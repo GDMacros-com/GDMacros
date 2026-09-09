@@ -4,13 +4,15 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "./config";
 
 /**
- * Reading the account list, for the legal notice tool and nothing else.
+ * Narrow Auth administration for legal notices, account lookup and a user's
+ * own confirmed account deletion.
  *
  * This is one of the narrow server-only modules that touches the privileged
  * Supabase key. It exists because there is no other way to learn an
  * account's email address: `auth.users` is not reachable through PostgREST, and
- * deliberately so. Sending an important Terms or Privacy notice to every
- * account holder is the only reason the application needs that information.
+ * deliberately so. Bulk enumeration exists only for important legal notices;
+ * the admin account tool exposes one exact username lookup at a time, only
+ * after the calling action has checked the administrator role.
  *
  * How it is kept narrow
  * ---------------------
@@ -18,12 +20,11 @@ import { SUPABASE_URL } from "./config";
  *     BUILD rather than leaking at runtime.
  *   * The key comes from SUPABASE_SECRET_KEY, with no NEXT_PUBLIC_ prefix, so
  *     Next will not inline it into any browser bundle.
- *   * The raw client is never exported. Two narrow reads leave this file and
- *     neither of them writes anything.
- *   * Nothing here returns an email to a caller that could hand it to the
- *     browser. `listAccountIds` returns ids. `resolveEmails` returns a Map used
- *     only inside the send path, which puts each address into exactly one
- *     outgoing message and then discards it.
+ *   * The raw client is never exported. Only purpose-built operations leave
+ *     this file.
+ *   * Bulk reads never hand addresses to the browser. The only browser-visible
+ *     address is from one exact account lookup after a fresh admin check.
+ *     `resolveEmails` is used only inside the legal-notice send path.
  *   * No address is ever persisted. The delivery table stores account uuids.
  */
 
@@ -124,4 +125,56 @@ export async function emailForUser(userId: string): Promise<string | null> {
   const { data, error } = await supabase.auth.admin.getUserById(userId);
   if (error || !data?.user?.email) return null;
   return data.user.email.trim() || null;
+}
+
+export interface AdminAccountSnapshot {
+  id: string;
+  email: string;
+  createdAt: string;
+  lastSignInAt: string | null;
+  emailConfirmedAt: string | null;
+  roles: string[];
+  pendingSubmissions: number;
+  publishedSubmissions: number;
+  supportTickets: number;
+  openSupportTickets: number;
+}
+
+/** Private account facts for one already-resolved profile id. */
+export async function adminAccountSnapshot(userId: string): Promise<AdminAccountSnapshot | null> {
+  const supabase = adminClient();
+  const [authResult, roles, pending, published, tickets, openTickets] = await Promise.all([
+    supabase.auth.admin.getUserById(userId),
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase.from("submissions").select("id", { count: "exact", head: true }).eq("submitted_by", userId),
+    supabase.from("published_submissions").select("submission_id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("opened_by", userId),
+    supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("opened_by", userId).eq("status", "open"),
+  ]);
+
+  const authUser = authResult.data?.user;
+  if (authResult.error || !authUser?.email) return null;
+  if (roles.error || pending.error || published.error || tickets.error || openTickets.error) {
+    throw new Error("Could not read account activity");
+  }
+
+  return {
+    id: authUser.id,
+    email: authUser.email.trim(),
+    createdAt: authUser.created_at,
+    lastSignInAt: authUser.last_sign_in_at ?? null,
+    emailConfirmedAt: authUser.email_confirmed_at ?? null,
+    roles: (roles.data ?? []).map((row) => String(row.role)),
+    pendingSubmissions: pending.count ?? 0,
+    publishedSubmissions: published.count ?? 0,
+    supportTickets: tickets.count ?? 0,
+    openSupportTickets: openTickets.count ?? 0,
+  };
+}
+
+/** The caller must separately prove this is the signed-in user's own id. */
+export async function deleteAuthAccount(userId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = adminClient();
+  const { error } = await supabase.auth.admin.deleteUser(userId, false);
+  return error ? { ok: false, error: error.message } : { ok: true };
 }

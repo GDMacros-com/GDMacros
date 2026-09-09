@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useViewTransition } from "@/lib/useViewTransition";
@@ -334,16 +335,24 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
                 : `No macros recorded with ${recorder}.`}
           </p>
           {(query || recorder !== "all") && (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
-                setRecorder("all");
-              }}
-              className="mt-1 rounded-lg bg-accent px-3.5 py-2 text-[13px] font-medium text-white transition-[background-color,transform] duration-200 ease-out hover:bg-accent-hover active:scale-95 active:duration-75"
-            >
-              Reset search and filter
-            </button>
+            <div className="mt-1 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setRecorder("all");
+                }}
+                className="rounded-lg bg-accent px-3.5 py-2 text-[13px] font-medium text-white transition-[background-color,transform] duration-200 ease-out hover:bg-accent-hover active:scale-95 active:duration-75"
+              >
+                Reset search and filter
+              </button>
+              <Link
+                href={`/support/new?type=level${query.trim() ? `&level=${encodeURIComponent(query.trim())}` : ""}`}
+                className="rounded-lg border border-border bg-surface px-3.5 py-2 text-[13px] font-semibold text-text-dim transition-[border-color,color,transform] hover:border-accent/40 hover:text-accent-soft active:scale-95"
+              >
+                Request this level
+              </Link>
+            </div>
           )}
         </div>
       ) : view === "grid" ? (

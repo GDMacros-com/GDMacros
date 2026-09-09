@@ -1,5 +1,5 @@
 /**
- * Tests for the revamped admin portal: its six tools, the submission editor,
+ * Tests for the revamped admin portal: its seven tools, the submission editor,
  * and the status board.
  *
  * Run with `npm run test:admin`. No network, no database, no keys.
@@ -51,6 +51,10 @@ const src = {
   inbox: read("src/app/admin/inbox/page.tsx"),
   activity: read("src/app/admin/activity/page.tsx"),
   quality: read("src/app/admin/quality/page.tsx"),
+  users: read("src/app/admin/users/page.tsx"),
+  userLookup: read("src/components/admin/UserLookup.tsx"),
+  userAction: read("src/lib/actions/adminUsers.ts"),
+  authAdmin: read("src/lib/supabase/auth-admin.ts"),
   queue: read("src/components/admin/ReviewQueue.tsx"),
   editor: read("src/components/admin/EditSubmission.tsx"),
   board: read("src/components/admin/StatusBoard.tsx"),
@@ -86,17 +90,19 @@ for (const [name, file] of [
   ["inbox", "src/app/admin/inbox/page.tsx"],
   ["activity", "src/app/admin/activity/page.tsx"],
   ["quality", "src/app/admin/quality/page.tsx"],
+  ["users", "src/app/admin/users/page.tsx"],
 ]) {
   check(`the ${name} route exists`, fs.existsSync(path.join(ROOT, file)));
 }
 
-check("the hub offers exactly six tools", (src.hub.match(/href: "\/admin\//g) ?? []).length === 6);
+check("the hub offers exactly seven tools", (src.hub.match(/href: "\/admin\//g) ?? []).length === 7);
 check("the hub links check submissions", src.hub.includes('"/admin/submissions"'));
 check("the hub links mail everyone", src.hub.includes('"/admin/notices"'));
 check("the hub links statistics", src.hub.includes('"/admin/status"'));
 check("the hub links the support inbox", src.hub.includes('"/admin/inbox"'));
 check("the hub links review activity", src.hub.includes('"/admin/activity"'));
 check("the hub links random quality checks", src.hub.includes('"/admin/quality"'));
+check("the hub links account tools", src.hub.includes('"/admin/users"'));
 check("the hub does not render the review queue itself", !/ReviewQueue/.test(src.hub));
 check("the hub does not render the mail tool itself", !/LegalNotices/.test(src.hub));
 
@@ -109,6 +115,7 @@ for (const [name, text] of [
   ["inbox", src.inbox],
   ["activity", src.activity],
   ["quality", src.quality],
+  ["users", src.users],
 ]) {
   check(`${name} re-checks the role server side`, /isCurrentUserAdmin\(\)/.test(text));
   check(`${name} 404s a non-admin rather than explaining`, /notFound\(\)/.test(text));
@@ -124,8 +131,15 @@ check(
     src.status.includes("next=/admin/status") &&
     src.inbox.includes("next=/admin/inbox") &&
     src.activity.includes("next=/admin/activity") &&
-    src.quality.includes("next=/admin/quality"),
+    src.quality.includes("next=/admin/quality") &&
+    src.users.includes("next=/admin/users"),
 );
+
+check("account lookup requires an exact username", /\.eq\("username_lower", clean\.toLowerCase\(\)\)/.test(src.userAction));
+check("account lookup checks the admin role inside the action", /lookupAdminUser[\s\S]*isCurrentUserAdmin\(\)/.test(src.userAction));
+check("the privileged account client stays server-only", src.authAdmin.startsWith('import "server-only"'));
+check("the account tool can copy the email and user id", /Copy email/.test(src.userLookup) && /Copy user ID/.test(src.userLookup));
+check("the account tool shows activity counts", /pendingSubmissions/.test(src.userLookup) && /openSupportTickets/.test(src.userLookup));
 check("the mail tool is unchanged, only relocated", /<LegalNotices/.test(src.notices));
 check(
   "queue navigation points at the new route",
@@ -819,6 +833,8 @@ check(
   "inspection must not be able to change a submission",
 );
 check("the file is hashed for identity", /createHash\("sha256"\)/.test(src.inspectAction));
+check("the hash is compared with GitHub's published asset digests", /asset\.digest[\s\S]*sha256/.test(src.inspectAction));
+check("an exact duplicate is clearly distinguished in the UI", /exact file is already published/i.test(src.inspectUi));
 check("it is loaded on demand, not with the queue", /Inspect file/.test(src.inspectUi));
 check("the queue offers it", /InspectSubmission/.test(src.queue));
 

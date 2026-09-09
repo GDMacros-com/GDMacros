@@ -322,9 +322,8 @@ export interface BanRow {
 /**
  * The ban list. Admin only, enforced inside the RPC.
  *
- * This is the only place an email address reaches a page, and only for
- * addresses a moderator typed in themselves. It cannot list anyone who has not
- * been banned, so it is not an account directory.
+ * This view only returns addresses a moderator typed in themselves. The full
+ * account list is never returned to the browser.
  */
 export async function listSubmissionBans(): Promise<{ bans: BanRow[] } | { error: string }> {
   const supabase = await createClient();

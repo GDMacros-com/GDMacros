@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { isCurrentUserAdmin } from "@/lib/admin";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { BellIcon, CheckIcon, ListIcon, MailIcon, GaugeIcon } from "@/components/icons";
+import { BellIcon, CheckIcon, ListIcon, MailIcon, GaugeIcon, UserIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 /**
  * The admin portal.
  *
- * Six tools, each on its own page. They are separated because they are
+ * Seven tools, each on its own page. They are separated because they are
  * different jobs with different blast radii: reviewing one macro, emailing
  * every account holder, and reading a status board should not sit in one
  * scrolling column where the wrong button is one mis-click away.
@@ -73,6 +73,12 @@ const TOOLS = [
     title: "Random quality check",
     description: "Pick a published macro, verify it, and record the result.",
     Icon: CheckIcon,
+  },
+  {
+    href: "/admin/users",
+    title: "Account tools",
+    description: "Look up an email by exact username, check account activity and manage blocks.",
+    Icon: UserIcon,
   },
 ] as const;
 

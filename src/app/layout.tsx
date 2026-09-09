@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import GoogleTranslate from "@/components/GoogleTranslate";
 import PageTransition from "@/components/PageTransition";
 import Navbar from "@/components/Navbar";
+import AdSenseLoader from "@/components/ads/AdSenseLoader";
+import AdBlockNotice from "@/components/ads/AdBlockNotice";
 import OpenTicketBanner from "@/components/support/OpenTicketBanner";
 import { KEYWORDS, site } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
@@ -87,11 +89,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8811219626379689"
-          crossOrigin="anonymous"
-        />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script
           type="application/ld+json"
@@ -99,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="flex min-h-dvh flex-col">
+        <AdSenseLoader />
         <GoogleTranslate />
         <Background />
         <Navbar />
@@ -107,6 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PageTransition>{children}</PageTransition>
         </main>
         <Footer />
+        <AdBlockNotice />
         <Analytics />
         <SpeedInsights />
       </body>

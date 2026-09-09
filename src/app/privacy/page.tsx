@@ -79,27 +79,30 @@ export default function PrivacyPage() {
         Version {PRIVACY_VERSION}. Last updated {formatLegalDate(PRIVACY_EFFECTIVE_DATE)}.
       </p>
       <p className="mt-4 text-[15px] leading-relaxed text-muted">
-        {site.name} is a macro catalog, not an advertising business. This page explains what is
-        stored, what stays private, and which other companies are involved.
+        {site.name} is a macro catalog supported in part by advertising. This page explains what is
+        stored, what stays private, how advertising works, and which other companies are involved.
       </p>
 
       <Section title="The short version">
         <Bullets
           items={[
             "You can browse and download everything without an account.",
-            "There is no advertising, no tracking cookie, and nothing is sold or shared for marketing.",
+            "Some public catalog pages contain Google AdSense advertising.",
+            "Where consent is required, you can accept, refuse, or manage advertising choices.",
             "An account stores what it needs to be an account, plus what you choose to give it.",
             "Your email address is private. Your username and your macros are public.",
             "We only email you about your account, your submissions, and changes to these documents.",
           ]}
         />
-        <p>The rest of this page is the detail behind those five points.</p>
+        <p>The rest of this page is the detail behind those points.</p>
       </Section>
 
       <Section title="Browsing without an account">
         <p>
-          You do not need an account to browse the catalog or to download a macro, and nothing about
-          you is stored on our side when you do either.
+          You do not need an account to browse the catalog or download a macro. We do not create an
+          account record about you merely because you browse, but the hosting, analytics and
+          advertising services described below receive the technical information needed to provide
+          their part of the page.
         </p>
         <p>
           Your browser keeps a few small preferences locally so the site behaves sensibly between
@@ -111,14 +114,54 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="Cookies">
-        <p>There is no advertising or tracking cookie on this site. Cookies appear in three cases:</p>
+        <p>Cookies or similar browser storage can appear in these cases:</p>
         <Bullets
           items={[
             "When you sign in, Supabase sets a session cookie so you stay signed in. Signing out clears it.",
             "If you use the language menu, Google Translate sets a googtrans cookie to remember the language. Setting it back to English clears it.",
             "An embedded YouTube video can set cookies when you play it. That is YouTube, under Google's terms, not us.",
+            "Google AdSense and its consent system can use cookies or similar storage to serve, limit, personalise and measure advertising according to your choices and the law that applies to you.",
           ]}
         />
+      </Section>
+
+      <Section title="Advertising and consent">
+        <p>
+          Public catalog and macro pages can show responsive advertisements supplied by Google
+          AdSense. Ads are kept out of account, submission, settings, notification, support-ticket
+          and admin pages. An advertisement is labelled and is not a recommendation or endorsement
+          by {site.name}.
+        </p>
+        <p>
+          Loading an ad or the consent message makes your browser communicate with Google. Depending
+          on your location, settings and consent, Google can process information such as your IP
+          address, browser and device information, the page you visited, ad interactions and cookie
+          or similar identifiers. Google uses that information to deliver, prevent fraud, measure
+          and, where permitted, personalise advertising.
+        </p>
+        <p>
+          Visitors in the EEA, UK and Switzerland are shown a Google-certified consent message with
+          choices to consent, not consent or manage options. Refusing personalised advertising does
+          not prevent you from using the catalog. You can revisit the privacy choices through the
+          Google message controls when they are available.
+        </p>
+        <p>
+          You can read{" "}
+          <a href="https://policies.google.com/technologies/ads" className="text-accent-soft hover:underline">
+            how Google uses information for advertising
+          </a>{" "}
+          and review your choices in{" "}
+          <a href="https://myadcenter.google.com/" className="text-accent-soft hover:underline">
+            Google&apos;s My Ad Center
+          </a>
+          .
+        </p>
+        <p>
+          The site can perform a small on-device check to notice when common advertisement elements
+          are hidden. If that suggests an ad blocker is active, a dismissible message asks whether
+          you would like to allow ads. The check is not sent to our server, does not block the site,
+          and the dismissal is remembered only in session storage for the current browser tab.
+        </p>
       </Section>
 
       <Section title="Your account">
@@ -134,9 +177,10 @@ export default function PrivacyPage() {
         <p>
           Your <span className="font-semibold text-text">username is public</span>. It is the name
           shown on macros you record and on your profile page. Your{" "}
-          <span className="font-semibold text-text">email address is private</span>: it is not shown
-          anywhere on the site, and the review screens do not have access to it. When an admin looks
-          at a submission they see the username, never the address behind it.
+          <span className="font-semibold text-text">email address is private</span>: it is never
+          shown publicly. A restricted admin account tool can reveal one address only after an admin
+          enters the exact username, for account support and moderation. The submission review
+          screen itself shows the username, never the address behind it.
         </p>
       </Section>
 
@@ -303,7 +347,8 @@ export default function PrivacyPage() {
             </>,
             <>
               <span className="font-semibold text-text">Google</span> is involved through Gmail,
-              where support mail is read, and through Google Translate if you use the language menu.
+              where support mail is read; Google Translate, if you use the language menu; and Google
+              AdSense, which provides consent choices and advertising on selected public pages.
             </>,
             <>
               <span className="font-semibold text-text">GitHub</span> hosts the source code, the
@@ -353,7 +398,7 @@ export default function PrivacyPage() {
         <p>Everything not listed as public above. In particular:</p>
         <Bullets
           items={[
-            "Your email address.",
+            "Your email address, visible only to you and authorised administrators using the exact account lookup.",
             "Your password, which is only ever stored hashed.",
             "Files you upload, until and unless a macro is accepted and published.",
             "Your submission notes and anything from the review process.",
@@ -379,6 +424,7 @@ export default function PrivacyPage() {
             "Your other account data, including settings, favorites, notifications and your submission history, stays while the account exists.",
             "Delivery records hold a destination address only while a retry could still need it, and are erased once the message is settled.",
             "Support email stays in the mailbox unless it is deleted by hand.",
+            "The ad-block notice dismissal lasts only for the current browser-tab session. Google's advertising and consent data follows Google's own retention settings and your consent choices.",
             "Deleting your account removes the account and the data tied to it. Macros already published stay in the catalog.",
           ]}
         />
@@ -386,8 +432,13 @@ export default function PrivacyPage() {
 
       <Section title="Deleting your account, or asking about your data">
         <p>
-          Write to <Mail /> from the address on the account and say what you want. That covers
-          deletion, asking what is stored about you, correcting something, and takedown requests.
+          You can permanently delete your own non-admin account in Settings after typing a clear
+          confirmation. Any submissions still in review must be withdrawn first. Published macros
+          remain in the catalog, as explained above.
+        </p>
+        <p>
+          You can also write to <Mail /> from the address on the account. That covers deletion,
+          asking what is stored about you, correcting something, and takedown requests.
         </p>
         <p>
           Please do not open a public GitHub issue for anything about your account. That is a public

@@ -92,6 +92,44 @@ export default function InspectSubmission({ id }: { id: string }) {
         </p>
       )}
 
+      {result.duplicateCheck?.status === "match" && (
+        <div role="alert" className="mt-2.5 rounded-lg border border-rose/40 bg-rose/10 px-3 py-2.5 text-[11.5px] leading-relaxed text-rose">
+          <p className="font-bold">This exact file is already published.</p>
+          <p className="mt-1 text-text-dim">
+            It matches <span className="font-mono text-text">{result.duplicateCheck.assetName}</span>
+            {result.duplicateCheck.author ? (
+              <>
+                , credited to{" "}
+                <span translate="no" className="notranslate font-semibold text-text">
+                  {result.duplicateCheck.author}
+                </span>
+              </>
+            ) : null}
+            {result.duplicateCheck.recorder ? ` for ${result.duplicateCheck.recorder}` : ""}. Publishing would upload the same bytes again.
+          </p>
+          <a
+            href={result.duplicateCheck.downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1.5 inline-block font-semibold text-accent-soft hover:underline"
+          >
+            Open existing download
+          </a>
+        </div>
+      )}
+
+      {result.existing && result.duplicateCheck?.status === "clear" && (
+        <p className="mt-2.5 rounded-lg border border-green/30 bg-green/5 px-3 py-2 text-[11.5px] leading-relaxed text-green">
+          The level/recorder already exists, but the uploaded bytes do not match any published file on this level.
+        </p>
+      )}
+
+      {result.existing && result.duplicateCheck?.status === "unavailable" && (
+        <p className="mt-2.5 rounded-lg border border-border-soft bg-surface px-3 py-2 text-[11.5px] leading-relaxed text-muted">
+          Exact-file comparison is unavailable right now. Use the SHA-256 shown below before publishing.
+        </p>
+      )}
+
       <div className="mt-3 flex flex-col gap-2">
         {(result.findings ?? []).map((f) => (
           <Row key={f.id} finding={f} />

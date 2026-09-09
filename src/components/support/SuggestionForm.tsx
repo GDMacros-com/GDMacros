@@ -5,10 +5,18 @@ import { useState, useTransition } from "react";
 import { createSuggestionTicket } from "@/lib/actions/supportTickets";
 import { SUPPORT_TICKET_LIMITS } from "@/lib/supportTickets";
 
-export default function SuggestionForm() {
+export default function SuggestionForm({
+  initialTitle = "",
+  initialBody = "",
+  mode = "suggestion",
+}: {
+  initialTitle?: string;
+  initialBody?: string;
+  mode?: "suggestion" | "level-request";
+}) {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+  const [title, setTitle] = useState(initialTitle);
+  const [body, setBody] = useState(initialBody);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -35,20 +43,26 @@ export default function SuggestionForm() {
           onChange={(event) => setTitle(event.target.value)}
           maxLength={SUPPORT_TICKET_LIMITS.title}
           required
-          placeholder="What would make GDMacros better?"
+          placeholder={mode === "level-request" ? "Which level should we add?" : "What would make GDMacros better?"}
           className="mt-2 h-11 w-full rounded-xl border border-border bg-surface-2 px-3.5 text-[13.5px] text-text outline-none placeholder:text-muted focus:border-accent"
         />
       </label>
 
       <label className="mt-5 block">
-        <span className="text-[12.5px] font-semibold text-text-dim">Suggestion</span>
+        <span className="text-[12.5px] font-semibold text-text-dim">
+          {mode === "level-request" ? "Level details" : "Suggestion"}
+        </span>
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
           maxLength={SUPPORT_TICKET_LIMITS.message}
           required
           rows={9}
-          placeholder="Explain the idea, why it would help, and anything we should be careful about."
+          placeholder={
+            mode === "level-request"
+              ? "Include the level name or ID and which recorder you need."
+              : "Explain the idea, why it would help, and anything we should be careful about."
+          }
           className="mt-2 w-full resize-y rounded-xl border border-border bg-surface-2 px-3.5 py-3 text-[13.5px] leading-relaxed text-text outline-none placeholder:text-muted focus:border-accent"
         />
         <span className="mt-1.5 block text-right text-[11.5px] text-muted tabular-nums">
@@ -67,7 +81,7 @@ export default function SuggestionForm() {
           disabled={pending || title.trim().length < 5 || body.trim().length < 3}
           className="rounded-xl bg-accent px-4 py-2.5 text-[13.5px] font-bold text-white transition-[background-color,transform] hover:bg-accent-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending ? "Opening..." : "Open suggestion"}
+          {pending ? "Opening..." : mode === "level-request" ? "Send level request" : "Open suggestion"}
         </button>
       </div>
     </form>

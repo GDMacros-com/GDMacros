@@ -61,6 +61,8 @@ const src = {
   navbar: read("src/components/Navbar.tsx"),
   footer: read("src/components/Footer.tsx"),
   settings: read("src/app/settings/page.tsx"),
+  browser: read("src/components/MacroBrowser.tsx"),
+  faq: read("src/app/faq/page.tsx"),
   proxy: read("src/proxy.ts"),
   middleware: read("src/lib/supabase/middleware.ts"),
   cron: read("src/app/api/cron/maintenance/route.ts"),
@@ -109,6 +111,10 @@ check("the broken button opens neither email nor GitHub", !/mailto:|issues\/new/
 check("the broken report context is looked up server side", /getLevelBySlug\(slug\.trim\(\)\)/.test(src.actions));
 check("known file URLs are copied from the catalog", /level\.macros[\s\S]*macro\.downloadLink/.test(src.actions));
 check("suggestions create a private ticket action", /createSuggestionTicket\(title, body\)/.test(src.suggestion));
+check("empty searches offer a level request", /Request this level/.test(src.browser) && /support\/new\?type=level/.test(src.browser));
+check("level requests prefill the private suggestion thread", /mode=\{isLevelRequest \? "level-request"/.test(src.newPage) && /Recorder needed/.test(src.newPage));
+check("login preserves a pre-filled request query", /destination = `\$\{pathname\}\$\{request\.nextUrl\.search\}`/.test(src.middleware));
+check("FAQ describes the private broken-macro ticket", /private support ticket/i.test(src.faq) && !/opens an email to support/i.test(src.faq));
 check("successful creation opens the returned thread", /router\.push\(result\.href\)/.test(src.suggestion + src.report));
 check("actions authenticate independently of their pages", /async function createTicket[\s\S]*getUser\(\)/.test(src.actions));
 check("refreshed thread props are rendered instead of frozen in client state", !/useState\(initialMessages\)/.test(src.thread));

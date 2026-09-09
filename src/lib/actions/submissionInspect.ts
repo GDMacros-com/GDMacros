@@ -6,6 +6,7 @@ import { getUser, createClient } from "@/lib/supabase/server";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 import { readGdrMetadata } from "@/lib/gdr";
 import { readGdr2Metadata } from "@/lib/gdr2";
+import { getReleaseByTag, listReleaseAssets } from "@/lib/github/releases";
 import { getAllLevels } from "@/lib/macros";
 import {
   findExistingEntry,
@@ -38,6 +39,60 @@ export interface InspectResult {
   warnings?: boolean;
   /** Set when the catalog already has this level and recorder. */
   existing?: { recorder: string; author: string } | null;
+  /** Byte-for-byte comparison against published GitHub assets for this level. */
+  duplicateCheck?:
+    | {
+        status: "match";
+        assetName: string;
+        downloadUrl: string;
+        recorder: string | null;
+        author: string | null;
+      }
+    | { status: "clear" }
+    | { status: "unavailable" };
+}
+
+/**
+ * Compares the upload with the immutable SHA-256 digests GitHub records on the
+ * level's release assets. This answers a different question from the catalog
+ * warning: the latter means "same level and recorder", while this means the
+ * bytes themselves are identical.
+ *
+ * A missing digest never becomes a false "different" answer. In that case the
+ * admin still sees the existing-entry warning and the hash from the file, but
+ * the exact comparison is honestly marked unavailable.
+ */
+async function checkPublishedDuplicate(levelId: string, sha256: string): Promise<NonNullable<InspectResult["duplicateCheck"]>> {
+  try {
+    const release = await getReleaseByTag(`level-${levelId}`);
+    if (!release) return { status: "clear" };
+
+    const assets = await listReleaseAssets(release.id);
+    const match = assets.find(
+      (asset) => asset.digest?.toLowerCase() === `sha256:${sha256.toLowerCase()}`,
+    );
+
+    if (match) {
+      const catalogMacro = getAllLevels()
+        .flatMap((level) => level.macros)
+        .find((macro) => macro.downloadLink === match.browser_download_url);
+      return {
+        status: "match",
+        assetName: match.name,
+        downloadUrl: match.browser_download_url,
+        recorder: catalogMacro?.recorder ?? null,
+        author: catalogMacro?.author ?? null,
+      };
+    }
+
+    return assets.every((asset) => Boolean(asset.digest))
+      ? { status: "clear" }
+      : { status: "unavailable" };
+  } catch {
+    // Inspection remains useful if GitHub is temporarily unavailable or the
+    // publisher is not configured on a local/preview deployment.
+    return { status: "unavailable" };
+  }
 }
 
 export async function inspectSubmission(id: string): Promise<InspectResult> {
@@ -86,14 +141,16 @@ export async function inspectSubmission(id: string): Promise<InspectResult> {
   const findings = gdrMeta
     ? reviewGdrFindings(gdrMeta, claim, file.bytes.byteLength, sha256)
     : reviewFindings(gdr2Meta!, claim, file.bytes.byteLength, sha256);
+  const duplicateCheck = await checkPublishedDuplicate(claim.levelId, sha256);
 
   return {
     ok: true,
     findings,
-    warnings: hasWarnings(findings),
+    warnings: hasWarnings(findings) || duplicateCheck.status === "match",
     existing: findExistingEntry(
       getAllLevels() as unknown as Parameters<typeof findExistingEntry>[0],
       claim,
     ),
+    duplicateCheck,
   };
 }

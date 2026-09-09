@@ -61,6 +61,8 @@ const src = {
   settingsPage: read("src/app/settings/page.tsx"),
   settingsUi: read("src/components/settings/SubmissionEmailSettings.tsx"),
   settingsAction: read("src/lib/actions/accountSettings.ts"),
+  deleteAccount: read("src/components/settings/DeleteAccount.tsx"),
+  authAdmin: read("src/lib/supabase/auth-admin.ts"),
   accountLink: read("src/components/AccountLink.tsx"),
   navbar: read("src/components/Navbar.tsx"),
   middleware: read("src/proxy.ts"),
@@ -243,6 +245,12 @@ check("settings save has no user-id parameter", /set_submission_email_preference
 check("email toggles are independent", /email_submission_accepted/.test(src.settingsUi + src.settingsPage + src.migration) && /email_submission_rejected/.test(src.settingsUi + src.settingsPage + src.migration));
 check("in-app results stay on when email is off", /always created, even when email is off/i.test(flat(src.settingsPage)));
 check("settings contain no theme control", !/ThemeToggle|light mode|dark mode/i.test(src.settingsUi + src.settingsPage));
+check("settings offer typed-confirmation account deletion", /<DeleteAccount/.test(src.settingsPage) && /DELETE \$\{username\}/.test(src.deleteAccount));
+check("self deletion re-checks the caller and confirmation server side", /getUserAndProfile\(\)/.test(src.settingsAction) && /confirmation !== `DELETE \$\{profile\.username\}`/.test(src.settingsAction));
+check("administrator self deletion is refused", /Administrator accounts cannot be self-deleted/.test(src.settingsAction));
+check("accounts with submissions in review must withdraw first", /Withdraw submissions that are still in review/.test(src.settingsAction));
+check("the privileged delete helper remains server-only", src.authAdmin.startsWith('import "server-only"') && /auth\.admin\.deleteUser/.test(src.authAdmin));
+check("the browser clears its stale session after deletion", /signOut\(\{ scope: "local" \}\)/.test(src.deleteAccount));
 check("the global navbar keeps the theme control", /<ThemeToggle\s*\/>/.test(src.navbar));
 check("the bell is inside the signed-in branch", src.accountLink.indexOf("if (!signedIn)") < src.accountLink.indexOf('href="/notifications"'));
 check("settings are inside the signed-in account menu", src.accountLink.indexOf("if (!signedIn)") < src.accountLink.indexOf('href="/settings"'));

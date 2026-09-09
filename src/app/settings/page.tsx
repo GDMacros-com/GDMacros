@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SubmissionEmailSettings from "@/components/settings/SubmissionEmailSettings";
+import DeleteAccount from "@/components/settings/DeleteAccount";
 import { MailIcon, ShieldIcon, SlidersIcon, UserIcon } from "@/components/icons";
 import { findAuthorByName } from "@/lib/authors";
 import { getUserAndProfile } from "@/lib/profile";
@@ -139,6 +140,14 @@ export default async function SettingsPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="card mt-7 border-rose/25 p-5 sm:p-6">
+        <h2 className="text-[15px] font-bold text-text">Delete account</h2>
+        <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">
+          You can permanently remove your own account without emailing support. A typed confirmation is required.
+        </p>
+        <DeleteAccount username={profile.username} />
       </section>
     </div>
   );

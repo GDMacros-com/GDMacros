@@ -81,10 +81,14 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     const url = request.nextUrl.clone();
+    const destination = `${pathname}${request.nextUrl.search}`;
     url.pathname = "/login";
+    url.search = "";
     // So the login page can return them to where they were headed. Only the
     // path is carried, never a full URL, so this cannot become an open redirect.
-    url.searchParams.set("next", pathname);
+    // Preserve an in-site query such as a pre-filled level request. LoginForm
+    // accepts only a leading-slash path, so this remains an internal redirect.
+    url.searchParams.set("next", destination);
     return includeAuthState(NextResponse.redirect(url));
   }
 

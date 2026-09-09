@@ -202,12 +202,13 @@ function items(levels: number, macros: number): Item[] {
     {
       q: "A macro is broken. How do I report it?",
       plain:
-        "Use the Report broken button on the macro's page. It opens an email to support with the level details already filled in, so you only have to describe what went wrong.",
+        "Sign in and use the Report broken button on the macro's page. After confirmation it opens a private support ticket with the level and download details already included.",
       a: (
         <>
-          Use the <span className="font-semibold text-text">Report broken</span> button on that
-          macro's page. It opens an email to <Mail /> with the level, the level ID and the download
-          links already filled in, so all you have to type is what went wrong.
+          Sign in and use the <span className="font-semibold text-text">Report broken</span> button
+          on that macro&apos;s page. After you confirm, it opens a private support ticket with the
+          level, level ID and download links already included. You can add more detail in the thread,
+          and you will be notified when an admin replies or closes it.
         </>
       ),
     },

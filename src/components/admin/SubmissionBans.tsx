@@ -11,9 +11,8 @@ import { formatDate } from "@/lib/submissions";
 /**
  * Submission bans.
  *
- * The only place in the whole site where an email address is shown, and only
- * for addresses a moderator typed in themselves. There is no account directory:
- * this cannot list, search or reveal anyone who has not been banned.
+ * One of the restricted admin views where an email address is shown. This ban
+ * list itself only includes addresses a moderator typed in themselves.
  *
  * The private moderation reason is shown to admins here and never to the banned
  * person, who only ever sees "You are not allowed to make macro submissions."

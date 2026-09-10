@@ -3542,5 +3542,20 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-89245091/SpringLekxGD-Backrooms-Mega-Hack.gdr2"
       }
     ]
+  },
+  {
+    "name": "PSYCHO",
+    "creator": "SureFir3",
+    "levelId": "108590404",
+    "video": "https://www.youtube.com/watch?v=49PZUs5gpXY",
+    "addedAt": "2026-09-10",
+    "macros": [
+      {
+        "author": "ChesszDC",
+        "recorder": "xdBot",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-108590404/ChesszDC-PSYCHO-xdBot.gdr2"
+      }
+    ]
   }
 ]

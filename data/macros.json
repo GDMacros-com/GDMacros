@@ -84,34 +84,6 @@
     ]
   },
   {
-    "name": "Aeternus",
-    "creator": "Riot",
-    "levelId": "102647436",
-    "video": "https://www.youtube.com/watch?v=XjypbEY_2Aw",
-    "description": "Rip & Tear until it's done",
-    "addedAt": "2026-08-14",
-    "macros": [
-      {
-        "author": "ChesszDC",
-        "recorder": "xdBot",
-        "downloadType": "GitHub",
-        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-102647436/ChesszDC-Aeternus-xdBot.gdr2"
-      },
-      {
-        "author": "ChesszDC",
-        "recorder": "zBot",
-        "downloadType": "GitHub",
-        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-102647436/ChesszDC-Aeternus-zBot.gdr"
-      },
-      {
-        "author": "ChesszDC",
-        "recorder": "Mega Hack",
-        "downloadType": "GitHub",
-        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-102647436/ChesszDC-Aeternus-Mega-Hack.gdr2"
-      }
-    ]
-  },
-  {
     "name": "Apocalyptic Trilogy",
     "creator": "APTeamOfficial",
     "levelId": "113443235",

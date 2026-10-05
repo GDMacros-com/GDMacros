@@ -315,3 +315,7 @@ Search and view mode are in the URL too (`?q=`, `?view=grid`).
 ---
 
 Not affiliated with, endorsed by, or connected to RobTop Games.
+
+### Moderator role
+
+For moderator permissions, the Supabase migration, role assignment and rollout checks, see [Setting up moderators](docs/mod-role.md).

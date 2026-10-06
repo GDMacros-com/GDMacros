@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { canonicalUrl, verifyVideo, videoIdFromUrl } from "@/lib/youtube";
 import { lookupLevel } from "@/lib/gdbrowser";
 import { SUBMISSION_RECORDERS } from "@/lib/types";
@@ -20,7 +20,7 @@ import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
  * without one or rejecting a good macro over a missing link.
  *
  * As everywhere else, this server action is NOT the security boundary. The
- * `admin_update_submission` RPC checks `private.is_admin()` for itself and
+ * `admin_update_submission` RPC checks `private.can_moderate()` for itself and
  * refuses once publishing has started, so an attacker who skipped the checks
  * here would still achieve nothing. These checks fail fast and give a usable
  * message.
@@ -50,7 +50,7 @@ export type EditResult =
 export async function updateSubmission(id: string, fields: EditFields): Promise<EditResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Not authorised." };
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "Not authorised." };
 
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Database unavailable." };

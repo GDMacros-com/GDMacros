@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import BackToAdmin from "@/components/admin/BackToAdmin";
 import QualityCheckCard, { type QualityCandidate } from "@/components/admin/QualityCheckCard";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { getAllLevels } from "@/lib/macros";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -27,7 +27,7 @@ export default async function AdminQualityPage() {
   if (!isSupabaseConfigured) redirect("/login");
   const user = await getUser();
   if (!user) redirect("/login?next=/admin/quality");
-  if (!(await isCurrentUserAdmin())) notFound();
+  if (!(await canCurrentUserModerate())) notFound();
   const supabase = await createClient();
   const historyResult = await supabase!.rpc("list_macro_quality_checks", { p_limit: 30 });
   const history = (historyResult.data ?? []) as QualityHistoryRow[];

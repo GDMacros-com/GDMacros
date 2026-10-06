@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import BackToAdmin from "@/components/admin/BackToAdmin";
 import SupportTicketBans, { type SupportTicketBanRow } from "@/components/admin/SupportTicketBans";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
@@ -13,7 +13,7 @@ import {
   type SupportTicketRow,
 } from "@/lib/supportTickets";
 
-export const metadata: Metadata = { title: "Admin inbox", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Support inbox", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 const FILTERS = new Set(["open", "resolved", "closed", "all"]);
 
@@ -21,7 +21,7 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: P
   if (!isSupabaseConfigured) redirect("/login");
   const user = await getUser();
   if (!user) redirect("/login?next=/admin/inbox");
-  if (!(await isCurrentUserAdmin())) notFound();
+  if (!(await canCurrentUserModerate())) notFound();
 
   const params = await searchParams;
   const filter = params.status && FILTERS.has(params.status) ? params.status : "open";
@@ -46,8 +46,8 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: P
       <BackToAdmin />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-extrabold tracking-tight text-text sm:text-[26px]">Admin inbox</h1>
-          <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">Suggestions and broken-macro reports. Ticket text is private to its owner and admins.</p>
+          <h1 className="text-[22px] font-extrabold tracking-tight text-text sm:text-[26px]">Support inbox</h1>
+          <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">Suggestions and broken-macro reports. Ticket text is private to its owner, admins and mods.</p>
         </div>
         <span className="rounded-lg bg-surface-2 px-2.5 py-1 text-[11.5px] font-semibold text-muted tabular-nums">{tickets.length} shown</span>
       </div>

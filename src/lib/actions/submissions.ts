@@ -8,7 +8,7 @@ import {
   deleteSubmissionObjectByPath,
   isStorageAdminConfigured,
 } from "@/lib/supabase/storage-admin";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { sendSubmissionResultBestEffort } from "@/lib/actions/submissionResultEmail";
 import { MIN_REJECTION_REASON, LIMITS, submissionErrorMessage } from "@/lib/submissions";
 import { assetFileName } from "@/lib/publish/assetName";
@@ -22,7 +22,7 @@ import { assetFileName } from "@/lib/publish/assetName";
  *
  *   * withdraw_submission matches on ownership AND pending status in its own
  *     WHERE clause;
- *   * every review RPC calls private.is_admin() inside the function.
+ *   * every review RPC calls private.can_moderate() inside the function.
  *
  * So the checks here produce a decent message and avoid pointless work; they
  * are not the security boundary.
@@ -98,7 +98,7 @@ export async function withdrawSubmission(id: string): Promise<Result> {
 export async function startProcessing(id: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("start_processing", { p_id: id });
@@ -120,7 +120,7 @@ export async function startProcessing(id: string): Promise<Result> {
 export async function releaseProcessing(id: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("release_processing", { p_id: id });
@@ -142,7 +142,7 @@ export async function releaseProcessing(id: string): Promise<Result> {
 export async function finishProcessing(id: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { data, error } = await supabase.rpc("finish_processing", { p_id: id });
@@ -176,7 +176,7 @@ export async function finishProcessing(id: string): Promise<Result> {
 export async function rejectSubmission(id: string, reason: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const trimmed = reason.trim();
@@ -214,7 +214,7 @@ export async function rejectSubmission(id: string, reason: string): Promise<Resu
 /* ------------------------------------------------------------------ */
 
 /**
- * A short-lived signed URL for one submission's file. Admin only.
+ * A short-lived signed URL for one submission's file. Admins and mods only.
  *
  * Used from two places: inspecting a submission before deciding on it, and
  * while publishing one by hand. Both are READ ONLY. This changes no status,
@@ -230,7 +230,7 @@ export async function getSubmissionDownloadUrl(
 ): Promise<{ url: string } | { error: string }> {
   const supabase = await createClient();
   if (!supabase) return { error: "Downloads are unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { error: "You do not have permission to do that." };
   if (!isStorageAdminConfigured) {
     console.error("[submissions] storage admin is not configured");
@@ -320,7 +320,7 @@ export interface BanRow {
 }
 
 /**
- * The ban list. Admin only, enforced inside the RPC.
+ * The submission ban list. Admins and mods only, enforced inside the RPC.
  *
  * This view only returns addresses a moderator typed in themselves. The full
  * account list is never returned to the browser.
@@ -328,7 +328,7 @@ export interface BanRow {
 export async function listSubmissionBans(): Promise<{ bans: BanRow[] } | { error: string }> {
   const supabase = await createClient();
   if (!supabase) return { error: "That is unavailable right now." };
-  if (!(await isCurrentUserAdmin())) return { error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { error: "You do not have permission to do that." };
 
   const { data, error } = await supabase.rpc("list_submission_bans");
   if (error) return { error: "The ban list could not be loaded." };
@@ -338,7 +338,7 @@ export async function listSubmissionBans(): Promise<{ bans: BanRow[] } | { error
 export async function banSubmissionEmail(email: string, reason: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "That is unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("ban_submission_email", {
@@ -354,7 +354,7 @@ export async function banSubmissionEmail(email: string, reason: string): Promise
 export async function unbanSubmissionEmail(email: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "That is unavailable right now." };
-  if (!(await isCurrentUserAdmin()))
+  if (!(await canCurrentUserModerate()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("unban_submission_email", { p_email: email.trim() });

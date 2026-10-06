@@ -7,6 +7,7 @@ import {
   addSupportTicketMessage,
   banSupportTicketUser,
   closeSupportTicket,
+  deleteSupportTicket,
 } from "@/lib/actions/supportTickets";
 import {
   SUPPORT_STATUS_LABEL,
@@ -30,11 +31,11 @@ function statusTone(status: SupportTicketRow["status"]) {
 export default function TicketThread({
   ticket,
   messages,
-  isAdmin,
+  canModerate,
 }: {
   ticket: SupportTicketRow;
   messages: ThreadMessage[];
-  isAdmin: boolean;
+  canModerate: boolean;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -69,6 +70,19 @@ export default function TicketThread({
     });
   }
 
+  function deleteTicket() {
+    if (!window.confirm("Permanently delete this ticket and all its messages? This cannot be undone.")) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteSupportTicket(ticket.id);
+      if (result.ok) {
+        window.dispatchEvent(new CustomEvent("gdmacros:support-changed"));
+        router.push("/admin/inbox");
+        router.refresh();
+      } else setError(result.error);
+    });
+  }
+
   function blockUser() {
     setError(null);
     startTransition(async () => {
@@ -98,7 +112,7 @@ export default function TicketThread({
               <span>Opened {ticketDate(ticket.created_at)} · {messages.length} comment{messages.length === 1 ? "" : "s"}</span>
             </div>
           </div>
-          <Link href={isAdmin ? "/admin/inbox" : "/support"} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold text-text-dim hover:border-accent/40 hover:text-text">
+          <Link href={canModerate ? "/admin/inbox" : "/support"} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold text-text-dim hover:border-accent/40 hover:text-text">
             Return to tickets
           </Link>
         </div>
@@ -120,8 +134,8 @@ export default function TicketThread({
       <section aria-label="Ticket transcript" className="mt-6 flex flex-col gap-4">
         {messages.map((message) => (
           <article key={message.id} className="flex items-start gap-3">
-            <span className={`mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border ${message.author_role === "admin" ? "border-accent/40 bg-accent/10 text-accent-soft" : "border-border bg-surface-2 text-muted"}`}>
-              {message.author_role === "admin" ? <CheckIcon className="h-[18px] w-[18px]" /> : <UserIcon className="h-[18px] w-[18px]" />}
+            <span className={`mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border ${message.author_role !== "user" ? "border-accent/40 bg-accent/10 text-accent-soft" : "border-border bg-surface-2 text-muted"}`}>
+              {message.author_role !== "user" ? <CheckIcon className="h-[18px] w-[18px]" /> : <UserIcon className="h-[18px] w-[18px]" />}
             </span>
             <div className="min-w-0 flex-1 overflow-hidden rounded-xl border border-border bg-surface">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft bg-surface-2/55 px-4 py-2.5 text-[12px]">
@@ -129,7 +143,7 @@ export default function TicketThread({
                   <span translate="no" className="notranslate font-bold text-text">{message.username}</span>{" "}
                   <span className="text-muted">commented {ticketDate(message.created_at)}</span>
                 </p>
-                {message.author_role === "admin" && <span className="rounded-md border border-accent/30 px-2 py-0.5 font-semibold text-accent-soft">GDMacros admin</span>}
+                {message.author_role !== "user" && <span className="rounded-md border border-accent/30 px-2 py-0.5 font-semibold text-accent-soft">GDMacros {message.author_role}</span>}
               </div>
               <p className="selectable whitespace-pre-wrap break-words px-4 py-4 text-[13.5px] leading-7 text-text-dim">{message.body}</p>
             </div>
@@ -145,7 +159,7 @@ export default function TicketThread({
             onChange={(event) => setBody(event.target.value)}
             maxLength={SUPPORT_TICKET_LIMITS.message}
             rows={7}
-            placeholder={isAdmin ? "Reply as GDMacros admin" : "Add more detail or answer the admin"}
+            placeholder={canModerate ? "Reply as GDMacros staff" : "Add more detail or answer the team"}
             className="mt-3 w-full resize-y rounded-xl border border-border bg-bg px-3.5 py-3 text-[13.5px] leading-relaxed text-text outline-none placeholder:text-muted focus:border-accent"
           />
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -159,9 +173,9 @@ export default function TicketThread({
         <p className="card mt-7 px-5 py-5 text-center text-[13px] text-muted">This ticket is closed and the transcript is read-only.</p>
       )}
 
-      {isAdmin && ticket.status === "open" && (
+      {canModerate && ticket.status === "open" && (
         <section className="mt-7 border-t border-border-soft pt-5">
-          <h2 className="text-[14px] font-bold text-text">Admin controls</h2>
+          <h2 className="text-[14px] font-bold text-text">Moderation controls</h2>
           {!closeMode ? (
             <div className="mt-3 flex flex-wrap gap-2.5">
               <button type="button" onClick={() => setCloseMode("resolved")} className="rounded-lg border border-green/40 bg-green/10 px-3.5 py-2 text-[12.5px] font-semibold text-green">Resolve ticket</button>
@@ -189,6 +203,12 @@ export default function TicketThread({
             </div>
           )}
         </section>
+      )}
+
+      {canModerate && (
+        <button type="button" onClick={deleteTicket} disabled={pending} className="mt-6 rounded-lg border border-rose/40 px-3.5 py-2 text-[12.5px] font-semibold text-rose disabled:opacity-60">
+          Delete ticket permanently
+        </button>
       )}
 
       {error && <p role="alert" className="mt-4 rounded-xl border border-rose/30 bg-rose/10 px-4 py-3 text-[12.5px] text-rose">{error}</p>}

@@ -1,6 +1,6 @@
 "use server";
 
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { isSubmissionResultSenderConfigured } from "@/lib/email/submissionResult";
 import { claimAndSendResultEmail } from "@/lib/email/resultQueue";
 import { getUser } from "@/lib/supabase/server";
@@ -20,7 +20,7 @@ export async function sendSubmissionResultBestEffort(notificationId: string): Pr
     if (!id) return;
 
     const user = await getUser();
-    if (!user || !(await isCurrentUserAdmin())) return;
+    if (!user || !(await canCurrentUserModerate())) return;
 
     // A queue visit still performs the privacy sweep even while Resend is not
     // configured. Never claim a pending payload until there is a sender.

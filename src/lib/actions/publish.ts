@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { sendSubmissionResultBestEffort } from "@/lib/actions/submissionResultEmail";
 import { runPublish, type PublishProgress } from "@/lib/publish/publisher";
 
@@ -11,7 +11,7 @@ import { runPublish, type PublishProgress } from "@/lib/publish/publisher";
  *
  * A server action is a POST endpoint that anyone on the internet can call, so
  * neither of these is the security boundary. Every RPC the publisher uses calls
- * `private.is_admin()` for itself, exactly as the 2D review functions do. The
+ * `private.can_moderate()` for itself, exactly as the 2D review functions do. The
  * check here exists to fail fast with a sensible message and to avoid doing
  * expensive work for someone who will be refused anyway.
  *
@@ -39,7 +39,7 @@ export async function publishMacro(id: string): Promise<PublishProgress> {
     };
   }
 
-  if (!(await isCurrentUserAdmin())) {
+  if (!(await canCurrentUserModerate())) {
     return {
       ok: false,
       state: "not_started",
@@ -71,7 +71,7 @@ export async function publishMacro(id: string): Promise<PublishProgress> {
 export async function publishMacroForBatch(id: string): Promise<PublishProgress> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, state: "not_started", stage: "validating", error: "Publishing is unavailable right now." };
-  if (!(await isCurrentUserAdmin())) return { ok: false, state: "not_started", stage: "validating", error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { ok: false, state: "not_started", stage: "validating", error: "You do not have permission to do that." };
   return runPublish(supabase, id, sendSubmissionResultBestEffort);
 }
 
@@ -97,7 +97,7 @@ export async function getPublishState(
 ): Promise<PublishStateView | { error: string }> {
   const supabase = await createClient();
   if (!supabase) return { error: "Publishing is unavailable right now." };
-  if (!(await isCurrentUserAdmin())) return { error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { error: "You do not have permission to do that." };
 
   const { data, error } = await supabase.rpc("get_publish_state", { p_id: id });
   if (error) return { error: "The publishing status could not be read." };

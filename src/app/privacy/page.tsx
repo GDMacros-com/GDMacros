@@ -212,7 +212,7 @@ export default function PrivacyPage() {
         />
         <p>
           The uploaded file goes into private storage. It is not public and not listed, and no
-          browser can reach it directly. Only an admin reviewing your submission can open it, and
+          browser can reach it directly. Only an admin or mod reviewing your submission can open it, and
           only through a short-lived link generated for that review. A reviewer can correct details
           such as a missing video link before publishing.
         </p>
@@ -220,7 +220,7 @@ export default function PrivacyPage() {
 
       <Section title="What becomes public">
         <p>
-          After an admin approves a submission, publishing happens automatically. The file is
+          After an admin or mod approves a submission, publishing happens automatically. The file is
           uploaded as a public download, the catalog entry is added, and the site is checked to
           confirm the macro is really live. Once that is confirmed, the private copy of your upload
           is deleted.
@@ -249,7 +249,7 @@ export default function PrivacyPage() {
           items={[
             "account mail such as confirmation and password resets,",
             "submission results, if you have those switched on in Settings,",
-            "the result of a support ticket when an admin closes it,",
+            "the result of a support ticket when an admin or mod closes it,",
             "notice of a material change to the Terms or this policy,",
             "and important account, security or service messages.",
           ]}
@@ -273,18 +273,17 @@ export default function PrivacyPage() {
         <p>
           When you are signed in, a suggestion or broken-macro report opens a private support
           thread. It stores your account ID, username, the title and messages, timestamps, its
-          status, and the macro page details when the report concerns a download. Only you and the
-          admins can read that thread.
+          status, and the macro page details when the report concerns a download. Only you, admins and mods can read that thread.
         </p>
         <p>
-          Open tickets stay available so the conversation can continue. When an admin resolves or
+          Open tickets stay available so the conversation can continue. When an admin or mod resolves or
           closes one, you receive an in-app notification and an email with a link to its transcript.
           The ticket, every message, its notification, and the delivery job are permanently deleted
           30 days after closure. Access stops at that deadline even if the scheduled deletion is a
-          few seconds late.
+          few seconds late. An admin or mod can also permanently delete a ticket and its transcript earlier.
         </p>
         <p>
-          An admin can block an account from opening new tickets when the feature is abused. The
+          An admin or mod can block an account from opening new tickets when the feature is abused. The
           block stores the account ID, the reason, who applied it, and the time. It does not hide an
           existing conversation or prevent replies in one.
         </p>
@@ -420,7 +419,7 @@ export default function PrivacyPage() {
           items={[
             "A submission stays until it is decided or you withdraw it. Once it is accepted and confirmed live, the private copy of your upload is deleted; a rejected or withdrawn one is removed along with its file.",
             "A published macro stays in the catalog, because it is catalog content rather than account data.",
-            "An open support ticket stays while the conversation is active. A resolved or otherwise closed ticket, its transcript and its notification are permanently deleted after 30 days.",
+            "An open support ticket stays while the conversation is active. A resolved or otherwise closed ticket, its transcript and its notification are permanently deleted after 30 days, or earlier if an admin or mod deletes the ticket.",
             "Your other account data, including settings, favorites, notifications and your submission history, stays while the account exists.",
             "Delivery records hold a destination address only while a retry could still need it, and are erased once the message is settled.",
             "Support email stays in the mailbox unless it is deleted by hand.",

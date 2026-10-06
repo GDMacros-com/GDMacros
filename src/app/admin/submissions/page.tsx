@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import ReviewQueue, { type AdminRow } from "@/components/admin/ReviewQueue";
 import SubmissionBans from "@/components/admin/SubmissionBans";
 import BackToAdmin from "@/components/admin/BackToAdmin";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { listSubmissionBans } from "@/lib/actions/submissions";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -25,12 +25,12 @@ const STATUSES = new Set(["pending", "processing", "all"]);
  *   1. the proxy redirects an anonymous visitor to /login;
  *   2. this page checks the role server side, from the database;
  *   3. the row level security policy on `submissions` only returns other
- *      people's rows when private.is_admin() is true.
+ *      people's rows when private.can_moderate() is true.
  *
  * The third is the one that matters. Even if the first two were removed, a
  * normal user reaching this page would render an empty queue, because the
  * database would hand them nothing. And every review RPC checks
- * private.is_admin() for itself, so seeing a button is not the same as being
+ * private.can_moderate() for itself, so seeing a button is not the same as being
  * able to use it. Editing a submission's details is no different: the
  * `admin_update_submission` RPC does its own check and refuses once publishing
  * has started.
@@ -51,7 +51,7 @@ export default async function AdminSubmissionsPage({
 
   const user = await getUser();
   if (!user) redirect("/login?next=/admin/submissions");
-  if (!(await isCurrentUserAdmin())) notFound();
+  if (!(await canCurrentUserModerate())) notFound();
 
   const params = await searchParams;
   const filter = params.status && STATUSES.has(params.status) ? params.status : "pending";

@@ -73,7 +73,8 @@ const src = {
     read("supabase/migrations/0007_legal_acceptance_and_notices.sql") +
     read("supabase/migrations/0011_account_experience.sql") +
     read("supabase/migrations/0012_privacy_version_2026_08_24.sql") +
-    read("supabase/migrations/0018_adsense_legal_versions.sql"),
+    read("supabase/migrations/0018_adsense_legal_versions.sql") +
+    read("supabase/migrations/0019_mod_role.sql"),
   ownerCard: read("src/components/DiscordOwnerCard.tsx"),
 };
 
@@ -270,7 +271,7 @@ check("privacy does not claim a YouTube Data API key", !/YouTube Data API/i.test
 check("privacy covers Lanyard on the about page", /Lanyard/.test(src.privacy));
 check("privacy says the Lanyard request comes from the browser", /request is made by your browser/i.test(src.privacy));
 check("privacy states the support transcript retention", /permanently deleted[\s\S]{0,80}30 days after closure/i.test(prose.privacy));
-check("privacy explains support thread visibility", /Only you and the admins can read that thread/i.test(prose.privacy));
+check("privacy explains support thread visibility", /Only you, admins and mods can read that thread/i.test(prose.privacy));
 check("privacy explains account deletion", /Deleting your account removes the account/i.test(src.privacy));
 
 check("terms covers submissions representations", /you have permission from the person/i.test(src.terms));

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
- * The admin portal button, shown only to administrators.
+ * The admin portal button, shown to admins and mods.
  *
  * This is CONVENIENCE, not security. The role is read from the database using
  * the visitor's own session, so the policy on `user_roles` decides: it returns
@@ -16,15 +16,15 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
  *
  * Hiding the button protects nothing on its own, and is not meant to. /admin
  * checks the role again on the server and 404s otherwise, the select policy on
- * `submissions` only returns other people's rows to an admin, and every review
- * RPC calls private.is_admin() for itself.
+ * `submissions` only returns other people's rows to staff, and every review
+ * RPC calls private.can_moderate() for itself.
  *
  * A CLIENT component for the same reason as AccountLink: resolving this on the
  * server would mean calling cookies() in the root layout, which opts every
  * route out of static rendering, including all 106 prerendered macro pages.
  */
 export default function AdminLink({ mobile = false }: { mobile?: boolean }) {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [canModerate, setCanModerate] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -38,15 +38,15 @@ export default function AdminLink({ mobile = false }: { mobile?: boolean }) {
       // majority, and they should cost nothing.
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        if (active) setIsAdmin(false);
+        if (active) setCanModerate(false);
         return;
       }
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("role", "admin")
+        .in("role", ["admin", "mod"])
         .limit(1);
-      if (active) setIsAdmin((roles?.length ?? 0) > 0);
+      if (active) setCanModerate((roles?.length ?? 0) > 0);
     };
 
     void check();
@@ -61,7 +61,7 @@ export default function AdminLink({ mobile = false }: { mobile?: boolean }) {
     };
   }, []);
 
-  if (!isAdmin) return null;
+  if (!canModerate) return null;
 
   // Red, because this is the moderation area and it should not be mistaken for
   // ordinary navigation.
@@ -71,7 +71,7 @@ export default function AdminLink({ mobile = false }: { mobile?: boolean }) {
   if (mobile) {
     return (
       <Link href="/admin" className={`${base} block px-3 py-2.5 text-center text-[13px]`}>
-        Admin portal
+        Staff portal
       </Link>
     );
   }
@@ -79,10 +79,10 @@ export default function AdminLink({ mobile = false }: { mobile?: boolean }) {
   return (
     <Link
       href="/admin"
-      title="Admin portal"
+      title="Staff portal"
       className={`${base} hidden px-3 py-2 text-[12.5px] sm:inline-block`}
     >
-      Admin portal
+      Staff portal
     </Link>
   );
 }

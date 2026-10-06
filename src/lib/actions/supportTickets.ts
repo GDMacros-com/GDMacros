@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { claimAndSendSupportTicketEmail } from "@/lib/email/supportTicketQueue";
 import { getLevelBySlug } from "@/lib/macros";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -128,7 +128,7 @@ export async function closeSupportTicket(
   status: Exclude<SupportTicketStatus, "open">,
   reason: string,
 ): Promise<Result> {
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "You do not have permission to do that." };
   const text = reason.trim();
   if (text.length < 3 || text.length > SUPPORT_TICKET_LIMITS.closeReason) {
     return { ok: false, error: "Give a reason between 3 and 500 characters." };
@@ -152,7 +152,7 @@ export async function closeSupportTicket(
 }
 
 export async function banSupportTicketUser(ticketId: string, reason: string): Promise<Result> {
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "You do not have permission to do that." };
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Support controls are unavailable right now." };
   const { error } = await supabase.rpc("ban_support_ticket_user", {
@@ -165,7 +165,7 @@ export async function banSupportTicketUser(ticketId: string, reason: string): Pr
 }
 
 export async function unbanSupportTicketUser(banId: string): Promise<Result> {
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "You do not have permission to do that." };
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Support controls are unavailable right now." };
   const { data, error } = await supabase.rpc("unban_support_ticket_user", { p_ban: banId });
@@ -191,5 +191,19 @@ export async function dismissAccountNotification(id: string): Promise<Result> {
   const { data, error } = await supabase.rpc("dismiss_account_notification", { p_id: id });
   if (error || data !== true) return { ok: false, error: "That notification could not be dismissed." };
   revalidatePath("/notifications");
+  return { ok: true };
+}
+
+export async function deleteSupportTicket(ticketId: string): Promise<Result> {
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "You do not have permission to do that." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, error: "Support tickets are unavailable right now." };
+  const { data, error } = await supabase.rpc("delete_support_ticket", { p_ticket: ticketId });
+  if (error || data !== true) return { ok: false, error: "That ticket could not be deleted." };
+  revalidatePath(`/support/tickets/${ticketId}`);
+  revalidatePath("/support");
+  revalidatePath("/notifications");
+  revalidatePath("/admin/inbox");
+  revalidatePath("/admin");
   return { ok: true };
 }

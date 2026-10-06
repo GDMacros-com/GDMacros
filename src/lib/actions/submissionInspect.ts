@@ -1,7 +1,7 @@
 "use server";
 
 import { createHash } from "node:crypto";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 import { readGdrMetadata } from "@/lib/gdr";
@@ -19,7 +19,7 @@ import {
 /**
  * Reading an uploaded macro's own header, for the reviewer.
  *
- * The file already sits in private Storage and only an admin can open it. This
+ * The file already sits in private Storage and only staff can open it. This
  * reads the same bytes on the server and reports what the header says, so a
  * disagreement between the file and the form is visible BEFORE anything is
  * published rather than after a release asset already carries the wrong name.
@@ -98,7 +98,7 @@ async function checkPublishedDuplicate(levelId: string, sha256: string): Promise
 export async function inspectSubmission(id: string): Promise<InspectResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Not authorised." };
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "Not authorised." };
 
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Database unavailable." };

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { getAllLevels } from "@/lib/macros";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +13,7 @@ export async function recordQualityCheck(
   outcome: "good" | "issue",
   note: string,
 ): Promise<Result> {
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: "You do not have permission to do that." };
+  if (!(await canCurrentUserModerate())) return { ok: false, error: "You do not have permission to do that." };
   const found = getAllLevels().flatMap((level) => level.macros.map((macro) => ({ level, macro })))
     .find(({ macro }) => macro.downloadLink === downloadUrl);
   if (!found) return { ok: false, error: "That macro is no longer in the catalog." };

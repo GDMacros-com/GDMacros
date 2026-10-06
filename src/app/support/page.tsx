@@ -37,7 +37,7 @@ export default async function SupportPage() {
             <span className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-surface text-accent-soft"><MailIcon className="h-5 w-5" /></span>
             <div>
               <h1 className="text-[22px] font-extrabold tracking-tight text-text sm:text-[26px]">Support tickets</h1>
-              <p className="mt-1 text-[13px] text-muted">Private conversations with the GDMacros admins.</p>
+              <p className="mt-1 text-[13px] text-muted">Private conversations with the GDMacros team.</p>
             </div>
           </div>
         </div>

@@ -28,7 +28,7 @@ export interface SupportTicketMessageRow {
   id: string;
   ticket_id: string;
   author_id: string | null;
-  author_role: "user" | "admin";
+  author_role: "user" | "admin" | "mod";
   body: string;
   created_at: string;
 }
@@ -73,7 +73,7 @@ export function supportTicketError(error: unknown): string {
     return "That ticket is closed or no longer available.";
   }
   if (message.includes("message rate limit")) return "Too many comments. Wait a while before replying again.";
-  if (message.includes("ticket message limit")) return "This thread is full. An admin must close it and open a follow-up if needed.";
+  if (message.includes("ticket message limit")) return "This thread is full. An admin or mod must close it and open a follow-up if needed.";
   if (message.includes("not found or already closed")) return "That ticket is already closed.";
   if (message.includes("not authorised")) return "You do not have permission to do that.";
   if (message.includes("cannot ban an administrator")) return "Administrators cannot be blocked.";

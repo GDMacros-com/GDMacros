@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import TicketThread from "@/components/support/TicketThread";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { canCurrentUserModerate } from "@/lib/admin";
 import { getUserAndProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -23,10 +23,10 @@ export default async function SupportTicketPage({ params }: { params: Promise<{ 
   if (!profile) redirect("/welcome");
 
   const supabase = await createClient();
-  const [ticketResult, messageResult, admin] = await Promise.all([
+  const [ticketResult, messageResult, canModerate] = await Promise.all([
     supabase!.from("support_tickets").select(SUPPORT_TICKET_COLUMNS).eq("id", id).maybeSingle(),
     supabase!.from("support_ticket_messages").select(SUPPORT_TICKET_MESSAGE_COLUMNS).eq("ticket_id", id).order("created_at"),
-    isCurrentUserAdmin(),
+    canCurrentUserModerate(),
   ]);
   if (ticketResult.error || !ticketResult.data) notFound();
 
@@ -45,9 +45,9 @@ export default async function SupportTicketPage({ params }: { params: Promise<{ 
         ticket={ticket}
         messages={messages.map((message) => ({
           ...message,
-          username: (message.author_id ? names.get(message.author_id) : null) ?? (message.author_role === "admin" ? "GDMacros admin" : "User"),
+          username: (message.author_id ? names.get(message.author_id) : null) ?? (message.author_role === "user" ? "User" : `GDMacros ${message.author_role}`),
         }))}
-        isAdmin={admin}
+        canModerate={canModerate}
       />
     </div>
   );

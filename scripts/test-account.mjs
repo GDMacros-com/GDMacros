@@ -48,7 +48,8 @@ const src = {
   legalMigrations:
     read("supabase/migrations/0011_account_experience.sql") +
     read("supabase/migrations/0012_privacy_version_2026_08_24.sql") +
-    read("supabase/migrations/0018_adsense_legal_versions.sql"),
+    read("supabase/migrations/0018_adsense_legal_versions.sql") +
+    read("supabase/migrations/0019_mod_role.sql"),
   authors: read("src/lib/authors.ts"),
   authorPage: read("src/app/author/[slug]/page.tsx"),
   macroPage: read("src/app/macro/[slug]/page.tsx"),

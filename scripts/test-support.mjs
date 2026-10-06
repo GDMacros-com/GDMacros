@@ -135,11 +135,11 @@ check("there is no browser insert grant", !/grant insert on public\.support_tick
 check("owners or admins alone can read tickets", /auth\.uid\(\)\) = opened_by or private\.is_admin\(\)/.test(mig));
 check("message reads inherit the ticket owner check", /support_ticket_messages for select[\s\S]*t\.opened_by = \(select auth\.uid\(\)\) or private\.is_admin\(\)/.test(mig));
 check("expired transcripts are denied exactly at their deadline", /delete_after is null or delete_after > now\(\)/.test(mig));
-check("the privacy page names private ticket visibility", /Only you and the admins can read that thread/i.test(flat(src.privacy)));
+check("the privacy page names private ticket visibility", /Only you, admins and mods can read that thread/i.test(flat(src.privacy)));
 check("the privacy page names the fixed retention", /permanently deleted 30 days after closure/i.test(flat(src.privacy)));
 
 console.log("Closing, notifications, email and retention");
-check("only admins can close in the action", /closeSupportTicket[\s\S]*isCurrentUserAdmin\(\)/.test(src.actions));
+check("staff can close in the action", /closeSupportTicket[\s\S]*canCurrentUserModerate\(\)/.test(src.actions));
 check("only admins can close in the database", /close_support_ticket[\s\S]*if not private\.is_admin\(\)/.test(mig));
 check("closure supports resolved and other closure", /not in \('resolved', 'closed'\)/.test(mig));
 check("closure sets a 30-day deletion deadline", /now\(\) \+ interval '30 days'/.test(mig));
@@ -179,7 +179,7 @@ check("reply alerts render differently from closures", /item\.kind === "support_
 
 console.log("Admin inbox and blocks");
 for (const [name, page] of [["inbox", src.inbox], ["activity", src.activity], ["quality", src.quality]]) {
-  check(`${name} checks the admin role`, /isCurrentUserAdmin\(\)/.test(page));
+  check(`${name} checks the admin role`, (name === "activity" ? /isCurrentUserAdmin\(\)/ : /canCurrentUserModerate\(\)/).test(page));
   check(`${name} hides from non-admins`, /notFound\(\)/.test(page));
   check(`${name} requires a signed-in user`, /getUser\(\)/.test(page));
 }
@@ -187,7 +187,7 @@ check("the inbox filters open, resolved, closed and all", /\["open", "resolved",
 check("the inbox never selects account email", !/select\([^)]*email/.test(src.inbox));
 check("blocks prevent new tickets only", /Blocks opening new tickets only|Blocks opening new tickets|Blocks opening/i.test(src.migration) || /Blocks opening new tickets only/i.test(src.bans));
 check("admins cannot block another admin", /cannot ban an administrator/.test(mig));
-check("the block action checks admin in app and RPC", /banSupportTicketUser[\s\S]*isCurrentUserAdmin\(\)/.test(src.actions) && /ban_support_ticket_user[\s\S]*private\.is_admin\(\)/.test(mig));
+check("the block action checks staff in the app and the original migration checks admin", /banSupportTicketUser[\s\S]*canCurrentUserModerate\(\)/.test(src.actions) && /ban_support_ticket_user[\s\S]*private\.is_admin\(\)/.test(mig));
 check("unblocking is available", /unbanSupportTicketUser/.test(src.bans) && /unban_support_ticket_user/.test(mig));
 
 console.log("Bulk publishing");

@@ -117,7 +117,7 @@ for (const [name, text] of [
   ["quality", src.quality],
   ["users", src.users],
 ]) {
-  check(`${name} re-checks the role server side`, /isCurrentUserAdmin\(\)/.test(text));
+  check(`${name} re-checks the role server side`, (["hub", "submissions", "inbox", "quality"].includes(name) ? /canCurrentUserModerate\(\)/ : /isCurrentUserAdmin\(\)/).test(text));
   check(`${name} 404s a non-admin rather than explaining`, /notFound\(\)/.test(text));
   check(`${name} requires a signed-in user`, /getUser\(\)/.test(text));
   check(`${name} is never statically cached`, /dynamic = "force-dynamic"/.test(text));
@@ -191,7 +191,7 @@ check("a video link is verified with YouTube", /verifyVideo\(videoId\)/.test(src
 check("the video is stored canonical", /canonicalUrl\(videoId\)/.test(src.editAction));
 check("a non-YouTube link is refused", /does not look like a YouTube link/.test(src.editAction));
 check("the recorder is checked against the allowed list", /RECORDERS as readonly string\[\]\)\.includes/.test(src.editAction));
-check("the action checks the role before doing work", /isCurrentUserAdmin\(\)/.test(src.editAction));
+check("the action checks the role before doing work", /canCurrentUserModerate\(\)/.test(src.editAction));
 check(
   "a publish-already-started refusal is explained rather than flattened",
   /publishing has already started/i.test(src.editAction),
@@ -816,7 +816,7 @@ check(
   /export function readGdr2Metadata/.test(src.gdr2) && /export function checkGdr2/.test(src.gdr2),
 );
 check("the reader returns null rather than throwing", /catch \{[\s\S]{0,60}return null/.test(src.gdr2));
-check("the action checks the admin role", /isCurrentUserAdmin\(\)/.test(src.inspectAction));
+check("the action checks moderation permissions", /canCurrentUserModerate\(\)/.test(src.inspectAction));
 check(
   "the claim comes from the row, not the caller",
   /from\("submissions"\)[\s\S]{0,300}\.eq\("id", id\)/.test(src.inspectAction),

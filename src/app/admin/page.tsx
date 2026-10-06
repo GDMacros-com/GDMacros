@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isCurrentUserAdmin } from "@/lib/admin";
+import { isCurrentUserAdmin, canCurrentUserModerate } from "@/lib/admin";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { BellIcon, CheckIcon, ListIcon, MailIcon, GaugeIcon, UserIcon } from "@/components/icons";
@@ -13,27 +13,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-/**
- * The admin portal.
- *
- * Seven tools, each on its own page. They are separated because they are
- * different jobs with different blast radii: reviewing one macro, emailing
- * every account holder, and reading a status board should not sit in one
- * scrolling column where the wrong button is one mis-click away.
- *
- * EVERY PAGE RE-CHECKS, AND SO DOES EVERY ACTION.
- *
- * This page having rendered is not a permission. Each tool page runs
- * the same server-side role check for itself, every server action behind them
- * checks again on each call, and every RPC underneath checks
- * `private.is_admin()` a third time. That is deliberate: a server action is a
- * POST endpoint anyone on the internet can call, so the only check that counts
- * is the one that runs on the request actually doing the work.
- *
- * A non-admin gets a 404 rather than a "forbidden" page. There is no reason to
- * confirm that this route exists.
- */
-
+// Each tool and server action checks its own permissions.
 const TOOLS = [
   {
     href: "/admin/submissions",
@@ -58,7 +38,7 @@ const TOOLS = [
   },
   {
     href: "/admin/inbox",
-    title: "Admin inbox",
+    title: "Support inbox",
     description: "Reply to suggestions and broken-macro reports, resolve tickets or block abuse.",
     Icon: BellIcon,
   },
@@ -87,10 +67,10 @@ export default async function AdminPage() {
 
   const user = await getUser();
   if (!user) redirect("/login?next=/admin");
-  if (!(await isCurrentUserAdmin())) notFound();
+  if (!(await canCurrentUserModerate())) notFound();
+  const admin = await isCurrentUserAdmin();
 
-  // A count, so the queue card can say whether anything is waiting. RLS decides
-  // what is countable; an admin sees every row because the 2C policy says so.
+  // RLS limits these counts to rows the current staff member can read.
   let waiting: number | null = null;
   let inbox: number | null = null;
   const supabase = await createClient();
@@ -105,14 +85,15 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto w-full max-w-[860px] px-4 py-10 sm:px-6 sm:py-14">
-      <h1 className="text-[22px] font-extrabold tracking-tight text-text sm:text-[26px]">Admin</h1>
+      <h1 className="text-[22px] font-extrabold tracking-tight text-text sm:text-[26px]">{admin ? "Admin" : "Moderation"}</h1>
       <p className="mt-1.5 mb-8 text-[13.5px] leading-relaxed text-muted">
-        Pick a tool. Each one checks your permissions again on every action, so nothing here is
-        unlocked just because this page loaded.
+        Review submissions, help with tickets, or check a macro.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {TOOLS.map(({ href, title, description, Icon }) => (
+        {TOOLS.filter((tool) =>
+          admin || tool.href === "/admin/submissions" || tool.href === "/admin/inbox" || tool.href === "/admin/quality"
+        ).map(({ href, title, description, Icon }) => (
           <Link
             key={href}
             href={href}

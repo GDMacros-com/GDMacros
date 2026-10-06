@@ -9,7 +9,7 @@ export default function BackToAdmin() {
       className="mb-5 inline-flex items-center gap-1.5 text-[12.5px] text-muted transition-colors hover:text-text-dim"
     >
       <ArrowLeftIcon className="h-3.5 w-3.5" />
-      Admin
+      Staff portal
     </Link>
   );
 }

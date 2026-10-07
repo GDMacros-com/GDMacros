@@ -44,6 +44,7 @@ function readMacros(entry: LevelInput): Partial<Macro>[] {
       {
         author: entry.macroAuthor,
         recorder: entry.recorder,
+        fps: entry.fps,
         downloadType: entry.downloadType,
         downloadLink: entry.downloadLink,
       },
@@ -117,6 +118,9 @@ export function getAllLevels(): Level[] {
           throw new Error(
             `${at} has recorder "${m.recorder}". Must be one of: ${RECORDERS.join(", ")}.`,
           );
+        }
+        if (typeof m.fps !== "number" || !Number.isFinite(m.fps) || m.fps <= 0) {
+          throw new Error(`${at} needs a positive finite recording FPS.`);
         }
         return { ...(m as Macro), position: j + 1 };
       });

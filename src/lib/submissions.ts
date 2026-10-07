@@ -1,3 +1,4 @@
+import { parseFps } from "./fps";
 import {
   SUBMISSION_RECORDERS,
   macroFileExtension,
@@ -34,6 +35,7 @@ export interface SubmissionFields {
   levelCreator: string;
   videoUrl: string;
   recorder: string;
+  fps: string;
   macroAuthor: string;
   notes: string;
 }
@@ -76,6 +78,8 @@ export function validateSubmission(fields: SubmissionFields): FieldErrors {
   if (!SUBMISSION_RECORDERS.includes(fields.recorder as SubmissionRecorder))
     errors.recorder = "Choose which tool recorded this macro.";
 
+  if (parseFps(fields.fps ?? "") === null) errors.fps = "Enter the positive FPS used to record this macro.";
+
   if (notes.length > LIMITS.notes)
     errors.notes = `Keep notes under ${LIMITS.notes} characters.`;
 
@@ -106,6 +110,7 @@ export function normaliseSubmission(fields: SubmissionFields) {
     levelCreator: t(fields.levelCreator) || null,
     videoUrl: t(fields.videoUrl) || null,
     recorder: fields.recorder,
+    fps: parseFps(fields.fps),
     macroAuthor: t(fields.macroAuthor),
     notes: t(fields.notes) || null,
   };
@@ -230,6 +235,7 @@ export interface PublishedSubmissionView extends PublishedSubmissionRow {
 }
 
 export interface SubmissionRow {
+  fps: number;
   id: string;
   level_name: string;
   level_id: string;
@@ -244,7 +250,7 @@ export interface SubmissionRow {
 
 /** The columns a submitter is allowed to see. No storage path, no reviewer. */
 export const OWN_COLUMNS =
-  "id,level_name,level_id,level_creator,video_url,recorder,macro_author,notes,status,created_at";
+  "id,level_name,level_id,level_creator,video_url,recorder,fps,macro_author,notes,status,created_at";
 
 export function formatDate(iso: string | null): string {
   if (!iso) return "";

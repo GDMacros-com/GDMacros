@@ -15,6 +15,8 @@ export function macroFileExtension(recorder: string): ".gdr" | ".gdr2" {
 
 /** One downloadable macro. A level can carry any number of these. */
 export interface MacroInput {
+  /** Last playback test, or null when not recorded. */
+  testedAt?: string | null;
   /** Who recorded this particular macro. */
   author: string;
   /** Which tool it was recorded with. */

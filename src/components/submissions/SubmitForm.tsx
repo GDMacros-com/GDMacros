@@ -1,5 +1,6 @@
 "use client";
 
+import { parseFps } from "@/lib/fps";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { AuthField, FormError, SubmitButton } from "@/components/auth/fields";
@@ -64,6 +65,7 @@ export default function SubmitForm({ username }: { username: string }) {
   const [manualBusy, setManualBusy] = useState(false);
 
   // The rest
+  const [fps, setFps] = useState("");
   const [recorder, setRecorder] = useState("");
   const [macroAuthor, setMacroAuthor] = useState("");
   const [notes, setNotes] = useState("");
@@ -161,6 +163,7 @@ export default function SubmitForm({ username }: { username: string }) {
     if (!SUBMISSION_RECORDERS.includes(recorder as (typeof SUBMISSION_RECORDERS)[number]))
       next.recorder = "Choose which tool recorded this macro.";
     if (!macroAuthor.trim()) next.macroAuthor = "Enter who recorded the macro.";
+    if (parseFps(fps) === null) next.fps = "Enter the positive FPS used to record this macro.";
     const fileProblem = validateFile(file, recorder);
     if (fileProblem) next.file = fileProblem;
     setErrors(next);
@@ -176,6 +179,7 @@ export default function SubmitForm({ username }: { username: string }) {
       body.append("levelCreator", level!.creator);
       body.append("videoUrl", video ? `https://www.youtube.com/watch?v=${video.videoId}` : "");
       body.append("recorder", recorder);
+      body.append("fps", fps);
       body.append("macroAuthor", macroAuthor);
       body.append("notes", notes);
       if (file) body.append("file", file);
@@ -474,6 +478,13 @@ export default function SubmitForm({ username }: { username: string }) {
             ))}
           </select>
           {errors.recorder && <p className="mt-1.5 text-[12px] text-rose">{errors.recorder}</p>}
+          <label htmlFor="fps" className="mt-5 block text-[12.5px] font-semibold text-text-dim">Recording FPS (required)</label>
+          <input id="fps" name="fps" type="number" step="any" required value={fps}
+            onChange={e => { setFps(e.target.value); setErrors(p => ({ ...p, fps: undefined })); }}
+            placeholder="e.g. 240" aria-describedby="fps-help" aria-invalid={!!errors.fps}
+            className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-text outline-none focus:border-accent" />
+          <p id="fps-help" className="mt-1.5 text-[12px] text-muted">Use the rate this file was recorded at. Any positive FPS is accepted, including decimals.</p>
+          {errors.fps && <p role="alert" className="mt-1.5 text-[12px] text-rose">{errors.fps}</p>}
         </div>
 
         <AuthField

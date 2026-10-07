@@ -120,6 +120,7 @@ function MacroCardBlock({ macro }: { macro: Macro }) {
           </span>
         </span>
         <div className="mt-2"><FpsBadge macros={[macro]} /></div>
+        {macro.testedAt && <p className="mt-2 text-[11.5px] text-muted">Last tested <time dateTime={macro.testedAt}>{macro.testedAt}</time></p>}
       </div>
 
       {unavailable ? (

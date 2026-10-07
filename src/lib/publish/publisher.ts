@@ -107,6 +107,7 @@ interface TrustedSubmission {
   level_creator: string | null;
   video_url: string | null;
   recorder: string;
+  fps: number;
   macro_author: string;
   storage_path: string;
   submitted_by: string;
@@ -443,6 +444,7 @@ export async function runPublish(
       videoUrl: sub.video_url,
       macroAuthor: sub.macro_author,
       recorder: sub.recorder,
+      fps: sub.fps,
       downloadLink: assetUrl,
       addedAt: todayIso(),
     };

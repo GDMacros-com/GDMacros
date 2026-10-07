@@ -136,7 +136,7 @@ check("owners or admins alone can read tickets", /auth\.uid\(\)\) = opened_by or
 check("message reads inherit the ticket owner check", /support_ticket_messages for select[\s\S]*t\.opened_by = \(select auth\.uid\(\)\) or private\.is_admin\(\)/.test(mig));
 check("expired transcripts are denied exactly at their deadline", /delete_after is null or delete_after > now\(\)/.test(mig));
 check("the privacy page names private ticket visibility", /Only you, admins and mods can read that thread/i.test(flat(src.privacy)));
-check("the privacy page names the fixed retention", /permanently deleted 30 days after closure/i.test(flat(src.privacy)));
+check("the privacy page names the fixed retention", /scheduled for deletion 30 days after closure/i.test(flat(src.privacy)));
 
 console.log("Closing, notifications, email and retention");
 check("staff can close in the action", /closeSupportTicket[\s\S]*canCurrentUserModerate\(\)/.test(src.actions));

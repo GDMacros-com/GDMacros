@@ -19,6 +19,8 @@ export interface MacroInput {
   author: string;
   /** Which tool it was recorded with. */
   recorder: Recorder;
+  /** Recording frame rate; positive finite values, including decimals. */
+  fps: number;
   /** Where the file is hosted, e.g. "Google Drive". */
   downloadType: string;
   /** Direct link to the macro file. */
@@ -61,6 +63,8 @@ export interface LevelInput {
   macroAuthor?: string;
   /** @deprecated */
   recorder?: Recorder;
+  /** @deprecated Legacy recording frame rate. */
+  fps?: number;
   /** @deprecated */
   downloadType?: string;
   /** @deprecated */

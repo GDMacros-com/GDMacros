@@ -90,8 +90,8 @@ export default function PrivacyPage() {
             "Some public catalog pages contain Google AdSense advertising.",
             "Where consent is required, you can accept, refuse, or manage advertising choices.",
             "An account stores what it needs to be an account, plus what you choose to give it.",
-            "Your email address is private. Your username and your macros are public.",
-            "We only email you about your account, your submissions, and changes to these documents.",
+            "Your email address is not publicly listed. Your username and accepted macros are public.",
+            "We send account, submission, support-ticket and important service or policy messages, not marketing email.",
           ]}
         />
         <p>The rest of this page is the detail behind those points.</p>
@@ -108,8 +108,10 @@ export default function PrivacyPage() {
           Your browser keeps a few small preferences locally so the site behaves sensibly between
           visits: things like your theme (<Key>gdm-theme</Key>), how you like the list laid out,
           what you viewed recently, and your favorites (<Key>gdmacros:favorites</Key>). These live in
-          your browser&apos;s local storage. They are not sent to us, they are not an identifier, and
-          clearing your site data removes them.
+          your browser&apos;s local storage. Theme, layout and recent-view preferences stay on your
+          device. Favorites can sync to your account when you sign in; the browser also keeps an
+          account identifier and pending changes so it does not mix different users&apos; lists.
+          Clearing your site data removes these local copies.
         </p>
       </Section>
 
@@ -196,8 +198,8 @@ export default function PrivacyPage() {
           setting changes the stored value; removing the feature or the account removes it.
         </p>
         <p>
-          Signed out, favorites stay in your browser only. We do not know what they are and they do
-          not leave your device.
+          Signed out, new favorite changes stay in your browser. When you sign in, the site can merge
+          those changes into your account so favorites are available on other devices.
         </p>
       </Section>
 
@@ -205,15 +207,14 @@ export default function PrivacyPage() {
         <p>Submitting a macro stores what is needed to review and publish it:</p>
         <Bullets
           items={[
-            "Which account submitted it, and the level, video link, recorder, macro author and any notes you entered.",
+            "Which account submitted it, and the level, video link, recorder, recording FPS, macro author and any notes you entered.",
             "The .gdr or .gdr2 file itself.",
             "Timestamps and the current review status.",
           ]}
         />
         <p>
-          The uploaded file goes into private storage. It is not public and not listed, and no
-          browser can reach it directly. Only an admin or mod reviewing your submission can open it, and
-          only through a short-lived link generated for that review. A reviewer can correct details
+          The uploaded file goes into private storage. It is not publicly listed or available through an anonymous storage URL. Authorised admins and mods can open it through short-lived review links. Anyone given
+          one of those links can use it until it expires, so reviewers must not share it. A reviewer can correct details
           such as a missing video link before publishing.
         </p>
       </Section>
@@ -225,7 +226,7 @@ export default function PrivacyPage() {
           confirm the macro is really live. Once that is confirmed, the private copy of your upload
           is deleted.
         </p>
-        <p>Public means the macro itself, and the credits shown beside it: the level, the recorder, and the macro author. Also public:</p>
+        <p>Public means the macro itself, and the credits shown beside it: the level, the recorder, the recording FPS, and the macro author. Also public:</p>
         <Bullets
           items={[
             "Your username, once you choose one.",
@@ -237,9 +238,12 @@ export default function PrivacyPage() {
           ]}
         />
         <p>
-          Nothing private travels with a published macro. The public file is named after the macro
-          author, the level and the recorder. It does not contain your email address, your account
-          ID, your submission notes, or anything from the review process.
+          We do not add your account email, internal account ID, submission notes or review records
+          to the public catalog. The uploaded macro file itself is published without a general
+          metadata-removal step: any names, comments or other information embedded in that file
+          can become public. Check your file before submitting and do not include secrets or
+          personal information you do not want to share. Public catalog entries and credits also
+          appear in GitHub history; removing a current entry does not erase existing copies.
         </p>
       </Section>
 
@@ -273,14 +277,14 @@ export default function PrivacyPage() {
         <p>
           When you are signed in, a suggestion or broken-macro report opens a private support
           thread. It stores your account ID, username, the title and messages, timestamps, its
-          status, and the macro page details when the report concerns a download. Only you, admins and mods can read that thread.
+          status, and the macro page details when the report concerns a download or a level request. Only you, admins and mods can read that thread.
         </p>
         <p>
           Open tickets stay available so the conversation can continue. When an admin or mod resolves or
           closes one, you receive an in-app notification and an email with a link to its transcript.
-          The ticket, every message, its notification, and the delivery job are permanently deleted
-          30 days after closure. Access stops at that deadline even if the scheduled deletion is a
-          few seconds late. An admin or mod can also permanently delete a ticket and its transcript earlier.
+          The ticket, every message, its notification, and the delivery job are scheduled for deletion
+          30 days after closure. Access through the site stops at that deadline even if the
+          scheduled cleanup is delayed. An admin or mod can also permanently delete a ticket and its transcript earlier.
         </p>
         <p>
           An admin or mod can block an account from opening new tickets when the feature is abused. The
@@ -346,7 +350,7 @@ export default function PrivacyPage() {
             </>,
             <>
               <span className="font-semibold text-text">Google</span> is involved through Gmail,
-              where support mail is read; Google Translate, if you use the language menu; and Google
+              where support mail is read; Google Translate, whose widget loads with the page to provide the language menu; and Google
               AdSense, which provides consent choices and advertising on selected public pages.
             </>,
             <>
@@ -357,12 +361,14 @@ export default function PrivacyPage() {
             <>
               <span className="font-semibold text-text">GDBrowser</span> is used to look up Geometry
               Dash level details. Those lookups are made by our server, not by your browser, so
-              GDBrowser does not see you.
+              those lookups do not pass your account identity to GDBrowser. Opening a GD Browser
+              link yourself does contact it directly.
             </>,
             <>
               <span className="font-semibold text-text">YouTube</span> provides showcase videos.
-              Searching for one during submission happens on our server and uses no API key. An
-              embedded player on a macro page is loaded by your browser and is subject to
+              Searching for one during submission happens on our server and uses no API key. Thumbnails load directly from Google image hosts, including before you play a video.
+              Clicking play loads the privacy-enhanced YouTube player in your browser. Those
+              requests expose ordinary connection information to Google and are subject to
               Google&apos;s terms.
             </>,
             <>
@@ -372,7 +378,8 @@ export default function PrivacyPage() {
                 About
               </Link>{" "}
               page. That request is made by your browser. It asks only for the public Discord
-              profile of the site owner, and there is no way to make it look up anyone else.
+              profiles shown on that page. The browser can also load their avatars from Discord&apos;s
+              image servers; these providers receive ordinary connection information.
             </>,
           ]}
         />
@@ -393,11 +400,27 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
+      <Section title="Staff access and moderation records">
+        <p>
+          Mods can review submissions, manage support tickets and run random quality checks on
+          published macros. Admins also have account lookup, site status, review activity and
+          service-message tools. We store moderation decisions, reasons, staff account identifiers,
+          timestamps and quality-check notes to operate and troubleshoot these features. A mod role
+          does not grant account-email lookup or bulk-email access.
+        </p>
+        <p>
+          These records are not public catalog data. Some operational records are retained separately
+          from the account that created them; deleting an account can remove its association without
+          deleting the entire moderation record. Please avoid unnecessary personal information in
+          submissions, tickets and moderation notes.
+        </p>
+      </Section>
+
       <Section title="What stays private">
         <p>Everything not listed as public above. In particular:</p>
         <Bullets
           items={[
-            "Your email address, visible only to you and authorised administrators using the exact account lookup.",
+            "Your account email address, accessible to authorised admins through the exact account lookup and to the services handling authentication and email. Mods cannot use the account-email lookup. If you include an email address in a support thread or uploaded file, its readers can see it.",
             "Your password, which is only ever stored hashed.",
             "Files you upload, until and unless a macro is accepted and published.",
             "Your submission notes and anything from the review process.",
@@ -421,10 +444,10 @@ export default function PrivacyPage() {
             "A published macro stays in the catalog, because it is catalog content rather than account data.",
             "An open support ticket stays while the conversation is active. A resolved or otherwise closed ticket, its transcript and its notification are permanently deleted after 30 days, or earlier if an admin or mod deletes the ticket.",
             "Your other account data, including settings, favorites, notifications and your submission history, stays while the account exists.",
-            "Delivery records hold a destination address only while a retry could still need it, and are erased once the message is settled.",
+            "A queued submission-result email can retain a destination address while a retry is possible; settling that job clears the address, not necessarily the delivery record or message. Other delivery records can remain for retry control and support. Account-linked records are removed with the account, and ticket jobs follow the ticket deletion rules.",
             "Support email stays in the mailbox unless it is deleted by hand.",
             "The ad-block notice dismissal lasts only for the current browser-tab session. Google's advertising and consent data follows Google's own retention settings and your consent choices.",
-            "Deleting your account removes the account and the data tied to it. Macros already published stay in the catalog.",
+            "Deleting your account removes its account-linked records. Published macros and credits remain in the catalog and its history. Separately received support email and provider logs or backups are not erased by that database operation.",
           ]}
         />
       </Section>
@@ -445,11 +468,26 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
+      <Section title="Your privacy rights">
+        <p>
+          Contact the GDMacros operator at <Mail /> to request access to, correction of or deletion
+          of your personal data. Depending on the law that applies, you may also have rights to
+          portability, restriction and objection, and to complain to a data-protection authority.
+          Where processing relies on consent, you can withdraw it without undoing processing that
+          already happened. We may need to verify account ownership before handling a request.
+        </p>
+        <p>
+          Service providers may process information in countries other than your own. Their privacy
+          notices describe their processing and international-transfer arrangements. Contact us if
+          you need information about the providers used for your account.
+        </p>
+      </Section>
+
       <Section title="Security">
         <p>
           Private data sits behind database access rules rather than being hidden by the interface,
-          so a request for someone else&apos;s data is refused by the database itself. Uploaded files
-          are in private storage that no browser can read. Nobody can promise perfect security and we
+          so a request for someone else&apos;s data is refused by the database itself. Unpublished uploads
+          are in private storage, with short-lived links for authorised review. Nobody can promise perfect security and we
           are not going to, but the design assumes the front end can be bypassed.
         </p>
       </Section>
@@ -457,8 +495,8 @@ export default function PrivacyPage() {
       <Section title="Children">
         <p>
           Geometry Dash has a young audience. We do not knowingly collect more from a younger visitor
-          than from anyone else, and you can use the whole catalog without an account and therefore
-          without giving us anything. If you believe a child&apos;s information is stored here and it
+          than from anyone else, and you can use the whole catalog without an account. Hosting and third-party services can still receive the browsing
+          information described above. If you believe a child&apos;s information is stored here and it
           should not be, write to <Mail /> and we will remove it.
         </p>
       </Section>

@@ -157,7 +157,7 @@ export default function MySubmissions({
                   <div className="min-w-0">
                     <p className="text-[14.5px] font-bold text-text">{s.level_name}</p>
                     <p className="mt-0.5 text-[12.5px] text-muted">
-                      ID <span className="tabular-nums">{s.level_id}</span> &middot; {s.recorder}
+                      ID <span className="tabular-nums">{s.level_id}</span> &middot; {s.recorder} &middot; {s.fps} FPS
                     </p>
                   </div>
                   <StatusPill status={s.status} />

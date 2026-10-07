@@ -14,7 +14,7 @@ const SECTIONS = [
     title: "What belongs here",
     items: [
       "Macros recorded with Mega Hack, xdBot or zBot. Nothing else is accepted.",
-      "The level has to be possible on 240 FPS.",
+      "Any positive recording FPS is accepted. State the actual rate used for your macro; decimals are allowed.",
       "The level has to exist in-game and have a working level ID.",
       "A showcase video is optional but encouraged. It becomes the entry's thumbnail automatically.",
     ],

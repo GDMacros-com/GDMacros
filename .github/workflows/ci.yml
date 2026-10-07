@@ -97,5 +97,8 @@ jobs:
       - name: Moderator permissions (PostgreSQL)
         run: npm run test:mod
 
+      - name: Recording FPS
+        run: npm run test:fps
+
       - name: ZBot catalog
         run: npm run test:zbot

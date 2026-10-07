@@ -130,10 +130,22 @@ export default function TermsPage() {
         <Bullets
           items={[
             "You recorded it, or you have permission from the person who did to submit and distribute it.",
-            "The level, recorder, author and other details you enter are accurate as far as you know.",
+            "The level, recorder, recording FPS, author and other details you enter are accurate as far as you know.",
             "The file is a genuine .gdr or .gdr2 macro and not malware, a joke file, or anything designed to cause harm.",
           ]}
         />
+        <p>
+          You must state the FPS used to record each macro. Any positive finite rate is accepted,
+          including decimal rates; there is no 240 FPS limit. Use the rate shown for the individual
+          download when playing it back. An FPS label describes the recording and is not a promise
+          that it will work with every game version or tool. Existing catalog recordings were
+          labelled 240 FPS when this field was introduced.
+        </p>
+        <p>
+          The file you submit may contain embedded names or other metadata. Remove anything you do
+          not want published before submitting; file validation does not guarantee that all metadata
+          is removed or that a file is harmless.
+        </p>
         <p>
           Submitting something does not mean it gets published. Every submission is reviewed, and it
           can be turned down. The{" "}
@@ -160,7 +172,7 @@ export default function TermsPage() {
             "Renaming the public file so it follows the site's naming convention.",
             "Copying it to our public download hosting.",
             "Publicly listing it and serving it as a download.",
-            "Showing the macro author, the level and the recorder alongside it.",
+            "Showing the macro author, the level, the recorder and the recording FPS alongside it.",
             "Keeping reasonable backup copies.",
           ]}
         />
@@ -184,18 +196,34 @@ export default function TermsPage() {
       </Section>
 
       <Section title="Moderation">
+        <p>
+          Admins and mods review submissions, handle support tickets and check published macros.
+          Mods have access to those tasks only; account administration and service-wide messaging
+          remain admin tasks. Reviewers may correct submission details before publication.
+        </p>
         <p>We can:</p>
         <Bullets
           items={[
             "Turn down a submission.",
             "Remove a macro that is broken, mislabelled, or not what it claimed to be.",
-            "Stop an account from submitting.",
+            "Stop an account from submitting or opening new support tickets when those features are abused.",
+            "Reply to, resolve, close or permanently delete support tickets.",
             "Remove abusive accounts and abusive content.",
           ]}
         />
         <p>
           We try to be reasonable and we will explain a decision if you ask, but we are not promising
           a formal appeals process or that every decision is final.
+        </p>
+      </Section>
+
+      <Section title="Support and requests">
+        <p>
+          Signed-in users can open private tickets for suggestions, broken macros and level requests.
+          Opening a request does not promise that a macro will be recorded or published. Admins and
+          mods can read and respond to these threads. Closed tickets normally remain accessible for
+          30 days and may be deleted earlier by staff, so keep any information you need. If you cannot
+          use tickets, contact <Mail />.
         </p>
       </Section>
 
@@ -208,7 +236,7 @@ export default function TermsPage() {
             "Try to get around review, moderation or access controls.",
             "Attack the site or deliberately disrupt it for other people.",
             "Generate or encourage artificial advertisement views or clicks.",
-            "Harass anyone through submissions, usernames or support email.",
+            "Harass anyone through submissions, usernames, support tickets or support email.",
           ]}
         />
       </Section>
@@ -216,7 +244,7 @@ export default function TermsPage() {
       <Section title="Services we depend on">
         <p>
           {site.name} runs on services we do not control: GitHub, Supabase, Vercel, Resend, YouTube,
-          GDBrowser, Google Translate and Google AdSense. If one of them has an outage or changes its
+          GDBrowser, Google Translate, Google AdSense, Lanyard and Discord. If one of them has an outage or changes its
           rules, parts of the site can stop working, and that is outside our hands. Their own terms
           apply when you interact with them directly, such as when you download a file from GitHub,
           watch an embedded video or receive an advertisement from Google.

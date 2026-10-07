@@ -21,6 +21,7 @@ export interface AdminRow {
   level_creator: string | null;
   video_url: string | null;
   recorder: string;
+  fps: number;
   macro_author: string;
   notes: string | null;
   status: string;
@@ -192,6 +193,7 @@ function Card({
             </span>
           </Field>
           <Field label="Recorder">{row.recorder}</Field>
+          <Field label="Recording FPS">{row.fps} FPS</Field>
           <Field label="File size">
             {row.file_size ? `${(row.file_size / 1024).toFixed(1)} KB` : "Unknown"}
           </Field>

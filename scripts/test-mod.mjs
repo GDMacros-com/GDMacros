@@ -47,9 +47,21 @@ for (const name of fs.readdirSync('supabase/migrations').filter(n => n.endsWith(
   // every table, policy, trigger and application function is applied unchanged.
   const sql = fs.readFileSync(`supabase/migrations/${name}`, 'utf8')
     .replace('create extension if not exists pg_cron with schema pg_catalog;', '');
-  try { await db.exec(sql); } catch (error) { console.error(`Migration failed: ${name}`); throw error; }
+  try {
+    await db.exec(sql);
+    if (name === '0019_mod_role.sql') {
+      await db.exec(sql); // Reapplying the moderator migration remains safe before later schema changes.
+      await db.exec(`insert into auth.users(id,email) values ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','legacy@example.test');
+        insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size)
+        values ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','Legacy','123','xdBot','Tester',100);`);
+    }
+    if (name === '0020_recording_fps.sql') {
+      assert.equal((await rows("select fps from public.submissions where level_name='Legacy'"))[0].fps,240);
+      await db.exec("delete from auth.users where id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'");
+    }
+  } catch (error) { console.error(`Migration failed: ${name}`); throw error; }
 }
-console.log('Applied all migrations through 0019');
+console.log('Applied all migrations');
 for (const [name, id] of Object.entries(ids)) {
   await db.query('insert into auth.users(id,email,email_confirmed_at) values ($1,$2,now())', [id, `${name}@example.test`]);
   await db.query('insert into public.profiles(id,username) values ($1,$2)', [id, `test_${name}`]);
@@ -61,8 +73,8 @@ const ticket = (await rows("select * from public.create_support_ticket('suggesti
 await as('other');
 const otherTicket = (await rows("select * from public.create_support_ticket('suggestion','Other ticket','Another private thread')"))[0].ticket_id;
 await db.exec('reset role');
-const submission = (await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size)
-  values ($1,'Test level','123','xdBot','Tester',100) returning id`, [ids.user]))[0].id;
+const submission = (await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps)
+  values ($1,'Test level','123','xdBot','Tester',100,240) returning id`, [ids.user]))[0].id;
 
 await check('anonymous callers cannot read moderation data or execute moderation functions', async () => {
   await as('anon');
@@ -159,7 +171,7 @@ await check('mods can edit, claim, release and run the full publish lifecycle', 
 });
 await check('mods can reject submissions and create the submitter notification', async () => {
   await db.exec('reset role');
-  const id=(await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size) values ($1,'Reject test','124','zBot','Tester',100) returning id`,[ids.user]))[0].id;
+  const id=(await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps) values ($1,'Reject test','124','zBot','Tester',100,240) returning id`,[ids.user]))[0].id;
   await as('mod');
   await rows('select public.reject_submission($1,$2)',[id,'Invalid recording']);
   assert.equal((await rows('select * from public.submissions where id=$1',[id])).length,0);
@@ -217,14 +229,33 @@ await check('role grants stay owner-managed and the assignment snippet validates
     await db.exec('rollback');
   }
 });
-await check('migration can be reapplied without removing grants or reopening anonymous execution', async () => {
+
+
+await check('FPS is required, finite and positive at the database boundary', async () => {
   await db.exec('reset role');
-  await db.exec(fs.readFileSync('supabase/migrations/0019_mod_role.sql','utf8'));
-  const functions = await rows(`select p.oid, p.proname from pg_proc p join pg_namespace n on p.pronamespace=n.oid
-    where n.nspname in ('public','private') and p.prosrc like '%private.can_moderate()%'`);
-  for (const fn of functions) assert.equal((await rows("select has_function_privilege('anon',$1::oid,'execute') as allowed",[fn.oid]))[0].allowed,false,fn.proname);
-  await as('mod');
-  assert.equal((await rows('select private.can_moderate() as allowed'))[0].allowed,true);
+  for (const value of [null, 0, -1, 'NaN', 'Infinity', '-Infinity']) {
+    await assert.rejects(db.query(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps)
+      values ($1,'Invalid FPS','999','xdBot','Tester',100,$2)`, [ids.user,value]), /submission_fps_valid|not-null/);
+  }
+  assert.equal((await rows("select to_regprocedure('public.create_submission(uuid,text,text,text,text,text,text,text,integer)') as old"))[0].old,null);
 });
+await check('declared FPS survives submission, staff editing and the publish snapshot', async () => {
+  await db.exec('reset role');
+  const id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+  await db.query("insert into storage.objects(bucket_id,name) values ('macro-submissions',$1)",[`${ids.user}/${id}.gdr2`]);
+  await as('user');
+  await rows('select public.create_submission($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[id,'FPS test','999',null,null,'xdBot','Tester',null,100,59.94]);
+  assert.equal((await rows('select fps from public.submissions where id=$1',[id]))[0].fps,59.94);
+  await denied('select public.admin_update_submission(p_id => $1, p_fps => $2)',[id,360]);
+  await as('mod');
+  for(const rate of [0,-1,'NaN','Infinity']) await denied('select public.admin_update_submission(p_id => $1, p_fps => $2)',[id,rate],/submission_fps_valid/);
+  await rows('select public.admin_update_submission(p_id => $1, p_fps => $2)',[id,1000000.25]);
+  await rows('select public.start_processing($1)',[id]);
+  assert.equal((await rows('select * from public.begin_publish($1)',[id]))[0].fps,1000000.25);
+  await denied('select public.admin_update_submission(p_id => $1, p_fps => $2)',[id,240],/can no longer be edited|publishing has already started/);
+  await db.exec('reset role');
+  await denied('update public.submissions set fps=240 where id=$1',[id],/immutable/);
+});
+
 await db.close();
 console.log(`${checks} PostgreSQL permission scenarios passed`);

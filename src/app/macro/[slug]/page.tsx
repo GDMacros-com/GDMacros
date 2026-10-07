@@ -1,3 +1,4 @@
+import FpsBadge from "@/components/FpsBadge";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -118,6 +119,7 @@ function MacroCardBlock({ macro }: { macro: Macro }) {
             {macro.recorder}
           </span>
         </span>
+        <div className="mt-2"><FpsBadge macros={[macro]} /></div>
       </div>
 
       {unavailable ? (

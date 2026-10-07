@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
     levelCreator: String(form.get("levelCreator") ?? ""),
     videoUrl: String(form.get("videoUrl") ?? ""),
     recorder: String(form.get("recorder") ?? ""),
+    fps: String(form.get("fps") ?? ""),
     macroAuthor: String(form.get("macroAuthor") ?? ""),
     notes: String(form.get("notes") ?? ""),
   };
@@ -187,6 +188,7 @@ export async function POST(request: NextRequest) {
     // Canonical, rebuilt from the verified id.
     p_video_url: videoUrl,
     p_recorder: values.recorder,
+    p_fps: values.fps,
     p_macro_author: values.macroAuthor,
     p_notes: values.notes,
     p_file_size: bytes.byteLength,

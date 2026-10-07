@@ -46,6 +46,7 @@ function readMacros(entry) {
     return [{
       author: entry.macroAuthor,
       recorder: entry.recorder,
+      fps: entry.fps,
       downloadType: entry.downloadType,
       downloadLink: entry.downloadLink,
     }];
@@ -93,6 +94,9 @@ data.forEach((entry, i) => {
 
     for (const field of MACRO_REQUIRED) {
       if (blank(m[field])) errors.push(`${where}: missing required field "${field}"`);
+    }
+    if (typeof m.fps !== "number" || !Number.isFinite(m.fps) || m.fps <= 0) {
+      errors.push(`${where}: fps must be a positive finite number`);
     }
     if (!blank(m.recorder) && !RECORDERS.includes(m.recorder)) {
       errors.push(`${where}: recorder must be one of: ${RECORDERS.join(", ")} (got ${JSON.stringify(m.recorder)})`);

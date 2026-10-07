@@ -33,6 +33,7 @@ Open `http://localhost:3000`. Without service credentials, you can work on the p
 | `npm run validate` | Validate the catalog |
 | `npx tsc --noEmit` | Check TypeScript |
 | `npm run test:fps` | FPS parsing, catalog propagation and backfill checks |
+| `npm run test:catalog-editor` | Catalog edits, replacement validation, authorization and concurrency |
 | `npm run test:mod` | Real PostgreSQL permission and migration checks using PGlite, plus application gates |
 
 Other suites are `test:publish`, `test:migrate`, `test:translate`, `test:email`, `test:legal`, `test:admin`, `test:account`, `test:support`, `test:zbot` and `test:ads`. CI runs the test suites, catalog validation, typecheck and build for PRs and pushes to `main`. Tests use local fixtures and mocked external services; they do not send real emails or publish real macros.
@@ -72,6 +73,7 @@ The GitHub App must have Contents write access to `GDMacros-com/GDMacros` and `G
 | Submission blocks and unblocks | No | Yes | Yes |
 | All support tickets, replies, closure, deletion and ticket blocks | No | Yes | Yes |
 | Random quality checks | No | Yes | Yes |
+| Edit or remove published macros and change last-tested dates | No | No | Yes |
 | Account lookup, review activity, site status and mass email | No | No | Yes |
 
 Roles are assigned in Supabase by the operator, not through public signup. See [Setting up moderators](docs/mod-role.md). An account with both roles retains admin access.
@@ -84,7 +86,7 @@ Support includes suggestions, broken-macro reports and level requests. Closed ti
 
 ## Editing the catalog
 
-The preferred contribution path is the website's submission form. Manual catalog edits are also possible through a PR. Each level contains one or more macros:
+The preferred contribution path is the website's submission form. Admins can edit published macros at `/admin/macros`; moderators cannot. The editor supports shared level details, per-macro metadata, replacement files and removal, with a confirmation step. It saves through the existing GitHub publisher integration and the public site updates after deployment. Manual catalog edits are also possible through a PR. See [Published macro editor](docs/catalog-editor.md). Each level contains one or more macros:
 
 ```json
 {
@@ -98,13 +100,16 @@ The preferred contribution path is the website's submission form. Manual catalog
       "recorder": "xdBot",
       "downloadType": "GitHub",
       "downloadLink": "https://github.com/OWNER/REPO/releases/download/TAG/FILE.gdr2",
-      "fps": 240
+      "fps": 240,
+      "testedAt": "2026-10-07"
     }
   ]
 }
 ```
 
 Replace example values with real data. `name`, `creator`, `levelId` and the macro fields above are required. Optional level fields are `video`, `thumbnail`, `slug`, `description` and `addedAt` (`YYYY-MM-DD`). `recorder` is exactly `Mega Hack`, `xdBot` or `zBot`. A level can contain recordings with different FPS values.
+
+Optional per-macro `testedAt` is a real `YYYY-MM-DD` date, or `null`/omitted when unknown. It is shown beside the recording FPS. New publications default to the publication date, following the operator’s upload-time testing workflow. Existing dates are backfilled from first catalog appearance in Git history; this records the upload baseline, not a new playback verification. Admins can correct or clear the date, and replacing a file does not silently update it.
 
 Macro pages use `/macro/<level-slug>`. Slugs must be unique. Without a thumbnail override, YouTube thumbnails are used when a video is present, otherwise a generated placeholder. The catalog supports search, recorder filtering, sorting and list/grid views. Run `npm run validate` before committing.
 
@@ -118,7 +123,7 @@ Connect the repository to Vercel and configure the service variables above. Keep
 
 The old GitHub Pages workflow and export configuration remain in the repository, but static hosting cannot provide the current site's authenticated routes, server actions, API endpoints or scheduled work. Use a server-capable deployment for the complete website.
 
-For this release, follow [FPS and policy rollout](docs/fps-policy-rollout.md) before merging. No new environment variables are required.
+The published macro editor needs no new SQL migration or environment variables. Merge and deploy, then follow [the editor rollout checks](docs/catalog-editor.md). The earlier [FPS and policy rollout](docs/fps-policy-rollout.md) still applies to deployments that have not installed migrations 020 and 021.
 
 ## Advertising, language and analytics
 
@@ -152,3 +157,7 @@ The policies describe implemented behavior, not a certification of legal complia
 - `scripts`: validation, offline regression suites and migration tooling
 
 Not affiliated with, endorsed by or connected to RobTop Games.
+
+## Playback guide and pricing
+
+The installation guide covers tool-specific imports and troubleshooting. Catalog files are free to download. xdBot is free, Mega Hack is paid, and zBot requires a paid key to import premade files despite offering free recording/playback of your own run. The guide links to the tool authors’ documentation and store pages.

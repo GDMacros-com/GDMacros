@@ -22,6 +22,7 @@ import { RECORDERS, type Recorder } from "@/lib/types";
 export const PUBLISHED_DOWNLOAD_TYPE = "GitHub";
 
 export interface CatalogMacro {
+  testedAt?: string | null;
   author: string;
   recorder: string;
   fps: number;
@@ -108,6 +109,7 @@ function buildMacro(input: PublicationInput): CatalogMacro {
     author: input.macroAuthor,
     recorder: input.recorder,
     fps: input.fps,
+    testedAt: input.addedAt,
     downloadType: PUBLISHED_DOWNLOAD_TYPE,
     downloadLink: input.downloadLink,
   };

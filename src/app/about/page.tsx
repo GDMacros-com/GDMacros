@@ -20,9 +20,9 @@ const SECTIONS = [
     title: "What you get",
     items: [
       "A searchable list of macros, each one showing the level it plays, who built that level and who recorded the macro.",
-      "Downloads that stay up. We host every file ourselves rather than pointing at someone else's upload.",
+      "Macro files hosted in our GitHub Releases repository, with a support inbox for reporting broken downloads.",
       "A link straight through to the level on GD Browser, so you can check it before you download.",
-      "No accounts, no ads, no paywalls. Take what you want.",
+      "Browse and download free without an account. Sign in to submit macros, save favorites or use support tickets. Advertising, where enabled, helps support the site.",
     ],
   },
   {
@@ -30,7 +30,7 @@ const SECTIONS = [
     items: [
       "Not a records list. Nothing here is a legitimate completion and none of it is presented as one.",
       "Not a ranking. The list is alphabetical, and no macro sits above another.",
-      "Not a mod menu. You will need Mega Hack, xdBot or zBot to play these files back.",
+      "Not a mod menu. You will need a compatible replay tool. Mega Hack is paid, and zBot requires a paid key to import these downloads.",
     ],
   },
 ];

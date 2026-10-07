@@ -1,3 +1,4 @@
+import { validDate } from "./catalog-editor";
 import fs from "node:fs";
 import path from "node:path";
 import { RECORDERS, type Level, type LevelInput, type Macro } from "./types";
@@ -121,6 +122,9 @@ export function getAllLevels(): Level[] {
         }
         if (typeof m.fps !== "number" || !Number.isFinite(m.fps) || m.fps <= 0) {
           throw new Error(`${at} needs a positive finite recording FPS.`);
+        }
+        if (m.testedAt != null && (typeof m.testedAt !== "string" || !validDate(m.testedAt))) {
+          throw new Error(`${at} needs a valid last-tested date or null.`);
         }
         return { ...(m as Macro), position: j + 1 };
       });

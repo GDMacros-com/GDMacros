@@ -1,5 +1,5 @@
 /**
- * Tests for the revamped admin portal: its seven tools, the submission editor,
+ * Tests for the revamped admin portal: its eight tools, the submission editor,
  * and the status board.
  *
  * Run with `npm run test:admin`. No network, no database, no keys.
@@ -95,7 +95,7 @@ for (const [name, file] of [
   check(`the ${name} route exists`, fs.existsSync(path.join(ROOT, file)));
 }
 
-check("the hub offers exactly seven tools", (src.hub.match(/href: "\/admin\//g) ?? []).length === 7);
+check("the hub offers exactly eight tools", (src.hub.match(/href: "\/admin\//g) ?? []).length === 8);
 check("the hub links check submissions", src.hub.includes('"/admin/submissions"'));
 check("the hub links mail everyone", src.hub.includes('"/admin/notices"'));
 check("the hub links statistics", src.hub.includes('"/admin/status"'));

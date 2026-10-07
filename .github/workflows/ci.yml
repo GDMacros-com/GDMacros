@@ -100,5 +100,8 @@ jobs:
       - name: Recording FPS
         run: npm run test:fps
 
+      - name: Published macro editor
+        run: npm run test:catalog-editor
+
       - name: ZBot catalog
         run: npm run test:zbot

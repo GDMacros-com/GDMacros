@@ -282,8 +282,7 @@ export default function InstallPage() {
             Open zBot in game and use its load or import control to select the downloaded .gdr file.
           </Step>
           <Step n={4} title="Play from the beginning">
-            Use playback mode and start the matching level from the beginning. Keep the game at 240
-            FPS unless the macro page says otherwise.
+            Use playback mode and start the matching level from the beginning. Use the recording FPS shown beside the download on the macro page.
           </Step>
         </ol>
       </section>
@@ -356,7 +355,7 @@ export default function InstallPage() {
         </p>
         <ul className="mt-3 space-y-2.5">
           {[
-            "Frame rate. Every macro here is made to run at 240 FPS. Set your game to the same rate the macro was recorded at.",
+            "Frame rate. Macros can use different recording rates. Set playback to the FPS shown for the particular macro you downloaded.",
             "Physics bypass and speedhacks. Turn them off unless the macro says otherwise.",
             "Other mods. Anything that alters timing, gameplay or object behaviour can shift the run.",
             "The level version. If the creator updated the level after the macro was recorded, the macro no longer matches it.",

@@ -3940,5 +3940,21 @@
         "fps": 240
       }
     ]
+  },
+  {
+    "name": "Project alter",
+    "creator": "soumpeixe",
+    "levelId": "107641215",
+    "video": "https://www.youtube.com/watch?v=588_r_pfqi0",
+    "addedAt": "2026-10-07",
+    "macros": [
+      {
+        "author": "MatijaThis55",
+        "recorder": "xdBot",
+        "fps": 240,
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-107641215/MatijaThis55-Project-alter-xdBot.gdr2"
+      }
+    ]
   }
 ]

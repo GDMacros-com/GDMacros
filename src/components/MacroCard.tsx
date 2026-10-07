@@ -1,5 +1,6 @@
 "use client";
 
+import FpsBadge from "./FpsBadge";
 import Link from "next/link";
 import { hostAccent } from "@/lib/format";
 import type { Level } from "@/lib/types";
@@ -38,6 +39,7 @@ export default function MacroCard({ level, index }: { level: Level; index: numbe
         >
           {level.name}
         </h2>
+        <div className="mt-2 flex justify-end"><FpsBadge macros={level.macros} /></div>
         <CreditTabs level={level} className="mt-2" />
 
         <div className="mt-auto flex items-center gap-1.5 pt-3 text-[12px] text-muted">

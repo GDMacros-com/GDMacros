@@ -1,5 +1,6 @@
 "use client";
 
+import FpsBadge from "./FpsBadge";
 import Link from "next/link";
 import { hostAccent } from "@/lib/format";
 import type { Level } from "@/lib/types";
@@ -42,8 +43,9 @@ export default function MacroRow({ level, index }: { level: Level; index: number
         <CreditTabs level={level} className="mt-2" />
       </div>
 
-      <div className="hidden shrink-0 flex-col items-end gap-1.5 lg:flex">
-        <span className="flex items-center gap-1.5 text-[12.5px] text-text-dim">
+      <div className="flex max-w-[32%] shrink-0 flex-col items-end gap-1.5">
+        <FpsBadge macros={level.macros} />
+        <span className="hidden items-center gap-1.5 lg:flex text-[12.5px] text-text-dim">
           <DownloadIcon
             className="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-y-0.5"
             style={accent ? { color: accent } : undefined}
@@ -56,7 +58,7 @@ export default function MacroRow({ level, index }: { level: Level; index: number
             <span>{level.macros.length} downloads</span>
           )}
         </span>
-        <span className="font-mono text-[11.5px] text-muted">ID {level.levelId}</span>
+        <span className="hidden font-mono text-[11.5px] text-muted lg:inline">ID {level.levelId}</span>
       </div>
     </Link>
   );

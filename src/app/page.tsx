@@ -62,7 +62,7 @@ export default function HomePage() {
         */}
         <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-muted">
           A macro is a recording of every input in a Geometry Dash level, played back frame by
-          frame. Every one in this catalog is free, hosted by us so the links stay alive, and
+          frame. Every one in this catalog is free to download, hosted on GitHub Releases, and
           labelled with the tool it needs. Browse extreme demon macros and everything else below,
           then read{" "}
           <Link href="/install" className="font-medium text-accent-soft underline-offset-2 hover:underline">

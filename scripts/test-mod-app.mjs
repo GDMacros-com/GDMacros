@@ -74,21 +74,21 @@ await check('missing sessions, failed role reads and missing config fail closed'
   queryError = new Error('read failed'); assert.equal(await permissions.canCurrentUserModerate(),false); queryError = null;
   configured = false; assert.equal(await permissions.canCurrentUserModerate(),false); configured = true;
 });
-await check('mods see only their three tools; admins retain all seven', async () => {
+await check('mods see only their three tools; admins retain all eight', async () => {
   const page = loadApp('src/app/admin/page.tsx').default;
   roles = ['mod'];
   const html = renderToStaticMarkup(await page());
   for (const route of ['submissions','inbox','quality']) assert.ok(html.includes(`href="/admin/${route}"`));
-  for (const route of ['users','notices','status','activity']) assert.ok(!html.includes(`href="/admin/${route}"`));
+  for (const route of ['users','notices','status','activity','macros']) assert.ok(!html.includes(`href="/admin/${route}"`));
   roles = ['admin'];
-  assert.equal((renderToStaticMarkup(await page()).match(/href="\/admin\//g) ?? []).length,7);
+  assert.equal((renderToStaticMarkup(await page()).match(/href="\/admin\//g) ?? []).length,8);
 });
 await check('users cannot open moderation routes; mods cannot open administrative routes', async () => {
-  for (const name of ['submissions','inbox','quality','users','notices','status','activity']) {
+  for (const name of ['submissions','inbox','quality','users','notices','status','activity','macros']) {
     const page = loadApp(`src/app/admin/${name}/page.tsx`).default;
     roles = [];
     await assert.rejects(page({ searchParams: Promise.resolve({}) }), /NOT_FOUND/);
-    if (['users','notices','status','activity'].includes(name)) {
+    if (['users','notices','status','activity','macros'].includes(name)) {
       roles = ['mod'];
       await assert.rejects(page({ searchParams: Promise.resolve({}) }), /NOT_FOUND/);
     }

@@ -98,6 +98,10 @@ data.forEach((entry, i) => {
     if (typeof m.fps !== "number" || !Number.isFinite(m.fps) || m.fps <= 0) {
       errors.push(`${where}: fps must be a positive finite number`);
     }
+    if (m.testedAt != null) {
+      const d = typeof m.testedAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.testedAt) ? new Date(m.testedAt + "T00:00:00Z") : new Date(NaN);
+      if (!Number.isFinite(d.getTime()) || d.toISOString().slice(0,10) !== m.testedAt || m.testedAt > new Date().toISOString().slice(0,10)) errors.push(`${where}: testedAt must be a real date (YYYY-MM-DD), not in the future, or null`);
+    }
     if (!blank(m.recorder) && !RECORDERS.includes(m.recorder)) {
       errors.push(`${where}: recorder must be one of: ${RECORDERS.join(", ")} (got ${JSON.stringify(m.recorder)})`);
     }

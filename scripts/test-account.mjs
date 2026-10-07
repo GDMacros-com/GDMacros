@@ -49,7 +49,8 @@ const src = {
     read("supabase/migrations/0011_account_experience.sql") +
     read("supabase/migrations/0012_privacy_version_2026_08_24.sql") +
     read("supabase/migrations/0018_adsense_legal_versions.sql") +
-    read("supabase/migrations/0019_mod_role.sql"),
+    read("supabase/migrations/0019_mod_role.sql") +
+    read("supabase/migrations/0021_current_legal_versions.sql"),
   authors: read("src/lib/authors.ts"),
   authorPage: read("src/app/author/[slug]/page.tsx"),
   macroPage: read("src/app/macro/[slug]/page.tsx"),
@@ -323,7 +324,7 @@ check(
 );
 check(
   "privacy bounds how long a delivery record holds an address",
-  /hold a destination address only while a retry could still need it/i.test(flat(src.privacy)),
+  /retain a destination address while a retry is possible/i.test(flat(src.privacy)),
 );
 check(
   "privacy still refuses to build a mailing list from them",

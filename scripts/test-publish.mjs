@@ -370,6 +370,7 @@ function baseSubmission(over = {}) {
     level_creator: "ryamu",
     video_url: "https://www.youtube.com/watch?v=5DYQQKsUzFA",
     recorder: "Mega Hack",
+    fps: 240,
     macro_author: "Zoink",
     storage_path: `${UUID_A}/${UUID_B}.gdr2`,
     submitted_by: UUID_A,
@@ -557,6 +558,7 @@ async function main() {
     videoUrl: "https://www.youtube.com/watch?v=5DYQQKsUzFA",
     macroAuthor: "Zoink",
     recorder: "Mega Hack",
+    fps: 240,
     downloadLink: "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-73667628/Zoink-Acheron-Mega-Hack.gdr2",
     addedAt: "2026-08-21",
   };
@@ -865,6 +867,7 @@ async function main() {
       submission_id: "44444444-4444-4444-8444-444444444444",
       macro_author: "OtherPlayer",
       recorder: "xdBot",
+    fps: 240,
     }));
     const [ra, rb] = await Promise.all([
       pub.runPublish(dbA.client, UUID_B),

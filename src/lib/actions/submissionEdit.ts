@@ -1,5 +1,6 @@
 "use server";
 
+import { parseFps } from "@/lib/fps";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { canCurrentUserModerate } from "@/lib/admin";
@@ -32,6 +33,7 @@ export interface EditFields {
   levelCreator?: string;
   videoUrl?: string;
   recorder?: string;
+  fps?: string;
   macroAuthor?: string;
 }
 
@@ -55,16 +57,22 @@ export async function updateSubmission(id: string, fields: EditFields): Promise<
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Database unavailable." };
 
-  const payload: Record<string, string | null> = {
+  const payload: Record<string, string | number | null> = {
     p_id: id,
     p_level_name: null,
     p_level_id: null,
     p_level_creator: null,
     p_video_url: null,
     p_recorder: null,
+    p_fps: null,
     p_macro_author: null,
   };
   const notes: string[] = [];
+  if (fields.fps !== undefined) {
+    const fps = parseFps(fields.fps);
+    if (fps === null) return { ok: false, error: "Enter a positive recording FPS." };
+    payload.p_fps = fps;
+  }
 
   /* ---- level id, and the name and creator that follow from it ---- */
   const levelId = fields.levelId?.trim();

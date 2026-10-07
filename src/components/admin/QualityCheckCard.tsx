@@ -12,6 +12,7 @@ export interface QualityCandidate {
   creator: string;
   macroAuthor: string;
   recorder: string;
+  fps: number;
   downloadUrl: string;
   videoUrl: string | null;
 }
@@ -46,7 +47,7 @@ export default function QualityCheckCard({ candidate }: { candidate: QualityCand
         </div>
         <div>
           <p className="text-[11.5px] text-muted">Recorder</p>
-          <p className="mt-0.5 text-[14px] font-bold text-text">{candidate.recorder}</p>
+          <p className="mt-0.5 text-[14px] font-bold text-text">{candidate.recorder} · {candidate.fps} FPS</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-2.5 border-t border-border-soft px-5 py-4">

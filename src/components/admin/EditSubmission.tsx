@@ -27,6 +27,7 @@ export interface EditableRow {
   level_creator: string | null;
   video_url: string | null;
   recorder: string;
+  fps: number;
   macro_author: string;
 }
 
@@ -46,6 +47,7 @@ export default function EditSubmission({
   const [levelName, setLevelName] = useState(row.level_name);
   const [levelCreator, setLevelCreator] = useState(row.level_creator ?? "");
   const [videoUrl, setVideoUrl] = useState(row.video_url ?? "");
+  const [fps, setFps] = useState(String(row.fps));
   const [recorder, setRecorder] = useState(row.recorder);
   const [macroAuthor, setMacroAuthor] = useState(row.macro_author);
 
@@ -68,6 +70,7 @@ export default function EditSubmission({
       levelCreator:
         !idChanged && levelCreator.trim() !== (row.level_creator ?? "") ? levelCreator.trim() : undefined,
       videoUrl: videoUrl.trim() !== (row.video_url ?? "") ? videoUrl.trim() : undefined,
+      fps: fps !== String(row.fps) ? fps : undefined,
       recorder: recorder !== row.recorder ? recorder : undefined,
       macroAuthor: macroAuthor.trim() !== row.macro_author ? macroAuthor.trim() : undefined,
     });
@@ -132,6 +135,12 @@ export default function EditSubmission({
             onChange={(e) => setMacroAuthor(e.target.value)}
             className={`${field} mt-1`}
           />
+        </label>
+
+        <label className="text-[11.5px] text-muted">
+          Recording FPS
+          <input type="number" step="any" required value={fps}
+            onChange={e => setFps(e.target.value)} className={`${field} mt-1`} />
         </label>
 
         <label className="text-[11.5px] text-muted">

@@ -374,6 +374,7 @@ export default function ProcessingModal({
 
           <Section title="Macro">
             <Row label="Recorder">{row.recorder}</Row>
+            <Row label="Recording FPS">{row.fps} FPS</Row>
             <Row label="Macro author">
               <span translate="no" className="notranslate">
                 {row.macro_author}

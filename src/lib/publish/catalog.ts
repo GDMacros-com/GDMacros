@@ -24,6 +24,7 @@ export const PUBLISHED_DOWNLOAD_TYPE = "GitHub";
 export interface CatalogMacro {
   author: string;
   recorder: string;
+  fps: number;
   downloadType: string;
   downloadLink: string;
 }
@@ -47,6 +48,7 @@ export interface PublicationInput {
   videoUrl: string | null;
   macroAuthor: string;
   recorder: string;
+  fps: number;
   downloadLink: string;
   /** ISO date for a level that does not exist yet. */
   addedAt: string;
@@ -105,6 +107,7 @@ function buildMacro(input: PublicationInput): CatalogMacro {
   return {
     author: input.macroAuthor,
     recorder: input.recorder,
+    fps: input.fps,
     downloadType: PUBLISHED_DOWNLOAD_TYPE,
     downloadLink: input.downloadLink,
   };
@@ -123,6 +126,9 @@ function buildMacro(input: PublicationInput): CatalogMacro {
  * level can be renamed; its id cannot.
  */
 export function applyPublication(currentText: string, input: PublicationInput): ApplyOutcome {
+  if (typeof input.fps !== "number" || !Number.isFinite(input.fps) || input.fps <= 0) {
+    return { ok: false, error: "Recording FPS must be a positive finite number." };
+  }
   const levels = parseCatalog(currentText);
   if (!levels) return { ok: false, error: "The catalog file is not valid JSON." };
 

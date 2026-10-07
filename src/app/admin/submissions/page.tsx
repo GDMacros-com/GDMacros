@@ -61,7 +61,7 @@ export default async function AdminSubmissionsPage({
   let query = supabase!
     .from("submissions")
     .select(
-      "id,submitted_by,level_name,level_id,level_creator,video_url,recorder,macro_author,notes,status,created_at,file_size,processing_by,processing_started_at",
+      "id,submitted_by,level_name,level_id,level_creator,video_url,recorder,fps,macro_author,notes,status,created_at,file_size,processing_by,processing_started_at",
     )
     .order("created_at", { ascending: false });
 

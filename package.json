@@ -19,7 +19,8 @@
     "test:zbot": "node scripts/test-zbot.mjs",
     "test:ads": "node scripts/test-ads.mjs",
     "migrate:mediafire": "node scripts/migrate-mediafire-to-github.mjs",
-    "test:mod": "node scripts/test-mod.mjs && node scripts/test-mod-app.mjs"
+    "test:mod": "node scripts/test-mod.mjs && node scripts/test-mod-app.mjs",
+    "test:fps": "node scripts/test-fps.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

@@ -1,321 +1,154 @@
 # GDMacros
 
-A community catalog of Geometry Dash macros, styled after the Global Demonlist / AREDL layout.
+[GDMacros](https://www.gdmacros.com) is a community catalog of Geometry Dash macros. Visitors can browse, search, favorite and download recordings for Mega Hack, xdBot and zBot. Accounts add synced favorites, submissions, notifications and private support tickets.
 
-The entire catalog lives in **one file**, [`data/macros.json`](data/macros.json). Adding a macro
-means appending one object and opening a pull request; the site rebuilds from it.
+The public catalog lives in `data/macros.json`. Accounts, private uploads, moderation and support use Supabase. Accepted macros are published to GitHub Releases, added to the catalog and checked against the production deployment before the submission is marked accepted.
 
-- **Stack:** Next.js 15 (App Router) · React 19 · Tailwind CSS v4 · TypeScript
-- **Output:** fully static. Every page is prerendered at build time, with no server and no database
-- **Hosting:** deploys to Vercel with zero config, or to GitHub Pages via static export
+Built with Next.js 16, React 19, TypeScript and Tailwind CSS 4. The full website needs a Next.js server runtime; it is **not a static-only site**. Vercel is the current deployment target.
 
----
+## Recording FPS
 
-## Quick start
+Each macro has its own required numeric `fps` value. Any positive finite rate is accepted, including decimal rates. There is no 240 FPS cap. The submission form starts blank so the submitter must provide the rate used for that recording; the API and database enforce it too.
 
-```bash
-npm install
-npm run dev          # http://localhost:3000
+The existing 381 catalog macros were labelled **240 FPS** when this field was introduced, as requested by the operator. This is a metadata backfill, not a conversion or independent inspection of the files. Existing pending submissions are also backfilled to 240; reviewers should correct them if necessary before publishing.
+
+List rows show the rate at the right, above download details. Grid cards and individual download cards show it too. A level with multiple recording rates shows **Mixed FPS** in the catalog, with the exact rate beside each download. Playback should use that macro's recording rate.
+
+## Running locally
+
+Use Node.js 22, matching CI.
+
+```sh
+npm ci
+npm run dev
 ```
 
-| Command            | What it does                                          |
-| ------------------ | ----------------------------------------------------- |
-| `npm run dev`      | Dev server with hot reload                            |
-| `npm run build`    | Production build (prerenders a page per macro)        |
-| `npm start`        | Serve the production build locally                    |
-| `npm run validate` | Check `data/macros.json` for missing/invalid fields   |
+Open `http://localhost:3000`. Without service credentials, you can work on the public catalog and most public pages; account and server-backed features need their configuration below.
 
----
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build |
+| `npm run validate` | Validate the catalog |
+| `npx tsc --noEmit` | Check TypeScript |
+| `npm run test:fps` | FPS parsing, catalog propagation and backfill checks |
+| `npm run test:mod` | Real PostgreSQL permission and migration checks using PGlite, plus application gates |
 
-## Adding a macro
+Other suites are `test:publish`, `test:migrate`, `test:translate`, `test:email`, `test:legal`, `test:admin`, `test:account`, `test:support`, `test:zbot` and `test:ads`. CI runs the test suites, catalog validation, typecheck and build for PRs and pushes to `main`. Tests use local fixtures and mocked external services; they do not send real emails or publish real macros.
 
-[`data/macros.json`](data/macros.json) ships with **8 blank template rows**. Fill them in one at a
-time. A row where every required field is still empty is skipped at build time, so the site builds
-and deploys fine with half the slots blank. Add more rows (or delete spare ones) whenever you like.
+## Service configuration
 
-A row with *some* fields filled is treated as a mistake, not a placeholder, and fails the build with
-a message naming the missing field. That way a half-finished entry can't slip out silently.
+Set development values in your local environment and production values in the hosting dashboard. Never commit secrets. Only variables beginning with `NEXT_PUBLIC_` are intended to be exposed to browsers.
 
-Fill a row in like this:
+| Variable | Used for |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public client key; access is still governed by database policies |
+| `NEXT_PUBLIC_SITE_URL` | Auth callback origin; use the public HTTPS domain in production |
+| `SUPABASE_SECRET_KEY` | Server-only storage, auth administration and email workers |
+| `GITHUB_PUBLISHER_APP_ID` | GitHub App used to publish accepted macros |
+| `GITHUB_PUBLISHER_PRIVATE_KEY_BASE64` | Server-only base64-encoded App private key |
+| `GITHUB_PUBLISHER_INSTALLATION_ID` | Optional installation ID; otherwise resolved through the App |
+| `RESEND_SUPPORT_API_KEY` | Service and support email |
+| `RESEND_INBOUND_WEBHOOK_SECRET` | Verification of inbound Resend webhook requests |
+| `CRON_SECRET` | Authentication for scheduled maintenance |
+| `VERCEL_ANALYTICS_TOKEN` | Optional admin analytics access |
+| `VERCEL_ANALYTICS_PROJECT_ID` | Optional explicit project ID; otherwise uses `VERCEL_PROJECT_ID` |
+| `VERCEL_ANALYTICS_TEAM_ID` | Optional analytics team scope |
+
+Set the Supabase Auth site URL and allowed redirect URLs for the environments you use. Configure account email templates and SMTP in Supabase, and the sending domain/inbound webhook in Resend. Inbound support mail uses `/api/email/inbound`; the forwarding destination is configured in the server-side email module.
+
+Apply migrations in `supabase/migrations` in numeric order for a new database. Existing deployments must apply only unapplied migrations. Some migrations install scheduled cleanup using `pg_cron`; the target Supabase project must support that extension. If using SQL Editor manually, keep the Supabase CLI migration history consistent before later using `supabase db push`.
+
+The GitHub App must have Contents write access to `GDMacros-com/GDMacros` and `GDMacros-com/GDMacros-downloads`. Publishing targets are fixed in `src/lib/github/config.ts`; they are not taken from requests. Changing them for another deployment requires a code review.
+
+## Roles and review
+
+| Access | User | Mod | Admin |
+| --- | --- | --- | --- |
+| Uploads, own account and tickets | Yes | Yes | Yes |
+| Review, inspect, edit, publish and reject submissions | No | Yes | Yes |
+| Submission blocks and unblocks | No | Yes | Yes |
+| All support tickets, replies, closure, deletion and ticket blocks | No | Yes | Yes |
+| Random quality checks | No | Yes | Yes |
+| Account lookup, review activity, site status and mass email | No | No | Yes |
+
+Roles are assigned in Supabase by the operator, not through public signup. See [Setting up moderators](docs/mod-role.md). An account with both roles retains admin access.
+
+Uploads are private until accepted. Mega Hack and xdBot use `.gdr2`; zBot uses `.gdr`. The file-size limit is 2 MB. The site checks the format and looks up level information on the server. Reviewers can correct metadata, including FPS, while a submission is pending and publication has not started. Their recording-file inspection is separate from the submitter's declared FPS.
+
+Publishing uploads a release asset, commits the catalog, waits for the production commit to be served, then records the result and cleans up the private upload. Failed publication can be retried from its stored state. FPS is read from the submission database row and written to the public catalog, not trusted from a publish-button request.
+
+Support includes suggestions, broken-macro reports and level requests. Closed tickets expire after 30 days; staff can delete them earlier. Public macros remain when an account is deleted. Existing auth, storage, GitHub and email integrations must be configured for the full workflow.
+
+## Editing the catalog
+
+The preferred contribution path is the website's submission form. Manual catalog edits are also possible through a PR. Each level contains one or more macros:
 
 ```json
 {
-  "name": "Acheron",
-  "creator": "ryamu",
-  "levelId": 73667628,
-  "video": "https://www.youtube.com/watch?v=EpNIkIBPOhw",
-  "description": "Optional note shown on the page.",
+  "name": "Example Level",
+  "creator": "LevelCreator",
+  "levelId": "12345678",
+  "video": "https://www.youtube.com/watch?v=VIDEO_ID",
   "macros": [
     {
-      "author": "ChesszDC",
+      "author": "MacroAuthor",
       "recorder": "xdBot",
-      "downloadType": "MediaFire",
-      "downloadLink": "https://www.mediafire.com/file/.../Acheron.gdr2/file"
+      "downloadType": "GitHub",
+      "downloadLink": "https://github.com/OWNER/REPO/releases/download/TAG/FILE.gdr2",
+      "fps": 240
     }
   ]
 }
 ```
 
-Order doesn't matter, the site always sorts alphabetically by `name`.
+Replace example values with real data. `name`, `creator`, `levelId` and the macro fields above are required. Optional level fields are `video`, `thumbnail`, `slug`, `description` and `addedAt` (`YYYY-MM-DD`). `recorder` is exactly `Mega Hack`, `xdBot` or `zBot`. A level can contain recordings with different FPS values.
 
-### More than one macro per level
+Macro pages use `/macro/<level-slug>`. Slugs must be unique. Without a thumbnail override, YouTube thumbnails are used when a video is present, otherwise a generated placeholder. The catalog supports search, recorder filtering, sorting and list/grid views. Run `npm run validate` before committing.
 
-Add another object to `macros`. There is no limit.
+The MediaFire migration tool remains available as `npm run migrate:mediafire`; it is an operator tool for copying old files, not a step needed to run the website. Public macro downloads currently use GitHub Releases.
 
-```json
-"macros": [
-  { "author": "ChesszDC", "recorder": "xdBot",     "downloadType": "MediaFire",    "downloadLink": "https://..." },
-  { "author": "Zoink",    "recorder": "Mega Hack", "downloadType": "Google Drive", "downloadLink": "https://..." }
-]
-```
+## Deployment and maintenance
 
-They are numbered by their position in the array, so the level page shows **Macro 1 by ChesszDC**
-and **Macro 2 by Zoink**, each with its own recorder, download host and copy button. Reorder the
-array to renumber them.
+Connect the repository to Vercel and configure the service variables above. Keep `src/lib/site.ts` and `NEXT_PUBLIC_SITE_URL` aligned with the production domain. The publisher verifies the live deployment through `/api/version`, using the commit supplied by Vercel.
 
-With a single macro the catalog row names its author directly. With several it shows a "3 macros"
-badge instead, and the authors appear on each macro card on the level page.
+`vercel.json` schedules `/api/cron/maintenance` daily. It needs `CRON_SECRET`; inspect the admin status page and provider logs if work is stuck. Supabase has separate scheduled support-ticket cleanup.
 
-### Field reference
+The old GitHub Pages workflow and export configuration remain in the repository, but static hosting cannot provide the current site's authenticated routes, server actions, API endpoints or scheduled work. Use a server-capable deployment for the complete website.
 
-Level fields:
+For this release, follow [FPS and policy rollout](docs/fps-policy-rollout.md) before merging. No new environment variables are required.
 
-| Field         | Required | Notes                                                            |
-| ------------- | -------- | ---------------------------------------------------------------- |
-| `name`        | **yes**  | The level. Sorted, searched, and used for the URL                 |
-| `creator`     | **yes**  | Who built the level, shown as the green tab                       |
-| `levelId`     | **yes**  | Powers the GD Browser button: `https://gdbrowser.com/<levelId>`    |
-| `macros`      | **yes**  | Array of one or more macros, fields below                         |
-| `video`       | no       | YouTube URL. Renders the embed and auto-generates the thumbnail   |
-| `thumbnail`   | no       | Image override: absolute URL, or a path like `/thumbnails/x.png`  |
-| `description` | no       | Short note shown under the video                                  |
-| `slug`        | no       | URL override. Defaults to the level name, slugified               |
+## Advertising, language and analytics
 
-Macro fields, inside `macros[]`:
-
-| Field          | Required | Notes                                                          |
-| -------------- | -------- | -------------------------------------------------------------- |
-| `author`       | **yes**  | Who recorded this macro, shown as "Macro N by ..."              |
-| `recorder`     | **yes**  | `"Mega Hack"`, `"xdBot"` or `"zBot"`. Anything else fails the build |
-| `downloadType` | **yes**  | Where it's hosted: `"Google Drive"`, `"MediaFire"`, `"MEGA"`, etc. |
-| `downloadLink` | **yes**  | Direct URL to the macro file                                    |
-
-`recorder` is a closed set defined by `RECORDERS` in [`src/lib/types.ts`](src/lib/types.ts). The
-catalog accepts those three tools, and the home page filters on it. A level matches the filter
-when **any** of its macros used the selected recorder.
-
-`downloadType` is free text, so any host works. These get a tinted icon:
-Google Drive, MediaFire, Dropbox, MEGA, GitHub, Discord, OneDrive.
-
-### Older entries
-
-The previous flat shape, where a single macro's fields sat directly on the level, is still read and
-converted on load. Nothing breaks if you have old entries, but new ones should use `macros`.
-
-### Thumbnails
-
-Resolved in order, first match wins:
-
-1. **`thumbnail`**: an absolute URL, or a file you drop in `public/` (e.g. `/thumbnails/society.png`).
-2. **`video`**: the YouTube still is used automatically. *No image file needed.*
-3. **Neither**: a generated gradient tile with the level's initial.
-
-The easiest good-looking setup is to just fill in `video`.
-
-### URLs
-
-Each macro gets `/macro/<slug>`, where slug defaults to `<name>-<macroAuthor>` slugified.
-`"Society"` + `"wPopoff"` → `/macro/society-wpopoff`. Two macros for the same level by different
-authors won't collide. If you do hit a duplicate, the build fails with a message telling you to add
-a `slug` field.
-
-### Before committing
-
-```bash
-npm run validate
-```
-
-Errors (missing required fields, an invalid `recorder`, non-numeric `levelId`, duplicate URLs, a
-`thumbnail` that isn't in `public/`) fail the check. Warnings (placeholder download link, no image
-source) are informational. Blank template rows are counted separately and never fail anything.
-
----
-
-## AdSense
-
-The publisher id is public and is already wired into the root layout and `public/ads.txt`. Actual
-ad units stay off until both the feature flag and their public slot ids are configured. Create two
-responsive **Display** ad units in AdSense, then add these Vercel environment variables for the
-Production environment only:
+Ads are optional and limited to public catalog and macro pages. Configure:
 
 ```text
 NEXT_PUBLIC_ADSENSE_ENABLED=true
-NEXT_PUBLIC_ADSENSE_HOME_SLOT=<numeric catalog ad unit id>
-NEXT_PUBLIC_ADSENSE_MACRO_SLOT=<numeric macro-page ad unit id>
+NEXT_PUBLIC_ADSENSE_HOME_SLOT=<catalog display-ad slot>
+NEXT_PUBLIC_ADSENSE_MACRO_SLOT=<macro display-ad slot>
 ```
 
-The catalog gets one unit before its results and a macro page gets one after all macro content and
-navigation. Account, admin, submission, notification, settings and support pages have no ad units.
-The ad-block reminder is detected locally, can always be dismissed, remembers dismissal only for
-the current tab, and never prevents access.
+The publisher ID is in the code and `public/ads.txt`. Configure and verify Google's consent message in the AdSense dashboard; the repository alone cannot prove the live CMP is published or correctly configured. Avoid enabling Auto ads if you want to preserve the coded placement limits. The ad-block reminder is dismissible and never denies catalog access.
 
-After deployment, verify that `https://www.gdmacros.com/ads.txt` displays exactly the publisher line
-from `public/ads.txt`. AdSense can take time to crawl it; do not add a second seller line unless that
-seller is genuinely authorised for this site.
+Google Translate's widget provides the language menu. Vercel Web Analytics and Speed Insights are mounted by the application. Video thumbnails and embeds, and the About page's Lanyard/Discord content, involve browser requests to their providers. The [Privacy Policy](https://www.gdmacros.com/privacy) describes the data flows.
 
-AdSense's Google CMP remains configured in the AdSense dashboard. Keep its three-choice European
-message published. Do not enable Auto ads as well unless the manual-placement limits are being
-deliberately replaced; running both would defeat the restrained layout.
+## Legal documents and notices
 
-## Deploying
+Public policies are in `src/app/terms/page.tsx` and `src/app/privacy/page.tsx`. Versions in `src/lib/legal.ts` must match `private.legal_documents` through a new migration. Updating a version does not rewrite old acceptance records or send an email. Admins can send a policy notice through the existing Legal Notices tool after the matching documents are live.
 
-### Vercel (recommended)
+The policies describe implemented behavior, not a certification of legal compliance. Deployment-specific facts such as the operator's legal identity, processing arrangements, provider regions, backups, retention and advertising consent configuration need operator review. Do not invent those facts from the source code.
 
-Push to GitHub, then import the repo at [vercel.com/new](https://vercel.com/new). Vercel detects
-Next.js automatically, so there are no settings to change. Every push redeploys, so merging a macro PR publishes it.
+## Source map
 
-Then set your real domain in [`src/lib/site.ts`](src/lib/site.ts) so metadata and share cards use
-absolute URLs.
+- `data/macros.json`: public catalog
+- `src/app`: public pages, account/staff routes and APIs
+- `src/components`: catalog, forms and staff interface
+- `src/lib/publish`: resumable publishing and catalog transformations
+- `src/lib/supabase`: session-bound clients and narrowly scoped server helpers
+- `src/lib/email`: transactional email and support forwarding
+- `supabase/migrations`: schema, permissions, RPCs and legal versions
+- `scripts`: validation, offline regression suites and migration tooling
 
-### GitHub Pages (optional, and not needed if you use Vercel)
-
-The site uses no server-side features, so it also exports to plain HTML. No config edit is needed:
-static export is switched on by environment variables, so the same repo builds for both hosts.
-
-```bash
-NEXT_OUTPUT=export NEXT_BASE_PATH=/GDMacros npm run build   # writes out/
-```
-
-[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) does exactly this. It is
-**manual-only** (Actions tab → Run workflow) so it never runs, and never fails, unless you ask for
-it. To use it, set **Settings → Pages → Source: GitHub Actions**, then run it once.
-
-`NEXT_BASE_PATH` must match the repo name when serving from `<user>.github.io/<repo>`. Drop it if
-you point a custom domain at Pages.
-
----
-
-## Translation
-
-The navbar language menu is wired to Google's free **website translate widget**
-([`src/components/GoogleTranslate.tsx`](src/components/GoogleTranslate.tsx)).
-
-This is deliberately *not* the Google Cloud Translation API. That one needs a paid API key, and on a
-static site there is nowhere to hide a key. It would sit in the page source for anyone to lift and
-bill to your account. The widget needs no key, costs nothing, and works on pure static hosting.
-
-Two details worth knowing:
-
-- Google's own banner and tooltip are suppressed in `globals.css`. The `body { top: 0 !important }`
-  rule matters, because without it Google pushes the page down 40px and breaks the sticky navbar.
-- Level names, creator handles, macro author handles, recorder names and download hosts are all
-  marked `translate="no"`, so "Bloodbath" doesn't become "Baño de sangre". **If you add new UI that
-  renders a proper noun, mark it the same way.**
-
-Edit the offered languages in `LANGUAGES` in [`src/lib/site.ts`](src/lib/site.ts). Any code Google
-Translate accepts works.
-
----
-
-## Search / SEO
-
-The site is built to be indexed well for "geometry dash macros" and related phrases.
-
-**What the code already does**
-
-- `<title>` leads with the phrase, not the brand: `Geometry Dash Macros | GDMacros`. Level pages use
-  `<Level> Macro (Geometry Dash) | GDMacros`.
-- The home `<h1>` is literally "Geometry Dash Macros". Heading text is the strongest on-page signal.
-- Every page has a unique meta description. Level pages generate one containing the level, the
-  creator, the macro authors and the recorders. A custom `description` is appended to it, never
-  substituted for it, so a personal note can't cost the page its keywords.
-- Canonical URLs on every page, so `?q=` and `?view=` variants don't split ranking.
-- `sitemap.xml` regenerates from the catalog on every build, and `robots.txt` points at it.
-- JSON-LD structured data: `WebSite` with a `SearchAction` (site-wide), `CollectionPage` +
-  `ItemList` (home), and `CreativeWork` per level.
-- OpenGraph and Twitter card tags, so shared links show a title, description and thumbnail.
-- Static prerendered HTML with no client-side data fetching, which is the easiest thing for a
-  crawler to read.
-
-**What no amount of code can do**
-
-Ranking is not something a build step decides. Google has to discover the site, crawl it, and judge
-it worth showing above the pages already ranking for that phrase. That depends on the domain being
-live, on other sites linking to yours, and on time. A brand new domain does not rank on day one no
-matter how the HTML is written.
-
-**What you have to do yourself, in order**
-
-1. Point `gdmacros.com` at the Vercel deployment and confirm it loads over HTTPS.
-2. Add the site to [Google Search Console](https://search.google.com/search-console) and verify
-   ownership via the DNS TXT record.
-3. Submit `https://gdmacros.com/sitemap.xml` there, then use "Request indexing" on the home page.
-4. Get a few real links: your YouTube channel description, a pinned Discord message, a Reddit or
-   forum post. Links from places people already are matter more than anything on this list.
-5. Add macros. A catalog with 60 levels has 60 more chances to match a search than one with 5, and
-   each level page targets its own long-tail phrase like "acheron macro".
-6. Wait. Two to eight weeks for a new domain to settle is normal.
-
-If `site.url` in [`src/lib/site.ts`](src/lib/site.ts) does not exactly match the domain you serve
-on, the sitemap and canonical tags will point at the wrong place and indexing will suffer. That one
-value matters more than everything else in this section.
-
----
-
-## Customising
-
-**Branding and links:** [`src/lib/site.ts`](src/lib/site.ts): `name`, `url`, `repo`.
-
-**Colours:** [`src/app/globals.css`](src/app/globals.css). The palette is two blocks at the top:
-`:root` (dark, the default) and `[data-theme="light"]`. Change a value in both and it propagates
-everywhere, including Tailwind utilities like `bg-surface` and `text-muted`. The green and blue
-credit tabs use `--green` and `--accent`.
-
-**Download host colours:** the `HOST_ACCENT` map in [`src/lib/format.ts`](src/lib/format.ts).
-
----
-
-## Project structure
-
-```
-data/macros.json            the entire catalog
-public/thumbnails/          optional images referenced by `thumbnail`
-scripts/validate-macros.mjs pre-commit sanity check
-src/
-  app/
-    page.tsx                catalog + search
-    macro/[slug]/page.tsx   macro detail (statically generated per entry)
-    guidelines/ about/      static content pages
-    sitemap.ts robots.ts    generated /sitemap.xml and /robots.txt
-    globals.css             design tokens + base styles
-  components/
-    MacroBrowser.tsx        search + view state
-    MacroRow.tsx MacroCard.tsx  list and grid presentations
-    CreditTabs.tsx          the green/blue credit tabs
-    CopyButton.tsx          "Click to copy" on the download card
-    Navbar.tsx Footer.tsx Background.tsx VideoEmbed.tsx Thumb.tsx
-  lib/
-    macros.ts               reads + sorts data/macros.json at build time
-    types.ts format.ts site.ts
-```
-
-### Ordering and ranking
-
-Ordering is **alphabetical by level name, always**. It isn't configurable from the UI, and nothing
-is ranked. Discovery is the search box, which matches level name, level creator, macro author,
-level ID, recorder and download host. Press <kbd>/</kbd> to jump to it, <kbd>Esc</kbd> to clear.
-
-The only filter is **recorder** (All / Mega Hack / xdBot / zBot), which is linkable as `?recorder=zBot`.
-Search and view mode are in the URL too (`?q=`, `?view=grid`).
-
-> The Next.js badge you may see in the bottom-left corner during `npm run dev` is the framework's
-> dev-tools indicator. It never appears in production builds, so it won't show on Vercel, and
-> `devIndicators: false` in `next.config.mjs` now hides it locally as well.
-
----
-
-Not affiliated with, endorsed by, or connected to RobTop Games.
-
-### Moderator role
-
-For moderator permissions, the Supabase migration, role assignment and rollout checks, see [Setting up moderators](docs/mod-role.md).
+Not affiliated with, endorsed by or connected to RobTop Games.

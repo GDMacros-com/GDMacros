@@ -39,6 +39,7 @@ export default async function AdminQualityPage() {
     creator: level.creator,
     macroAuthor: macro.author,
     recorder: macro.recorder,
+    fps: macro.fps,
     downloadUrl: macro.downloadLink,
     videoUrl: level.video ?? null,
   })));

@@ -14,7 +14,7 @@ export default function Footer() {
             <span className="text-[14px] font-extrabold tracking-[0.06em] text-text uppercase">{site.name}</span>
           </div>
           <p className="mt-2 max-w-md text-[13px] leading-relaxed text-muted">
-            {site.tagline}. Every macro is hosted by us, so the downloads stay up. Not affiliated
+            {site.tagline}. Macro downloads are hosted on GitHub Releases. Not affiliated
             with RobTop Games.
           </p>
         </div>

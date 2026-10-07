@@ -186,10 +186,10 @@ function items(levels: number, macros: number): Item[] {
     {
       q: "What happens after I submit?",
       plain:
-        "It joins the review queue. An admin accepts or rejects it, and an accepted macro is published to the site automatically. You get a notice either way.",
+        "It joins the review queue. An admin or moderator accepts or rejects it, and an accepted macro is published to the site automatically. You get a notice either way.",
       a: (
         <>
-          It joins the review queue and waits for an admin. They either accept it or reject it with a
+          It joins the review queue and waits for an admin or moderator. They either accept it or reject it with a
           reason, and you get a short notice either way.
           <br />
           <br />
@@ -208,7 +208,7 @@ function items(levels: number, macros: number): Item[] {
           Sign in and use the <span className="font-semibold text-text">Report broken</span> button
           on that macro&apos;s page. After you confirm, it opens a private support ticket with the
           level, level ID and download links already included. You can add more detail in the thread,
-          and you will be notified when an admin replies or closes it.
+          and you will be notified when an admin or moderator replies or closes it.
         </>
       ),
     },
@@ -232,15 +232,14 @@ function items(levels: number, macros: number): Item[] {
     },
     {
       q: `Is ${site.name} free?`,
-      plain: `Yes. The site, the catalog and every download are free. The replay tools are made by other people and have their own pricing: xdBot and zBot have free versions, while Mega Hack is paid.`,
+      plain: `Yes. The site, the catalog and every download are free. The replay tools are made by other people and have their own pricing: xdBot is free; Mega Hack is paid, and zBot requires a paid key to import premade files like our downloads.`,
       a: (
         <>
           Yes. The site, the catalog and all {macros} downloads across {levels} levels are free, with
           no account required and nothing to pay.
           <br />
           <br />
-          The replay tools are separate products made by other people. xdBot and zBot have free
-          versions, while Mega Hack is paid. None of them is ours.
+          The replay tools are separate products made by other people. xdBot is free. Mega Hack is paid, and zBot requires a paid key to import premade files like our downloads. None of them is ours.
         </>
       ),
     },

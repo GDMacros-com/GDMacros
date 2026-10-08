@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Background from "@/components/Background";
+import DiscordAnnouncement from "@/components/DiscordAnnouncement";
 import Footer from "@/components/Footer";
 import GoogleTranslate from "@/components/GoogleTranslate";
 import PageTransition from "@/components/PageTransition";
@@ -106,6 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
         <AdBlockNotice />
+        <DiscordAnnouncement />
         <Analytics />
         <SpeedInsights />
       </body>

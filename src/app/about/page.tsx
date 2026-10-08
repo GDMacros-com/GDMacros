@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getAllLevels, getMacroCount } from "@/lib/macros";
 import { site } from "@/lib/site";
 import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "@/lib/support";
+import DiscordCommunity from "@/components/DiscordCommunity";
 import DiscordOwnerCards from "@/components/DiscordOwnerCard";
 
 export const metadata: Metadata = {
@@ -93,7 +94,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* The owner stays last, at the very bottom of the page. */}
       <section className="mt-14">
         <h2 className="text-[19px] font-bold text-text">Meet the owner</h2>
         <p className="mt-2 text-[14.5px] leading-relaxed text-text-dim">
@@ -110,6 +110,8 @@ export default function AboutPage() {
           .
         </p>
       </section>
+
+      <DiscordCommunity />
 
       <p className="mt-10 text-[12.5px] text-muted">
         Not affiliated with, endorsed by, or connected to RobTop Games.

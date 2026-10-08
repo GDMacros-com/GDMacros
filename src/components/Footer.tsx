@@ -39,6 +39,9 @@ export default function Footer() {
             <Link href="/about" className="text-text-dim transition-colors hover:text-accent-soft">
               About
             </Link>
+            <a href={site.discord} target="_blank" rel="noopener noreferrer" className="text-text-dim transition-colors hover:text-accent-soft">
+              Discord<span className="sr-only"> (opens in a new tab)</span>
+            </a>
             <Link href="/privacy" className="text-text-dim transition-colors hover:text-accent-soft">
               Privacy
             </Link>

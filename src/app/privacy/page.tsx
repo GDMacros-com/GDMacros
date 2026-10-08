@@ -111,6 +111,9 @@ export default function PrivacyPage() {
           your browser&apos;s local storage. Theme, layout and recent-view preferences stay on your
           device. Favorites can sync to your account when you sign in; the browser also keeps an
           account identifier and pending changes so it does not mix different users&apos; lists.
+          The Discord announcement also saves a local flag
+          (<Key>gdmacros:discord-announcement:2026-10</Key>) when shown, so it does not
+          appear again in that browser. This flag is not synced to your account.
           Clearing your site data removes these local copies.
         </p>
       </Section>
@@ -380,6 +383,12 @@ export default function PrivacyPage() {
               page. That request is made by your browser. It asks only for the public Discord
               profiles shown on that page. The browser can also load their avatars from Discord&apos;s
               image servers; these providers receive ordinary connection information.
+              The About page also offers a Discord server widget. It loads only after you
+              choose “Load Discord widget”, connecting your browser to Discord, which
+              receives connection information such as your IP address and browser details
+              and may use cookies under its own privacy policy. Opening our invite or
+              joining the community also takes you to Discord, under Discord’s terms
+              and privacy policy.
             </>,
           ]}
         />

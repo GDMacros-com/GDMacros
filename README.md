@@ -6,6 +6,14 @@ The public catalog lives in `data/macros.json`. Accounts, private uploads, moder
 
 Built with Next.js 16, React 19, TypeScript and Tailwind CSS 4. The full website needs a Next.js server runtime; it is **not a static-only site**. Vercel is the current deployment target.
 
+## Discord community
+
+The community invite is available in the footer and on About, beneath the owner section. The About widget loads after the visitor clicks **Load Discord widget**. Invite and widget URLs live in `src/lib/site.ts`.
+
+A modal announces the server on public browsing pages. It blocks page interaction until the visitor closes it, presses Escape, chooses Maybe later or opens the invite. The browser saves `gdmacros:discord-announcement:2026-10` when it appears, so subsequent visits skip it. Clearing site data or using another browser resets this; with local storage unavailable, it is remembered only until reload. Account, admin and support routes do not trigger it.
+
+Apply `supabase/migrations/0022_discord_privacy_version.sql` alongside this deployment to match the updated privacy disclosure. No new environment variables are needed.
+
 ## Recording FPS
 
 Each macro has its own required numeric `fps` value. Any positive finite rate is accepted, including decimal rates. There is no 240 FPS cap. The submission form starts blank so the submitter must provide the rate used for that recording; the API and database enforce it too.

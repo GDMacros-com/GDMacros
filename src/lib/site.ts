@@ -4,6 +4,8 @@
  */
 export const site = {
   name: "GDMacros",
+  discord: "https://discord.gg/Pe6EarWen9",
+  discordWidget: "https://discord.com/widget?id=1557316326941392908&theme=dark",
   tagline: "Free Geometry Dash macros",
 
   /**

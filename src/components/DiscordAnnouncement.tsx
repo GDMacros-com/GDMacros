@@ -54,6 +54,19 @@ export default function DiscordAnnouncement() {
       ref={dialogRef}
       aria-labelledby="discord-announcement-title"
       aria-describedby="discord-announcement-description"
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const controls = event.currentTarget.querySelectorAll<HTMLElement>("button, a[href]");
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }}
       onCancel={(event) => { event.preventDefault(); dismiss(); }}
       onClose={() => { restoreScroll.current?.(); restoreScroll.current = null; }}
       className="discord-announcement m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[460px] overflow-y-auto rounded-3xl border border-[#5865f2]/50 bg-surface p-0 text-text shadow-2xl"

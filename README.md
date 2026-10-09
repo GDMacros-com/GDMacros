@@ -12,7 +12,17 @@ The community invite is available in the footer and on About, beneath the owner 
 
 A modal announces the server on public browsing pages. It blocks page interaction until the visitor closes it, presses Escape, chooses Maybe later or opens the invite. The browser saves `gdmacros:discord-announcement:2026-10` when it appears, so subsequent visits skip it. Clearing site data or using another browser resets this; with local storage unavailable, it is remembered only until reload. Account, admin and support routes do not trigger it.
 
-Apply `supabase/migrations/0022_discord_privacy_version.sql` alongside this deployment to match the updated privacy disclosure. No new environment variables are needed.
+The announcement/widget update uses `supabase/migrations/0022_discord_privacy_version.sql` and needs no extra environment variables.
+
+## Community bot and dashboard
+
+This repository contains the website dashboard and its server-side integration. The Discord service and its deployment guide are maintained separately in the private `GDMacros-com/Discord-bot` repository; the website stays on Vercel. Admins manage it at `/admin/bot-panel`. Website mods cannot access its pages, APIs, cases or transcripts. Discord command roles are configured separately in the dashboard.
+
+Modules cover boost announcements, a Honeypot-based softban trap, moderation and detailed logs, Lurkr-compatible XP import/leveling, multiple ticket panels with private 30-day transcripts, and temporary voice channels. `/discord` redirects to the community invite; `/discord/leaderboard` shows only the enabled public ranking fields. Modules start disabled and require explicit setup.
+
+Repository owners can find the bot deployment and rollout guide in the private bot repository. Set `GDM_BOT_API_URL` and `GDM_BOT_API_KEY` as **server-only** Vercel variables; the Discord token exists only on the VPS. Never prefix these with `NEXT_PUBLIC_`, upload a live database, or commit a Lurkr export.
+
+Apply migration `0023_discord_bot_legal_versions.sql` alongside the bot release. It updates the Terms and Privacy versions, without sending notices or changing past acceptance records. No new public Supabase bot tables are used. Review the hosting disclosure and retention settings for the actual deployment before enabling modules.
 
 ## Recording FPS
 
@@ -42,6 +52,7 @@ Open `http://localhost:3000`. Without service credentials, you can work on the p
 | `npx tsc --noEmit` | Check TypeScript |
 | `npm run test:fps` | FPS parsing, catalog propagation and backfill checks |
 | `npm run test:catalog-editor` | Catalog edits, replacement validation, authorization and concurrency |
+| `npm run test:bot` | Bot dashboard authorization, request boundaries and public output |
 | `npm run test:mod` | Real PostgreSQL permission and migration checks using PGlite, plus application gates |
 
 Other suites are `test:publish`, `test:migrate`, `test:translate`, `test:email`, `test:legal`, `test:admin`, `test:account`, `test:support`, `test:zbot` and `test:ads`. CI runs the test suites, catalog validation, typecheck and build for PRs and pushes to `main`. Tests use local fixtures and mocked external services; they do not send real emails or publish real macros.
@@ -65,6 +76,8 @@ Set development values in your local environment and production values in the ho
 | `VERCEL_ANALYTICS_TOKEN` | Optional admin analytics access |
 | `VERCEL_ANALYTICS_PROJECT_ID` | Optional explicit project ID; otherwise uses `VERCEL_PROJECT_ID` |
 | `VERCEL_ANALYTICS_TEAM_ID` | Optional analytics team scope |
+| `GDM_BOT_API_URL` | Server-only HTTPS origin of the bot API, e.g. `https://bot.gdmacros.com` |
+| `GDM_BOT_API_KEY` | Server-only shared key matching the VPS; at least 48 random characters |
 
 Set the Supabase Auth site URL and allowed redirect URLs for the environments you use. Configure account email templates and SMTP in Supabase, and the sending domain/inbound webhook in Resend. Inbound support mail uses `/api/email/inbound`; the forwarding destination is configured in the server-side email module.
 
@@ -83,6 +96,7 @@ The GitHub App must have Contents write access to `GDMacros-com/GDMacros` and `G
 | Random quality checks | No | Yes | Yes |
 | Edit or remove published macros and change last-tested dates | No | No | Yes |
 | Account lookup, review activity, site status and mass email | No | No | Yes |
+| Discord bot dashboard, cases and Discord ticket transcripts | No | No | Yes |
 
 Roles are assigned in Supabase by the operator, not through public signup. See [Setting up moderators](docs/mod-role.md). An account with both roles retains admin access.
 

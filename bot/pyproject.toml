@@ -1,0 +1,10 @@
+[project]
+name = "gdmacros-discord-bot"
+version = "1.0.0"
+requires-python = ">=3.12"
+description = "Single-server GDMacros community bot and private dashboard API"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,4 +1,5 @@
 import json
+import asyncio
 from unittest.mock import AsyncMock
 import discord
 import pytest
@@ -189,6 +190,35 @@ async def test_unknown_interrupted_softban_does_not_invent_case(bot, monkeypatch
     await bot.moderation.retry_unbans()
     assert not bot.store.rows("SELECT * FROM cases")
     assert "no successful case" in bot.store.one("SELECT body FROM outbox")["body"]
+
+
+async def test_recovery_waits_for_an_inflight_softban(bot, monkeypatch):
+    entered, release = asyncio.Event(), asyncio.Event()
+
+    async def slow_ban(*args, **kwargs):
+        entered.set()
+        await release.wait()
+
+    unban = AsyncMock()
+    monkeypatch.setattr(discord.Guild, "ban", slow_ban)
+    monkeypatch.setattr(discord.Guild, "unban", unban)
+    action = asyncio.create_task(
+        bot.moderation.member_action(
+            "softban",
+            bot.guild.get_member(MOD),
+            bot.guild.get_member(USER),
+            "Test",
+            900,
+        )
+    )
+    await entered.wait()
+    recovery = asyncio.create_task(bot.moderation.retry_unbans())
+    await asyncio.sleep(0)
+    assert not unban.await_count and not recovery.done()
+    release.set()
+    await asyncio.gather(action, recovery)
+    assert unban.await_count == 1
+    assert bot.store.one("SELECT count(*) AS n FROM cases")["n"] == 1
 
 
 def test_case_filters_are_parameterized(bot):

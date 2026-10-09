@@ -296,6 +296,55 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
+      <Section title="Discord community bot">
+        <p>
+          When enabled in our Discord server, the GDM Community bot provides moderation, boost
+          announcements, leveling, private Discord tickets and temporary voice channels. It uses
+          Discord user, role and channel identifiers, display names, profile avatar references,
+          relevant message content and timestamps, and member or voice events needed for those
+          features. This does not give the bot access to your Discord password, private messages
+          with other people, or conversations in servers where it is not installed.
+        </p>
+        <p>
+          Moderation cases record the action, affected user or channel, moderator, reason and time.
+          Configured event logs can include edited or deleted message content available to the bot.
+          These records support server moderation and have no automatic expiry: staff retain them
+          until they are removed, including when an applicable privacy request requires removal.
+          Discord log copies are separate from the bot database. General logs exclude private ticket
+          message content. Staff control log destinations and must keep sensitive logs private.
+        </p>
+        <p>
+          Leveling stores XP, message counts, reward progress, optional rank colors and backgrounds,
+          and recent daily activity totals. A public leaderboard can show your Discord name, user
+          identifier, XP, level and message count. Use <Key>/privacy hide</Key> to hide your rank and
+          stop earning XP, <Key>/privacy show</Key> to opt back in, or <Key>/privacy delete</Key> to
+          erase leveling totals, recent activity and rank customization and opt out. These commands
+          do not erase moderation records or Discord&apos;s own copies. Recent activity summaries
+          expire after 400 days. Imported leveling files are processed for the import and are not
+          kept as separate uploaded files by the service.
+        </p>
+        <p>
+          Discord tickets are visible in Discord to their creator, the panel&apos;s staff, any added
+          participants and people who can bypass restrictions through Discord&apos;s permissions.
+          Closing a ticket saves a transcript of message text, embeds, author identifiers and
+          attachment links. Website transcripts require a GDMacros admin account; a website mod
+          cannot read them. A transcript expires 30 days after closure and is erased by scheduled
+          cleanup. Its link stops working at expiry even if cleanup is delayed. The bot also deletes
+          the closed Discord channel; permission failures require staff attention and are retried.
+          Attachments are linked from Discord rather than copied to our storage, so Discord&apos;s
+          copies and expiring download links follow Discord&apos;s own rules. Reopening a ticket
+          removes the saved transcript; closing it again produces a new transcript and expiry.
+        </p>
+        <p>
+          The bot and its private database run on our separately hosted server, with OVHcloud as
+          the intended hosting provider. Website requests to its dashboard are checked by our
+          server against your current admin role. Dashboard changes and transcript access record
+          the acting website account identifier and time. Temporary voice ownership records are
+          removed when the channel is deleted. Deleting a website account does not erase records
+          attached to a separate Discord identity; contact <Mail /> about those records.
+        </p>
+      </Section>
+
       <Section title="Email you send us">
         <p>
           Mail sent to <Mail /> travels through more than one company before it reaches a person, so
@@ -346,6 +395,12 @@ export default function PrivacyPage() {
               server code. Vercel Web Analytics and Speed Insights are enabled. They report aggregate
               traffic and page performance, and are not used to build a profile of you or to
               advertise to you.
+            </>,
+            <>
+              <span className="font-semibold text-text">Discord</span> supplies the community
+              platform, bot API and attachment hosting. <span className="font-semibold text-text">OVHcloud</span>{" "}
+              is the intended host for our separate bot service and its private database. Discord
+              community data is used for community features and moderation, not advertising.
             </>,
             <>
               <span className="font-semibold text-text">Resend</span> handles email, both the

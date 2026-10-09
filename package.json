@@ -21,7 +21,8 @@
     "migrate:mediafire": "node scripts/migrate-mediafire-to-github.mjs",
     "test:mod": "node scripts/test-mod.mjs && node scripts/test-mod-app.mjs",
     "test:fps": "node scripts/test-fps.mjs",
-    "test:catalog-editor": "node scripts/test-catalog-editor.mjs"
+    "test:catalog-editor": "node scripts/test-catalog-editor.mjs",
+    "test:bot": "node scripts/test-bot.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

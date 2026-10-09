@@ -51,7 +51,8 @@ const src = {
     read("supabase/migrations/0018_adsense_legal_versions.sql") +
     read("supabase/migrations/0019_mod_role.sql") +
     read("supabase/migrations/0021_current_legal_versions.sql") +
-    read("supabase/migrations/0022_discord_privacy_version.sql"),
+    read("supabase/migrations/0022_discord_privacy_version.sql") +
+    read("supabase/migrations/0023_discord_bot_legal_versions.sql"),
   authors: read("src/lib/authors.ts"),
   authorPage: read("src/app/author/[slug]/page.tsx"),
   macroPage: read("src/app/macro/[slug]/page.tsx"),

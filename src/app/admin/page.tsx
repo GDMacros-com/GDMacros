@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 // Each tool and server action checks its own permissions.
 const TOOLS = [
+  { href: "/admin/bot-panel", title: "Community bot", description: "Manage the Discord bot, moderation cases, leveling and ticket panels.", Icon: GaugeIcon },
   { href: "/admin/macros", title: "Edit published macros", description: "Correct details, replace a file, remove an entry or update its tested date.", Icon: ListIcon },
   {
     href: "/admin/submissions",

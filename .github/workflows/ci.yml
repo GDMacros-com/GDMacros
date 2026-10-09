@@ -1,6 +1,6 @@
 # Runs on every push and pull request.
 #
-# Two jobs, deliberately separate.
+# Separate catalog and website test jobs.
 #
 # `check` is the one that catches a bad macro submission: a missing field, a
 # wrong recorder, a duplicate URL or broken JSON in data/macros.json fails here
@@ -37,6 +37,9 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Audit website production dependencies
+        run: npm audit --omit=dev
 
       - name: Validate data/macros.json
         run: npm run validate
@@ -105,3 +108,6 @@ jobs:
 
       - name: ZBot catalog
         run: npm run test:zbot
+
+      - name: Bot website authorization and public data
+        run: npm run test:bot

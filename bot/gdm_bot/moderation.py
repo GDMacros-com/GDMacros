@@ -98,6 +98,13 @@ class ModerationService:
         return number
 
     async def member_action(self, action, actor, target, reason, value=None):
+        if action == "softban":
+            # Maintenance must not recover a softban while it is still running.
+            async with self.lock:
+                return await self._member_action(action, actor, target, reason, value)
+        return await self._member_action(action, actor, target, reason, value)
+
+    async def _member_action(self, action, actor, target, reason, value=None):
         guild = self.bot.guild
         if actor.guild.id != guild.id or target.guild.id != guild.id:
             raise UserError("Choose a member of the configured server")
@@ -188,6 +195,10 @@ class ModerationService:
         return self.record(action, target.id, actor.id, reason, details)
 
     async def retry_unbans(self):
+        async with self.lock:
+            await self._retry_unbans()
+
+    async def _retry_unbans(self):
         for row in self.store.rows("SELECT * FROM pending_unbans LIMIT 20"):
             data = json.loads(row["reason"])
             if data.get("completed"):

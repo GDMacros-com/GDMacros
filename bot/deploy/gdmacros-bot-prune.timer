@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly GDMacros transcript expiry, including while the bot is offline
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=60
+Unit=gdmacros-bot-prune.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=Erase expired GDMacros Discord transcripts
+
+[Service]
+Type=oneshot
+User=gdmacrosbot
+Group=gdmacrosbot
+WorkingDirectory=/opt/gdmacros/bot
+EnvironmentFile=/etc/gdmacros-bot.env
+ExecStart=/opt/gdmacros/bot/.venv/bin/python -m gdm_bot.prune
+StateDirectory=gdmacros-bot
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/gdmacros-bot

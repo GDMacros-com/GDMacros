@@ -1,0 +1,27 @@
+[Unit]
+Description=GDMacros Discord bot and private API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gdmacrosbot
+Group=gdmacrosbot
+WorkingDirectory=/opt/gdmacros/bot
+EnvironmentFile=/etc/gdmacros-bot.env
+ExecStart=/opt/gdmacros/bot/.venv/bin/python -m gdm_bot
+Restart=on-failure
+RestartSec=10
+StateDirectory=gdmacros-bot
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/gdmacros-bot
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

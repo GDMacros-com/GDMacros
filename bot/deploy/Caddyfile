@@ -1,0 +1,10 @@
+# Point this subdomain at the VPS first. Caddy obtains and renews HTTPS.
+bot.gdmacros.com {
+    @api path /v1/*
+    handle @api {
+        reverse_proxy 127.0.0.1:8787
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

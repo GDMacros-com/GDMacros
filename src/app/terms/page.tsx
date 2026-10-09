@@ -227,6 +227,37 @@ export default function TermsPage() {
         </p>
       </Section>
 
+      <Section title="Discord community and bot">
+        <p>
+          Our Discord server is a place to hang out with the GDM Community. Macro requests,
+          submissions and website support remain on the website. Discord&apos;s own terms and
+          community rules apply when you use its platform.
+        </p>
+        <p>
+          When enabled, our bot supports moderation, boost announcements, XP and role rewards,
+          private Discord tickets and temporary voice channels. Staff choose which features,
+          channels and command roles are enabled. An enabled honeypot channel has a clear warning:
+          posting there can trigger a softban, which removes you and clears recent messages while
+          allowing you to rejoin. Discord permissions and role hierarchy still apply; administrators
+          can bypass channel locks, and the bot cannot override Discord&apos;s restrictions.
+        </p>
+        <p>
+          XP, ranks and rewards are community features, not paid entitlements or guarantees. They
+          can be corrected, imported, reset or disabled by staff. Level-up messages, warnings and
+          other bot messages relate to these features; closed DMs can prevent delivery. Do not
+          spam, exploit leveling, or use ticket and voice features to harass others.
+        </p>
+        <p>
+          Discord tickets are separate from website support tickets. Closed Discord transcripts
+          require a website admin account and expire after 30 days; attachment links may expire
+          sooner. Keep information you need before the ticket closes. Do not put passwords, tokens,
+          payment details or other sensitive personal information into tickets or bot commands.
+          The <Link href="/privacy" className="text-accent-soft hover:underline">Privacy Policy</Link>{" "}
+          explains community data and moderation records. For an appeal, bot issue or privacy
+          request, contact <Mail />.
+        </p>
+      </Section>
+
       <Section title="Things you should not do">
         <Bullets
           items={[

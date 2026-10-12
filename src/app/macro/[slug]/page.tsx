@@ -322,13 +322,13 @@ export default async function MacroPage({ params }: { params: Promise<{ slug: st
       </div>
 
       {(prev || next) && (
-        <nav className="mt-12 grid gap-2.5 border-t border-border-soft pt-6 sm:grid-cols-2">
+        <nav aria-label="Level navigation" className="mt-12 grid gap-2.5 border-t border-border-soft pt-6 sm:grid-cols-2">
           {prev ? (
             <Link
               href={`/macro/${prev.slug}`}
-              className="card group px-4 py-3 transition-[border-color,transform] duration-200 ease-out hover:-translate-x-1 hover:border-accent/40 active:scale-[0.98] active:duration-75"
+              className="card level-nav-link group min-w-0 px-4 py-3"
             >
-              <p className="text-[11px] tracking-wider text-muted uppercase">Previous</p>
+              <p className="flex items-center gap-1.5 text-[11px] tracking-wider text-muted uppercase"><span className="level-nav-arrow" aria-hidden="true">←</span>Previous</p>
               <p
                 translate="no"
                 className="notranslate mt-0.5 truncate text-[14px] font-semibold text-text-dim transition-colors group-hover:text-accent-soft"
@@ -342,9 +342,9 @@ export default async function MacroPage({ params }: { params: Promise<{ slug: st
           {next && (
             <Link
               href={`/macro/${next.slug}`}
-              className="card group px-4 py-3 text-right transition-[border-color,transform] duration-200 ease-out hover:translate-x-1 hover:border-accent/40 active:scale-[0.98] active:duration-75 sm:col-start-2"
+              className="card level-nav-link level-nav-next group min-w-0 px-4 py-3 text-right sm:col-start-2"
             >
-              <p className="text-[11px] tracking-wider text-muted uppercase">Next</p>
+              <p className="flex items-center justify-end gap-1.5 text-[11px] tracking-wider text-muted uppercase">Next<span className="level-nav-arrow" aria-hidden="true">→</span></p>
               <p
                 translate="no"
                 className="notranslate mt-0.5 truncate text-[14px] font-semibold text-text-dim transition-colors group-hover:text-accent-soft"

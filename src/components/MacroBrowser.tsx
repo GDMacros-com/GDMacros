@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useViewTransition } from "@/lib/useViewTransition";
 import { migrateStoredFavorites } from "@/lib/favorites";
 import { RECORDERS, type Level, type Recorder } from "@/lib/types";
 import MacroCard from "./MacroCard";
@@ -13,27 +12,22 @@ import Segmented from "./Segmented";
 import {
   BotIcon,
   ChevronDownIcon,
-  ClockIcon,
   DiceIcon,
   GridIcon,
   RowsIcon,
   SearchIcon,
-  SortAzIcon,
   XIcon,
 } from "./icons";
 
 type View = "list" | "grid";
 
-/**
- * How the list is ordered. The button cycles through these in order, so the
- * next one is always predictable.
- */
-type Sort = "az" | "newest" | "oldest";
+type Sort = "az" | "za" | "newest" | "oldest";
 
-const SORTS: { id: Sort; label: string; short: string; next: string }[] = [
-  { id: "az", label: "Sorted A-Z", short: "A-Z", next: "newest first" },
-  { id: "newest", label: "Newest first", short: "Newest", next: "oldest first" },
-  { id: "oldest", label: "Oldest first", short: "Oldest", next: "A to Z" },
+const SORTS: { id: Sort; label: string }[] = [
+  { id: "az", label: "A-Z" },
+  { id: "za", label: "Z-A" },
+  { id: "newest", label: "Newest first" },
+  { id: "oldest", label: "Oldest first" },
 ];
 
 /** Remembered between visits, so a chosen order is still there on the way back. */
@@ -73,10 +67,6 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hydrated = useRef(false);
   const router = useRouter();
-
-  // Filter and layout changes rearrange the whole list, so they are worth
-  // animating. Typing is not: a transition per keystroke would fight the user.
-  const withTransition = useViewTransition();
 
   // Favorites were keyed by slug before Phase 2B. This page has the whole
   // catalog, so it is the natural place to finish that migration: almost every
@@ -130,7 +120,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const el = document.activeElement;
-      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
+      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement;
 
       if (e.key === "/" && !typing) {
         e.preventDefault();
@@ -156,6 +146,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
     });
 
     if (sort === "az") return matched;
+    if (sort === "za") return matched.reverse();
 
     // Anything without a date goes last either way, rather than being treated
     // as impossibly old or impossibly new. Array.sort is stable, so levels
@@ -167,14 +158,6 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
     );
     return [...dated, ...undated];
   }, [levels, query, recorder, sort]);
-
-  const activeSort = SORTS.find((o) => o.id === sort) ?? SORTS[0];
-
-  /** Steps to the next order. Wraps, so the button never dead-ends. */
-  function cycleSort() {
-    const i = SORTS.findIndex((o) => o.id === sort);
-    withTransition(() => setSort(SORTS[(i + 1) % SORTS.length].id));
-  }
 
   /**
    * Jumps to a random level from whatever is currently on screen, so an active
@@ -222,7 +205,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
             ariaLabel="View mode"
             size="sm"
             value={view}
-            onChange={(next) => withTransition(() => setView(next))}
+            onChange={setView}
             options={[
               {
                 value: "list",
@@ -261,7 +244,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
         <Segmented<RecorderFilter>
           ariaLabel="Filter by recorder"
           value={recorder}
-          onChange={(next) => withTransition(() => setRecorder(next))}
+          onChange={setRecorder}
           options={(["all", ...RECORDERS] as RecorderFilter[]).map((value) => ({
             value,
             label:
@@ -286,40 +269,26 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
               : ` of ${levels.length} level${levels.length === 1 ? "" : "s"}`}
           </p>
           <span className="text-muted/40">·</span>
-          {/* Cycles A-Z, newest, oldest. The title says what the next click
-              does, because a cycling control otherwise hides its options.
-              "A-Z" is pinned: Google Translate reads it as the state code and
-              renders "sorted in Arizona" in several languages. */}
-          <button
-            type="button"
-            onClick={cycleSort}
-            title={`Sorted ${activeSort.short}. Click to sort by ${activeSort.next}.`}
-            aria-label={`Change sorting. Currently ${activeSort.label}. Click to sort by ${activeSort.next}.`}
-            className="group/sort flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[12.5px] font-medium text-text-dim transition-[border-color,background-color,transform] duration-200 ease-out hover:border-accent/40 hover:bg-surface-2 hover:text-text active:scale-95 active:duration-75"
-          >
-            {activeSort.id === "az" ? (
-              <SortAzIcon className="h-3.5 w-3.5 text-muted transition-colors group-hover/sort:text-accent-soft" />
-            ) : (
-              <ClockIcon className="h-3.5 w-3.5 text-muted transition-colors group-hover/sort:text-accent-soft" />
-            )}
-            {activeSort.id === "az" ? (
-              <span>
-                Sorted{" "}
-                <span translate="no" className="notranslate">
-                  A-Z
-                </span>
-              </span>
-            ) : (
-              <span>{activeSort.label}</span>
-            )}
-            <ChevronDownIcon className="h-3 w-3 text-muted/60 transition-transform duration-200 group-hover/sort:translate-y-px" />
-          </button>
+          <div className="relative shrink-0">
+            <select
+              aria-label="Sort levels"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as Sort)}
+              className="cursor-pointer appearance-none rounded-lg border border-border bg-surface py-2 pr-8 pl-3 text-[12.5px] font-medium text-text-dim transition-colors hover:border-accent/40 hover:bg-surface-2 hover:text-text"
+            >
+              {SORTS.map((option) => (
+                <option key={option.id} value={option.id} translate={option.id === "az" || option.id === "za" ? "no" : undefined}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDownIcon aria-hidden="true" className="pointer-events-none absolute top-1/2 right-2.5 h-3 w-3 -translate-y-1/2 text-muted" />
+          </div>
         </div>
       </div>
 
-      {/* Only with nothing narrowed down: mid-search it would sit above results
-          it does not match. Renders nothing until localStorage has been read. */}
-      {!query && recorder === "all" && <RecentlyViewed levels={levels} />}
+      {/* History stays available across recorder filters. */}
+      {!query && <RecentlyViewed levels={levels} />}
 
       {results.length === 0 ? (
         <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">

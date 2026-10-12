@@ -61,6 +61,7 @@ export default function Thumb({
             ref={imgRef}
             src={src}
             alt=""
+            draggable={false}
             loading="lazy"
             decoding="async"
             onLoad={() => setStatus("loaded")}

@@ -20,41 +20,41 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-4 md:items-end">
-          <nav className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
-            <Link href="/" className="text-text-dim transition-colors hover:text-accent-soft">
+          <nav aria-label="Footer navigation" className="-mx-2.5 flex flex-wrap gap-0.5 text-[13px]">
+            <Link href="/" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               All macros
             </Link>
-            <Link href="/install" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/install" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               How to install
             </Link>
-            <Link href="/favorites" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/favorites" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Favorites
             </Link>
-            <Link href="/faq" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/faq" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               FAQ
             </Link>
-            <Link href="/guidelines" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/guidelines" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Guidelines
             </Link>
-            <Link href="/about" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/about" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               About
             </Link>
-            <a href={site.discord} target="_blank" rel="noopener noreferrer" className="text-text-dim transition-colors hover:text-accent-soft">
+            <a href={site.discord} target="_blank" rel="noopener noreferrer" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Discord<span className="sr-only"> (opens in a new tab)</span>
             </a>
-            <Link href="/privacy" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/privacy" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Privacy
             </Link>
-            <Link href="/terms" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/terms" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Terms
             </Link>
             <Link
               href="/submit"
-              className="text-text-dim transition-colors hover:text-accent-soft"
+              className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2"
             >
               Submit a macro
             </Link>
-            <Link href="/support/new" className="text-text-dim transition-colors hover:text-accent-soft">
+            <Link href="/support/new" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Send a suggestion
             </Link>
           </nav>
@@ -64,6 +64,7 @@ export default function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub repository"
+            title="GitHub"
             className="grid h-9 w-9 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text md:-mr-2"
           >
             <GithubIcon className="h-[17px] w-[17px]" />

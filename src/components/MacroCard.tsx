@@ -23,9 +23,6 @@ export default function MacroCard({ level, index }: { level: Level; index: numbe
       style={
         {
           "--i": index,
-          // Shares its name with the list row, so switching layout morphs the
-          // same element rather than swapping one component for another.
-          viewTransitionName: `macro-${level.slug}`,
         } as React.CSSProperties
       }
       className="animate-rise card spotlight group defer-offscreen-card flex flex-col overflow-hidden transition-[border-color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/40 active:scale-[0.985] active:duration-75"

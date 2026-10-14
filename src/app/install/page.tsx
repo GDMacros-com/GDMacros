@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   },
 };
 
-const XDBOT_PC = "https://www.mediafire.com/file/kk33lxumpzit8y8/zilko.xdbot.geode/file";
-const XDBOT_MOBILE = "https://www.mediafire.com/file/gdxapqjqgkbcgmy/zilko.xdbot.geode/file";
+const XDBOT_PC = "https://raw.githubusercontent.com/GDMacros-com/GDMacros-downloads/refs/heads/main/zilko.xdbot.geode";
+const XDBOT_MOBILE = "https://raw.githubusercontent.com/GDMacros-com/GDMacros-downloads/refs/heads/main/zilko.xdbot.geode";
 const MEGA_HACK_STORE = "https://absolllute.com/store/mega-hack";
 const ZBOT_STORE = "https://zbot.figmentcoding.me/";
 const ZBOT_PAGE = "https://geode-sdk.org/mods/fig.zbot";

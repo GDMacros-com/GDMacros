@@ -4380,5 +4380,22 @@
         "testedAt": "2026-10-07"
       }
     ]
+  },
+  {
+    "name": "Silent Jawbreaker",
+    "creator": "AndrewOfGD",
+    "levelId": "21453066",
+    "video": "https://www.youtube.com/watch?v=VGvlKIYWEvI",
+    "addedAt": "2026-10-14",
+    "macros": [
+      {
+        "author": "Itsagelaaaa",
+        "recorder": "Mega Hack",
+        "fps": 60,
+        "testedAt": "2026-10-14",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-21453066/Itsagelaaaa-Silent-Jawbreaker-Mega-Hack.gdr2"
+      }
+    ]
   }
 ]

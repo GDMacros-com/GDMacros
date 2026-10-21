@@ -4447,5 +4447,21 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-148598469/ChesszDC-Artemis-13-xdBot.gdr2"
       }
     ]
+  },
+  {
+    "name": "New Record",
+    "creator": "lTemp",
+    "levelId": "76760593",
+    "addedAt": "2026-10-21",
+    "macros": [
+      {
+        "author": "Chessy",
+        "recorder": "Mega Hack",
+        "fps": 240,
+        "testedAt": "2026-10-21",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-76760593/Chessy-New-Record-Mega-Hack.gdr2"
+      }
+    ]
   }
 ]

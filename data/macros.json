@@ -4430,5 +4430,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-120012581/ItsAgelaaaa-Defeated-Circles-Mega-Hack.gdr2"
       }
     ]
+  },
+  {
+    "name": "Artemis 13",
+    "creator": "mvngo",
+    "levelId": "148598469",
+    "video": "https://www.youtube.com/watch?v=Dg0WZY90X7w",
+    "addedAt": "2026-10-21",
+    "macros": [
+      {
+        "author": "ChesszDC",
+        "recorder": "xdBot",
+        "fps": 240,
+        "testedAt": "2026-10-21",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-148598469/ChesszDC-Artemis-13-xdBot.gdr2"
+      }
+    ]
   }
 ]

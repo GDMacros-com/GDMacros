@@ -23,7 +23,7 @@ const SECTIONS = [
       "A searchable list of macros, each one showing the level it plays, who built that level and who recorded the macro.",
       "Macro files hosted in our GitHub Releases repository, with a support inbox for reporting broken downloads.",
       "A link straight through to the level on GD Browser, so you can check it before you download.",
-      "Browse and download free without an account. Sign in to submit macros, save favorites or use support tickets. Advertising, where enabled, helps support the site.",
+      "Browse and download free without an account. Sign in to submit macros, save favorites or use support tickets.",
     ],
   },
   {

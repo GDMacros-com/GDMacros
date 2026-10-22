@@ -37,6 +37,6 @@ Send one combined Terms/Privacy update through the admin Legal Notices tool once
 
 Explain those changes in your own notice, link `/terms` and `/privacy`, send a test to yourself, then use the existing preview/confirmation flow. If applicable law requires renewed agreement or a notice period, arrange that before making the relevant change effective; the notice tool alone does not collect renewed consent.
 
-The source review cannot verify the production AdSense CMP, hosting regions, provider logs/backups, controller identity or contractual transfer arrangements. Review those deployment facts separately before treating the privacy text as a complete compliance review.
+The source review cannot verify the hosting regions, provider logs/backups, controller identity or contractual transfer arrangements. Review those deployment facts separately before treating the privacy text as a complete compliance review.
 
 Rights wording was checked against the [European Commission’s explanation of individual data-protection rights](https://commission.europa.eu/law/law-topic/data-protection/information-individuals_en). This does not verify deployment-specific compliance.

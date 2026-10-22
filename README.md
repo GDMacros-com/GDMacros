@@ -12,7 +12,7 @@ The community invite is available in the footer and on About, beneath the owner 
 
 A modal announces the server on public browsing pages. It blocks page interaction until the visitor closes it, presses Escape, chooses Maybe later or opens the invite. The browser saves `gdmacros:discord-announcement:2026-10` when it appears, so subsequent visits skip it. Clearing site data or using another browser resets this; with local storage unavailable, it is remembered only until reload. Account, admin and support routes do not trigger it.
 
-Apply `supabase/migrations/0022_discord_privacy_version.sql` alongside this deployment to match the updated privacy disclosure. No new environment variables are needed.
+Apply migrations through `0024_new_macro_webhook.sql` before deploying this update. Migration 0023 updates both legal document versions; 0024 queues new macro announcements. Set the server-only `NEW_MACRO_WEBHOOK` to your Discord webhook URL in Vercel Production.
 
 ## Recording FPS
 
@@ -44,7 +44,7 @@ Open `http://localhost:3000`. Without service credentials, you can work on the p
 | `npm run test:catalog-editor` | Catalog edits, replacement validation, authorization and concurrency |
 | `npm run test:mod` | Real PostgreSQL permission and migration checks using PGlite, plus application gates |
 
-Other suites are `test:publish`, `test:migrate`, `test:translate`, `test:email`, `test:legal`, `test:admin`, `test:account`, `test:support`, `test:zbot` and `test:ads`. CI runs the test suites, catalog validation, typecheck and build for PRs and pushes to `main`. Tests use local fixtures and mocked external services; they do not send real emails or publish real macros.
+Other suites are `test:publish`, `test:announcements`, `test:migrate`, `test:translate`, `test:email`, `test:legal`, `test:admin`, `test:account`, `test:support` and `test:zbot`. CI runs the test suites, catalog validation, typecheck and build for PRs and pushes to `main`. Tests use local fixtures and mocked external services; they do not send real emails, post to Discord or publish real macros.
 
 ## Service configuration
 
@@ -133,17 +133,13 @@ The old GitHub Pages workflow and export configuration remain in the repository,
 
 The published macro editor needs no new SQL migration or environment variables. Merge and deploy, then follow [the editor rollout checks](docs/catalog-editor.md). The earlier [FPS and policy rollout](docs/fps-policy-rollout.md) still applies to deployments that have not installed migrations 020 and 021.
 
-## Advertising, language and analytics
+## New macro announcements
 
-Ads are optional and limited to public catalog and macro pages. Configure:
+Set `NEW_MACRO_WEBHOOK` to the Discord incoming webhook URL (a server-only secret). New accepted macros are queued transactionally when publication finishes, after production is verified live. Single and bulk publishing try delivery immediately; the existing authenticated maintenance cron retries failures daily using `CRON_SECRET`. Apply `supabase/migrations/0023_current_legal_versions.sql` and `supabase/migrations/0024_new_macro_webhook.sql` before deploying. The worker uses the existing `SUPABASE_SECRET_KEY` and GitHub catalog access.
 
-```text
-NEXT_PUBLIC_ADSENSE_ENABLED=true
-NEXT_PUBLIC_ADSENSE_HOME_SLOT=<catalog display-ad slot>
-NEXT_PUBLIC_ADSENSE_MACRO_SLOT=<macro display-ad slot>
-```
+The green embed includes the level name, level ID, macro creator and a link to the macro page, never a direct download. It uses the current catalog's custom slug if present. Private notes and email addresses are excluded, and mentions are disabled. Missing configuration skips delivery. Jobs survive acceptance and request failures; concurrent workers use leases. Discord does not support an idempotency key, so a lost delivery confirmation can produce a duplicate on retry. Historical acceptances are not backfilled. Tests use mocked delivery and do not post to Discord.
 
-The publisher ID is in the code and `public/ads.txt`. Configure and verify Google's consent message in the AdSense dashboard; the repository alone cannot prove the live CMP is published or correctly configured. Avoid enabling Auto ads if you want to preserve the coded placement limits. The ad-block reminder is dismissible and never denies catalog access.
+## Language and analytics
 
 Google Translate's widget provides the language menu. Vercel Web Analytics and Speed Insights are mounted by the application. Video thumbnails and embeds, and the About page's Lanyard/Discord content, involve browser requests to their providers. The [Privacy Policy](https://www.gdmacros.com/privacy) describes the data flows.
 
@@ -151,7 +147,7 @@ Google Translate's widget provides the language menu. Vercel Web Analytics and S
 
 Public policies are in `src/app/terms/page.tsx` and `src/app/privacy/page.tsx`. Versions in `src/lib/legal.ts` must match `private.legal_documents` through a new migration. Updating a version does not rewrite old acceptance records or send an email. Admins can send a policy notice through the existing Legal Notices tool after the matching documents are live.
 
-The policies describe implemented behavior, not a certification of legal compliance. Deployment-specific facts such as the operator's legal identity, processing arrangements, provider regions, backups, retention and advertising consent configuration need operator review. Do not invent those facts from the source code.
+The policies describe implemented behavior, not a certification of legal compliance. Deployment-specific facts such as the operator's legal identity, processing arrangements, provider regions, backups and retention need operator review. Do not invent those facts from the source code.
 
 ## Source map
 

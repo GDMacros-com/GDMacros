@@ -1,4 +1,5 @@
 import "server-only";
+import { sendMacroAnnouncement } from "./announcement";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { checkGdr } from "@/lib/gdr";
@@ -646,6 +647,8 @@ export async function runPublish(
         };
       }
 
+      await sendMacroAnnouncement(submissionId);
+
       // (b) The row is gone, so the transaction did commit and only the
       // response was lost. The submitter already has their notification. There
       // is nothing left to do and nothing to retry.
@@ -668,6 +671,8 @@ export async function runPublish(
     // is best effort: a failure leaves an invisible orphan in an unlistable
     // bucket, which is the trade this project has always preferred over a
     // visible row pointing at a missing file.
+    await sendMacroAnnouncement(submissionId);
+
     const finish = parseFinishEnvelope(finishData);
     if (finish.storagePath) {
       const { deleteSubmissionObjectByPath } = await import("@/lib/supabase/storage-admin");

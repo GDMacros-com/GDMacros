@@ -76,7 +76,8 @@ const src = {
     read("supabase/migrations/0018_adsense_legal_versions.sql") +
     read("supabase/migrations/0019_mod_role.sql") +
     read("supabase/migrations/0021_current_legal_versions.sql") +
-    read("supabase/migrations/0022_discord_privacy_version.sql"),
+    read("supabase/migrations/0022_discord_privacy_version.sql") +
+    read("supabase/migrations/0023_current_legal_versions.sql"),
   ownerCard: read("src/components/DiscordOwnerCard.tsx"),
 };
 
@@ -260,10 +261,6 @@ check("privacy covers the signup acceptance record", /which version of the/i.tes
 check("privacy covers automatic publishing", /publishing happens automatically/i.test(src.privacy));
 check("privacy says the private upload is deleted after publication", /private copy of your upload is deleted/i.test(src.privacy));
 check("privacy covers Vercel analytics", /Web Analytics and Speed Insights/i.test(src.privacy));
-check("privacy discloses Google AdSense", /Google AdSense/i.test(src.privacy));
-check("privacy explains advertising consent choices", /consent, not consent or manage options/i.test(prose.privacy));
-check("privacy explains the ad blocker check", /small on-device check/i.test(prose.privacy));
-check("privacy says the ad blocker notice does not block access", /does not block the site/i.test(prose.privacy));
 check("privacy covers local storage keys", /gdm-theme/.test(src.privacy) && /gdmacros:favorites/.test(src.privacy));
 check("privacy covers the supabase session cookie", /session cookie/i.test(src.privacy));
 check("privacy covers google translate", /googtrans/i.test(src.privacy));
@@ -287,9 +284,6 @@ check("terms refuses to promise leaderboard acceptance", /they can change them, 
 check("terms says a macro completion is not a manual completion", /not a manual completion/i.test(src.terms));
 check("terms lists third party services", /GitHub, Supabase, Vercel, Resend, YouTube/i.test(src.terms));
 check("terms covers moderation", /Turn down a submission/i.test(src.terms));
-check("terms covers advertising", /advertisements supplied by Google AdSense/i.test(prose.terms));
-check("terms prohibits artificial ad activity", /Artificial ad impressions or clicks/i.test(prose.terms));
-check("terms keeps ad blocker access available", /does not remove access to the catalog/i.test(prose.terms));
 check("terms does not promise appeals are guaranteed", /not promising\s+a formal appeals process/i.test(src.terms));
 check("terms says future re-acceptance is not assumed from an email", /an email on its own is not us claiming/i.test(src.terms));
 

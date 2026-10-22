@@ -235,7 +235,6 @@ export default function TermsPage() {
             "Impersonate another person, whether in a username, a macro credit, or a message to support.",
             "Try to get around review, moderation or access controls.",
             "Attack the site or deliberately disrupt it for other people.",
-            "Generate or encourage artificial advertisement views or clicks.",
             "Harass anyone through submissions, usernames, support tickets or support email.",
           ]}
         />
@@ -244,10 +243,10 @@ export default function TermsPage() {
       <Section title="Services we depend on">
         <p>
           {site.name} runs on services we do not control: GitHub, Supabase, Vercel, Resend, YouTube,
-          GDBrowser, Google Translate, Google AdSense, Lanyard and Discord. If one of them has an outage or changes its
+          GDBrowser, Google Translate, Lanyard and Discord. If one of them has an outage or changes its
           rules, parts of the site can stop working, and that is outside our hands. Their own terms
           apply when you interact with them directly, such as when you download a file from GitHub,
-          watch an embedded video or receive an advertisement from Google.
+          watch an embedded video or use the language menu.
         </p>
         <p>
           The{" "}
@@ -258,19 +257,9 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="Advertising">
-        <p>
-          Some public catalog and macro pages contain advertisements supplied by Google AdSense.
-          Advertising helps cover the cost of running the site, but an advertisement is not our
-          recommendation or endorsement of the advertiser, product or destination.
-        </p>
-        <p>
-          You may use an ad blocker. If the site detects one, it may show a dismissible request to
-          allow ads, but refusing or dismissing that request does not remove access to the catalog.
-          Do not deliberately or repeatedly click, refresh or automate advertisements, and do not ask
-          anyone else to do so. Artificial ad impressions or clicks can harm the site and are not a
-          legitimate way to support it.
-        </p>
+      <Section title="Public macro announcements">
+        <p>Accepted macros may be announced in our Discord community with the level name,
+          level ID, public macro creator credit and a link to the macro page.</p>
       </Section>
 
       <Section title="Availability">

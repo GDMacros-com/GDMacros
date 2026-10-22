@@ -1,8 +1,6 @@
 import Link from "next/link";
-import AdSlot from "@/components/ads/AdSlot";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import MacroBrowser from "@/components/MacroBrowser";
-import { ADSENSE_HOME_SLOT } from "@/lib/adsense";
 import { getAllLevels, getMacroCount } from "@/lib/macros";
 import { site } from "@/lib/site";
 
@@ -71,8 +69,6 @@ export default function HomePage() {
           if you have not used one before.
         </p>
       </div>
-
-      <AdSlot slot={ADSENSE_HOME_SLOT} className="mb-5" />
       <MacroBrowser levels={levels} />
     </div>
   );

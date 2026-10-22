@@ -79,16 +79,14 @@ export default function PrivacyPage() {
         Version {PRIVACY_VERSION}. Last updated {formatLegalDate(PRIVACY_EFFECTIVE_DATE)}.
       </p>
       <p className="mt-4 text-[15px] leading-relaxed text-muted">
-        {site.name} is a macro catalog supported in part by advertising. This page explains what is
-        stored, what stays private, how advertising works, and which other companies are involved.
+        {site.name} is a macro catalog. This page explains what is
+        stored, what stays private, and which other companies are involved.
       </p>
 
       <Section title="The short version">
         <Bullets
           items={[
             "You can browse and download everything without an account.",
-            "Some public catalog pages contain Google AdSense advertising.",
-            "Where consent is required, you can accept, refuse, or manage advertising choices.",
             "An account stores what it needs to be an account, plus what you choose to give it.",
             "Your email address is not publicly listed. Your username and accepted macros are public.",
             "We send account, submission, support-ticket and important service or policy messages, not marketing email.",
@@ -100,8 +98,7 @@ export default function PrivacyPage() {
       <Section title="Browsing without an account">
         <p>
           You do not need an account to browse the catalog or download a macro. We do not create an
-          account record about you merely because you browse, but the hosting, analytics and
-          advertising services described below receive the technical information needed to provide
+          account record about you merely because you browse, but the hosting and analytics services described below receive the technical information needed to provide
           their part of the page.
         </p>
         <p>
@@ -125,47 +122,16 @@ export default function PrivacyPage() {
             "When you sign in, Supabase sets a session cookie so you stay signed in. Signing out clears it.",
             "If you use the language menu, Google Translate sets a googtrans cookie to remember the language. Setting it back to English clears it.",
             "An embedded YouTube video can set cookies when you play it. That is YouTube, under Google's terms, not us.",
-            "Google AdSense and its consent system can use cookies or similar storage to serve, limit, personalise and measure advertising according to your choices and the law that applies to you.",
           ]}
         />
       </Section>
 
-      <Section title="Advertising and consent">
+      <Section title="Public macro announcements">
         <p>
-          Public catalog and macro pages can show responsive advertisements supplied by Google
-          AdSense. Ads are kept out of account, submission, settings, notification, support-ticket
-          and admin pages. An advertisement is labelled and is not a recommendation or endorsement
-          by {site.name}.
-        </p>
-        <p>
-          Loading an ad or the consent message makes your browser communicate with Google. Depending
-          on your location, settings and consent, Google can process information such as your IP
-          address, browser and device information, the page you visited, ad interactions and cookie
-          or similar identifiers. Google uses that information to deliver, prevent fraud, measure
-          and, where permitted, personalise advertising.
-        </p>
-        <p>
-          Visitors in the EEA, UK and Switzerland are shown a Google-certified consent message with
-          choices to consent, not consent or manage options. Refusing personalised advertising does
-          not prevent you from using the catalog. You can revisit the privacy choices through the
-          Google message controls when they are available.
-        </p>
-        <p>
-          You can read{" "}
-          <a href="https://policies.google.com/technologies/ads" className="text-accent-soft hover:underline">
-            how Google uses information for advertising
-          </a>{" "}
-          and review your choices in{" "}
-          <a href="https://myadcenter.google.com/" className="text-accent-soft hover:underline">
-            Google&apos;s My Ad Center
-          </a>
-          .
-        </p>
-        <p>
-          The site can perform a small on-device check to notice when common advertisement elements
-          are hidden. If that suggests an ad blocker is active, a dismissible message asks whether
-          you would like to allow ads. The check is not sent to our server, does not block the site,
-          and the dismissal is remembered only in session storage for the current browser tab.
+          When a macro is accepted and live, we send its public level name, level ID, macro
+          creator credit and a link to its macro page to Discord for a public announcement.
+          We do not include your email address, private submission notes or uploaded file.
+          Discord processes and retains the announcement under its own policies.
         </p>
       </Section>
 
@@ -353,8 +319,7 @@ export default function PrivacyPage() {
             </>,
             <>
               <span className="font-semibold text-text">Google</span> is involved through Gmail,
-              where support mail is read; Google Translate, whose widget loads with the page to provide the language menu; and Google
-              AdSense, which provides consent choices and advertising on selected public pages.
+              where support mail is read; Google Translate, whose widget loads with the page to provide the language menu.
             </>,
             <>
               <span className="font-semibold text-text">GitHub</span> hosts the source code, the
@@ -455,7 +420,6 @@ export default function PrivacyPage() {
             "Your other account data, including settings, favorites, notifications and your submission history, stays while the account exists.",
             "A queued submission-result email can retain a destination address while a retry is possible; settling that job clears the address, not necessarily the delivery record or message. Other delivery records can remain for retry control and support. Account-linked records are removed with the account, and ticket jobs follow the ticket deletion rules.",
             "Support email stays in the mailbox unless it is deleted by hand.",
-            "The ad-block notice dismissal lasts only for the current browser-tab session. Google's advertising and consent data follows Google's own retention settings and your consent choices.",
             "Deleting your account removes its account-linked records. Published macros and credits remain in the catalog and its history. Separately received support email and provider logs or backups are not erased by that database operation.",
           ]}
         />

@@ -33,6 +33,6 @@ The editor reads the current catalog from GitHub and sends its blob SHA back wit
 - [zBot source](https://github.com/FigmentBoy/zBot), including the paid `key` gate around replay import in `src/gui.cpp`, and [official store](https://zbot.figmentcoding.me/).
 - [Original xdBot repository](https://github.com/ZiLko/xdBot), archived June 25, 2025. Existing MediaFire community-build links are retained with a maintenance/compatibility qualification; they are not labelled as verified current builds.
 
-About, FAQ, home and footer copy now reflect free downloads, paid playback tools where applicable, accounts, advertising where enabled and GitHub hosting without promising permanent availability. The Terms and Privacy Policy were reviewed: their existing publication, moderation, third-party hosting, retention and advertising disclosures cover this change. No additional personal data collection or legal-version update is introduced here.
+About, FAQ, home and footer copy now reflect free downloads, paid playback tools where applicable, accounts and GitHub hosting without promising permanent availability. The Terms and Privacy Policy were reviewed: their existing publication, moderation, third-party hosting, retention disclosures cover this change. No additional personal data collection or legal-version update is introduced here.
 
-These improvements do not guarantee AdSense approval. After deployment, review the public pages and request another review only when the site accurately reflects the service being provided.
+After deployment, review the public pages to confirm they accurately reflect the service being provided.

@@ -169,6 +169,21 @@ await check('mods can edit, claim, release and run the full publish lifecycle', 
   await as('user');
   assert.equal((await rows("select * from public.submission_notifications where outcome='accepted'")).length,1);
 });
+await check('announcement queue is service-only, transactional and leased', async () => {
+  await as('user');
+  await denied('select * from public.macro_announcement_jobs');
+  await denied('select * from public.claim_macro_announcement(null)');
+  await as('mod');
+  await denied('select * from public.claim_macro_announcement(null)');
+  await db.exec('reset role');
+  assert.equal((await rows('select * from public.macro_announcement_jobs where submission_id=$1',[submission])).length,1);
+  await db.exec('set role service_role');
+  const job = (await rows('select * from public.claim_macro_announcement($1)',[submission]))[0];
+  assert.equal(job.level_id,'123');
+  assert.equal(job.attempts,1);
+  assert.equal((await rows('select * from public.claim_macro_announcement($1)',[submission])).length,0);
+  await db.exec('reset role');
+});
 await check('mods can reject submissions and create the submitter notification', async () => {
   await db.exec('reset role');
   const id=(await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps) values ($1,'Reject test','124','zBot','Tester',100,240) returning id`,[ids.user]))[0].id;

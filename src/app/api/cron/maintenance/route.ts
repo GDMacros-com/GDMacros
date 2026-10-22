@@ -1,3 +1,4 @@
+import { drainMacroAnnouncements } from "@/lib/publish/announcement";
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { drainResultEmailQueue } from "@/lib/email/resultQueue";
@@ -82,10 +83,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const [emails, supportEmails, purgedTickets] = await Promise.all([
+  const [emails, supportEmails, purgedTickets, macroAnnouncements] = await Promise.all([
     drainResultEmailQueue(),
     drainSupportTicketEmailQueue(),
     purgeExpiredSupportTickets(),
+    drainMacroAnnouncements(),
   ]);
 
   // Counts only. No recipient, no notification id, no message.
@@ -105,6 +107,7 @@ export async function GET(request: NextRequest) {
       drained: supportEmails.drained,
     },
     supportTicketsPurged: purgedTickets,
+    macroAnnouncements,
   };
 
   console.log(`[cron:maintenance] ${JSON.stringify(summary)}`);

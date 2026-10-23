@@ -4481,5 +4481,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-23298409/Cheesy-Duelo-Maestro-Mega-Hack.gdr2"
       }
     ]
+  },
+  {
+    "name": "The Devourer",
+    "creator": "Whirl",
+    "levelId": "69230086",
+    "video": "https://www.youtube.com/watch?v=5W20q6n_e9s",
+    "addedAt": "2026-10-23",
+    "macros": [
+      {
+        "author": "ChesszDC",
+        "recorder": "xdBot",
+        "fps": 240,
+        "testedAt": "2026-10-23",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-69230086/ChesszDC-The-Devourer-xdBot.gdr2"
+      }
+    ]
   }
 ]

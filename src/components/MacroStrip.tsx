@@ -36,6 +36,7 @@ export default function MacroStrip({
           <Link
             key={level.slug}
             href={`/macro/${level.slug}`}
+            prefetch={false}
             className="card group flex items-center gap-3 p-2.5 transition-[border-color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/40"
           >
             <div className="h-[42px] w-[74px] shrink-0">

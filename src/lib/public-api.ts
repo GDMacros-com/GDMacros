@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { getAllLevels } from "./macros";
 import { parseFps } from "./fps";
 import { site } from "./site";
@@ -70,7 +69,6 @@ const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
   "Access-Control-Allow-Headers": "If-None-Match",
-  "Access-Control-Expose-Headers": "ETag",
   "X-Content-Type-Options": "nosniff",
 };
 
@@ -79,14 +77,8 @@ function json(request: Request, value: unknown, status = 200) {
   const headers = new Headers({ ...cors, "Content-Type": "application/json; charset=utf-8" });
   headers.set("Cache-Control", status === 200
     ? "public, max-age=0, s-maxage=300, stale-while-revalidate=60" : "no-store");
-  if (status === 200) {
-    const tag = `"${createHash("sha256").update(body).digest("hex")}"`;
-    headers.set("ETag", tag);
-    const matches = request.headers.get("if-none-match")?.split(",").some(
-      value => value.trim() === "*" || value.trim().replace(/^W\//, "") === tag,
-    );
-    if (matches) return new Response(null, { status: 304, headers });
-  }
+  // Do not emit ETags: Vercel's CDN-generated 304 responses strip CORS
+  // headers. CDN caching still applies; browser clients receive JSON 200s.
   return new Response(request.method === "HEAD" ? null : body, { status, headers });
 }
 

@@ -38,6 +38,7 @@ const MORE_ITEMS: MenuItem[] = [
   { label: "Support tickets", href: "/support", desc: "Private conversations with the admins" },
   { label: "Send a suggestion", href: "/support/new", desc: "Tell us what would improve GDMacros" },
   { label: "About", href: "/about", desc: "What this site is" },
+  { label: "API documentation", href: "/docs/api", desc: "Build with the public macro catalog" },
   { label: "Privacy", href: "/privacy", desc: "Analytics, cookies and third parties" },
 ];
 
@@ -82,7 +83,7 @@ function MenuLink({ item, onNavigate }: { item: MenuItem; onNavigate: () => void
       {content}
     </a>
   ) : (
-    <Link href={item.href} className={className} onClick={onNavigate}>
+    <Link href={item.href} prefetch={item.href === "/docs/api" ? false : undefined} className={className} onClick={onNavigate}>
       {content}
     </Link>
   );

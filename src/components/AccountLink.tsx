@@ -116,6 +116,7 @@ export default function AccountLink() {
     return (
       <Link
         href="/login"
+        prefetch={false}
         aria-label="Log in or create an account"
         title="Log in or create an account"
         className="grid h-9 w-9 place-items-center rounded-lg text-muted transition-[color,background-color,transform] hover:bg-surface-2 hover:text-text active:scale-90"

@@ -20,6 +20,7 @@ export default function MacroRow({ level, index }: { level: Level; index: number
   return (
     <Link
       href={`/macro/${level.slug}`}
+      prefetch={false}
       {...spotlight}
       style={
         {

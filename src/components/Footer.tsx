@@ -39,6 +39,9 @@ export default function Footer() {
             <Link href="/about" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               About
             </Link>
+            <Link href="/docs/api" prefetch={false} className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
+              API documentation
+            </Link>
             <a href={site.discord} target="_blank" rel="noopener noreferrer" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Discord<span className="sr-only"> (opens in a new tab)</span>
             </a>

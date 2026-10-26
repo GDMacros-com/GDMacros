@@ -19,6 +19,7 @@ export default function MacroCard({ level, index }: { level: Level; index: numbe
   return (
     <Link
       href={`/macro/${level.slug}`}
+      prefetch={false}
       {...spotlight}
       style={
         {

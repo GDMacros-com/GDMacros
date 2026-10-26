@@ -33,6 +33,19 @@ const nextConfig = {
     : {
         async headers() {
           return [
+            // Vercel can generate conditional 304 responses from its CDN
+            // without invoking the route. Apply public API CORS at routing
+            // level too, so those responses remain readable by browser clients.
+            {
+              source: "/api/v1/:path*",
+              headers: [
+                { key: "Access-Control-Allow-Origin", value: "*" },
+                { key: "Access-Control-Allow-Methods", value: "GET, HEAD, OPTIONS" },
+                { key: "Access-Control-Allow-Headers", value: "If-None-Match" },
+                { key: "Access-Control-Expose-Headers", value: "ETag" },
+                { key: "X-Content-Type-Options", value: "nosniff" },
+              ],
+            },
             {
               source: "/.well-known/:path*",
               headers: [{ key: "Content-Type", value: "text/plain; charset=utf-8" }],

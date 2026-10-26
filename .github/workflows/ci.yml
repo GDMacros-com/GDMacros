@@ -70,6 +70,9 @@ jobs:
       - name: Macro announcements
         run: npm run test:announcements
 
+      - name: Public catalog API
+        run: npm run test:api
+
       - name: Publisher
         run: npm run test:publish
 

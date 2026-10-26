@@ -65,13 +65,13 @@ assert.equal(stats.data.levels, levels.length);
 assert.equal(stats.data.macros, allRecordings.pagination.total);
 assert.equal(stats.data.recorders.reduce((sum, row) => sum + row.macros, 0), stats.data.macros);
 
-const tag = first.headers.get('etag');
-for (const value of [tag, `W/${tag}`, `"other", ${tag}`, '*']) {
+assert.equal(first.headers.get('etag'), null);
+for (const value of ['"previous-version"', '*']) {
   const response = publicApi(request('', { headers: { 'if-none-match': value } }), 'levels');
-  assert.equal(response.status, 304);
-  assert.equal(await response.text(), '');
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('access-control-allow-origin'), '*');
+  assert.ok((await response.json()).data.length);
 }
-assert.equal(publicApi(request('?limit=1', { headers: { 'if-none-match': tag } }), 'levels').status, 200);
 assert.equal(await publicApi(request('', { method: 'HEAD' }), 'levels').text(), '');
 assert.equal(apiOptions().status, 204);
 assert.equal(apiOptions().headers.get('access-control-allow-methods'), 'GET, HEAD, OPTIONS');
@@ -91,4 +91,4 @@ const route = await jiti.import('../src/app/api/v1/levels/[levelId]/route.ts');
 assert.equal((await route.GET(request(), { params: Promise.resolve({ levelId: String(known.levelId) }) })).status, 200);
 const unknown = await jiti.import('../src/app/api/v1/[...path]/route.ts');
 assert.equal((await unknown.GET(request()).json()).error.code, 'NOT_FOUND');
-console.log('Public API: search, filters, pagination, DTO boundaries, errors, CORS, ETags and route handlers passed.');
+console.log('Public API: search, filters, pagination, DTO boundaries, errors, CORS, cache headers and route handlers passed.');

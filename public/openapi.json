@@ -1,0 +1,1227 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GDMacros Public API",
+    "version": "1.0.0",
+    "description": "Public read-only catalog API. Production firewall: 60 requests per IP per 60-second fixed window across /api/v1 and its children, excluding OPTIONS. CDN caches successful responses for 300 seconds with 60 seconds stale revalidation. No ETag/304 contract. Lists use catalog alphabetical level order and recording order within each level. No permanent recording IDs or write/account API. Catalog changes require deployment; pagination is not snapshot-isolated across deployments. Availability is subject to hosting limits."
+  },
+  "servers": [
+    {
+      "url": "https://www.gdmacros.com"
+    }
+  ],
+  "security": [],
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "operationId": "getApi",
+        "summary": "Discover v1 endpoints",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discovery"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Level or endpoint not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "getApiHead",
+        "summary": "Discover v1 endpoints (headers only)",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success."
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID."
+          },
+          "404": {
+            "description": "Level or endpoint not found."
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop."
+          }
+        }
+      },
+      "options": {
+        "operationId": "getApiOptions",
+        "summary": "CORS preflight",
+        "responses": {
+          "204": {
+            "description": "No content. Allows GET, HEAD, OPTIONS and the If-None-Match request header; wildcard origin, no credentials."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          }
+        }
+      }
+    },
+    "/api/v1/levels": {
+      "get": {
+        "operationId": "listLevels",
+        "summary": "List matching levels with all their recordings",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive literal substring after trimming. Levels search name, creator, ID and recording author/recorder/host; recordings search level name/creator/ID and that recording author/recorder. Not a regular expression.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "recorder",
+            "in": "query",
+            "description": "Exact recorder name. URL-encode spaces, for example Mega%20Hack.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Mega Hack",
+                "xdBot",
+                "zBot"
+              ]
+            }
+          },
+          {
+            "name": "fps",
+            "in": "query",
+            "description": "Exact recording FPS match. Positive finite decimal or scientific notation; no range matching or 240 FPS cap.",
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Results per page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Level or endpoint not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "listLevelsHead",
+        "summary": "List matching levels with all their recordings (headers only)",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive literal substring after trimming. Levels search name, creator, ID and recording author/recorder/host; recordings search level name/creator/ID and that recording author/recorder. Not a regular expression.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "recorder",
+            "in": "query",
+            "description": "Exact recorder name. URL-encode spaces, for example Mega%20Hack.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Mega Hack",
+                "xdBot",
+                "zBot"
+              ]
+            }
+          },
+          {
+            "name": "fps",
+            "in": "query",
+            "description": "Exact recording FPS match. Positive finite decimal or scientific notation; no range matching or 240 FPS cap.",
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Results per page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success."
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID."
+          },
+          "404": {
+            "description": "Level or endpoint not found."
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop."
+          }
+        }
+      },
+      "options": {
+        "operationId": "listLevelsOptions",
+        "summary": "CORS preflight",
+        "responses": {
+          "204": {
+            "description": "No content. Allows GET, HEAD, OPTIONS and the If-None-Match request header; wildcard origin, no credentials."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          }
+        }
+      }
+    },
+    "/api/v1/levels/{levelId}": {
+      "get": {
+        "operationId": "getLevel",
+        "summary": "Get one level by its exact Geometry Dash ID",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Level or endpoint not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "getLevelHead",
+        "summary": "Get one level by its exact Geometry Dash ID (headers only)",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success."
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID."
+          },
+          "404": {
+            "description": "Level or endpoint not found."
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop."
+          }
+        }
+      },
+      "options": {
+        "operationId": "getLevelOptions",
+        "summary": "CORS preflight",
+        "responses": {
+          "204": {
+            "description": "No content. Allows GET, HEAD, OPTIONS and the If-None-Match request header; wildcard origin, no credentials."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          }
+        }
+      }
+    },
+    "/api/v1/macros": {
+      "get": {
+        "operationId": "listMacros",
+        "summary": "List only matching recordings with their level metadata",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive literal substring after trimming. Levels search name, creator, ID and recording author/recorder/host; recordings search level name/creator/ID and that recording author/recorder. Not a regular expression.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "recorder",
+            "in": "query",
+            "description": "Exact recorder name. URL-encode spaces, for example Mega%20Hack.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Mega Hack",
+                "xdBot",
+                "zBot"
+              ]
+            }
+          },
+          {
+            "name": "fps",
+            "in": "query",
+            "description": "Exact recording FPS match. Positive finite decimal or scientific notation; no range matching or 240 FPS cap.",
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Results per page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MacroList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Level or endpoint not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "listMacrosHead",
+        "summary": "List only matching recordings with their level metadata (headers only)",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive literal substring after trimming. Levels search name, creator, ID and recording author/recorder/host; recordings search level name/creator/ID and that recording author/recorder. Not a regular expression.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "recorder",
+            "in": "query",
+            "description": "Exact recorder name. URL-encode spaces, for example Mega%20Hack.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Mega Hack",
+                "xdBot",
+                "zBot"
+              ]
+            }
+          },
+          {
+            "name": "fps",
+            "in": "query",
+            "description": "Exact recording FPS match. Positive finite decimal or scientific notation; no range matching or 240 FPS cap.",
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Results per page. Use plain integer digits without a leading zero.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success."
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID."
+          },
+          "404": {
+            "description": "Level or endpoint not found."
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop."
+          }
+        }
+      },
+      "options": {
+        "operationId": "listMacrosOptions",
+        "summary": "CORS preflight",
+        "responses": {
+          "204": {
+            "description": "No content. Allows GET, HEAD, OPTIONS and the If-None-Match request header; wildcard origin, no credentials."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          }
+        }
+      }
+    },
+    "/api/v1/stats": {
+      "get": {
+        "operationId": "getStats",
+        "summary": "Catalog and recorder totals",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Level or endpoint not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "getStatsHead",
+        "summary": "Catalog and recorder totals (headers only)",
+        "description": "Public, read-only. No API key. Unknown or repeated query parameters are rejected. GET and HEAD share status/headers; HEAD has no body. OPTIONS returns 204 for CORS preflight.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success."
+          },
+          "400": {
+            "description": "Invalid or unsupported query parameter, repeated parameter, or malformed level ID."
+          },
+          "404": {
+            "description": "Level or endpoint not found."
+          },
+          "405": {
+            "description": "Method not allowed. Use GET, HEAD or OPTIONS."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          },
+          "500": {
+            "description": "Catalog temporarily unavailable. Do not retry in a tight loop."
+          }
+        }
+      },
+      "options": {
+        "operationId": "getStatsOptions",
+        "summary": "CORS preflight",
+        "responses": {
+          "204": {
+            "description": "No content. Allows GET, HEAD, OPTIONS and the If-None-Match request header; wildcard origin, no credentials."
+          },
+          "429": {
+            "description": "Firewall rate limit exceeded. The body and CORS/Retry-After headers are platform-controlled and not guaranteed to be JSON. Back off and retry later."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LevelSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "levelId",
+          "name",
+          "creator",
+          "slug",
+          "url",
+          "description",
+          "videoUrl",
+          "thumbnailUrl",
+          "addedAt"
+        ],
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "pattern": "^[0-9]{1,12}$",
+            "description": "Geometry Dash level ID, represented as a string."
+          },
+          "name": {
+            "type": "string",
+            "description": "Level name."
+          },
+          "creator": {
+            "type": "string",
+            "description": "Level creator."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Current website slug; it may change when a level is renamed."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "GDMacros level page."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional level description."
+          },
+          "videoUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Optional video URL."
+          },
+          "thumbnailUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Absolute thumbnail URL, or null."
+          },
+          "addedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Date the level was added, or null when unknown."
+          }
+        }
+      },
+      "Recording": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "author",
+          "recorder",
+          "fps",
+          "testedAt",
+          "downloadType",
+          "downloadUrl"
+        ],
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "Catalog recording credit, not a verified account identity."
+          },
+          "recorder": {
+            "type": "string",
+            "enum": [
+              "Mega Hack",
+              "xdBot",
+              "zBot"
+            ],
+            "description": "Exact recorder name, including case and spaces."
+          },
+          "fps": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Positive finite recording FPS, including decimal rates; use this rate for playback."
+          },
+          "testedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Recorded last-tested date, or null. Historical values may be upload-date baselines, not new playback verification."
+          },
+          "downloadType": {
+            "type": "string",
+            "description": "Hosting provider label."
+          },
+          "downloadUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public recording file URL. Download directly from this host, not through the API."
+          }
+        }
+      },
+      "Level": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "levelId",
+          "name",
+          "creator",
+          "slug",
+          "url",
+          "description",
+          "videoUrl",
+          "thumbnailUrl",
+          "addedAt",
+          "macros"
+        ],
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "pattern": "^[0-9]{1,12}$",
+            "description": "Geometry Dash level ID, represented as a string."
+          },
+          "name": {
+            "type": "string",
+            "description": "Level name."
+          },
+          "creator": {
+            "type": "string",
+            "description": "Level creator."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Current website slug; it may change when a level is renamed."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "GDMacros level page."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional level description."
+          },
+          "videoUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Optional video URL."
+          },
+          "thumbnailUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Absolute thumbnail URL, or null."
+          },
+          "addedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Date the level was added, or null when unknown."
+          },
+          "macros": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/Recording"
+            }
+          }
+        }
+      },
+      "Macro": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "author",
+          "recorder",
+          "fps",
+          "testedAt",
+          "downloadType",
+          "downloadUrl",
+          "level"
+        ],
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "Catalog recording credit, not a verified account identity."
+          },
+          "recorder": {
+            "type": "string",
+            "enum": [
+              "Mega Hack",
+              "xdBot",
+              "zBot"
+            ],
+            "description": "Exact recorder name, including case and spaces."
+          },
+          "fps": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Positive finite recording FPS, including decimal rates; use this rate for playback."
+          },
+          "testedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Recorded last-tested date, or null. Historical values may be upload-date baselines, not new playback verification."
+          },
+          "downloadType": {
+            "type": "string",
+            "description": "Hosting provider label."
+          },
+          "downloadUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public recording file URL. Download directly from this host, not through the API."
+          },
+          "level": {
+            "$ref": "#/components/schemas/LevelSummary"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "page",
+          "limit",
+          "total",
+          "totalPages"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "LevelList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Level"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "MacroList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Macro"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "LevelResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Level"
+          }
+        }
+      },
+      "Discovery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "version",
+              "endpoints"
+            ],
+            "properties": {
+              "version": {
+                "type": "string",
+                "const": "v1"
+              },
+              "endpoints": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "levels",
+                  "level",
+                  "macros",
+                  "stats"
+                ],
+                "properties": {
+                  "levels": {
+                    "type": "string",
+                    "description": "Levels endpoint."
+                  },
+                  "level": {
+                    "type": "string",
+                    "description": "Level endpoint template."
+                  },
+                  "macros": {
+                    "type": "string",
+                    "description": "Recordings endpoint."
+                  },
+                  "stats": {
+                    "type": "string",
+                    "description": "Statistics endpoint."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "StatsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "levels",
+              "macros",
+              "recorders"
+            ],
+            "properties": {
+              "levels": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "macros": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "recorders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "recorder",
+                    "macros"
+                  ],
+                  "properties": {
+                    "recorder": {
+                      "type": "string",
+                      "enum": [
+                        "Mega Hack",
+                        "xdBot",
+                        "zBot"
+                      ]
+                    },
+                    "macros": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "INVALID_QUERY",
+                  "NOT_FOUND",
+                  "METHOD_NOT_ALLOWED",
+                  "INTERNAL_ERROR"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable description; use code/status for application logic."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

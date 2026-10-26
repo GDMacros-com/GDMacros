@@ -1,167 +1,290 @@
 # GDMacros
 
-[GDMacros](https://www.gdmacros.com) is a community catalog of Geometry Dash macros. Visitors can browse, search, favorite and download recordings for Mega Hack, xdBot and zBot. Accounts add synced favorites, submissions, notifications and private support tickets.
+[GDMacros](https://www.gdmacros.com) is a community catalog of Geometry Dash macros for **Mega Hack, xdBot and zBot**. Browsing and downloading are free and do not require an account. Accounts add synced favorites, submissions, notifications and private support tickets.
 
-The public catalog lives in `data/macros.json`. Accounts, private uploads, moderation and support use Supabase. Accepted macros are published to GitHub Releases, added to the catalog and checked against the production deployment before the submission is marked accepted.
+This README describes the source tree reviewed on **26 October 2026**. It documents implemented behavior; it does not confirm which migrations or credentials have been applied to production.
 
-Built with Next.js 16, React 19, TypeScript and Tailwind CSS 4. The full website needs a Next.js server runtime; it is **not a static-only site**. Vercel is the current deployment target.
+## Architecture and current API status
 
-## Discord community
+The site uses Next.js 16, React 19, TypeScript and Tailwind CSS 4. Vercel is the current deployment target. Public catalog and author pages are generated from repository data; accounts, staff tools, server actions and API routes require a Next.js server runtime.
 
-The community invite is available in the footer and on About, beneath the owner section. The About widget loads after the visitor clicks **Load Discord widget**. Invite and widget URLs live in `src/lib/site.ts`.
+| Component | Responsibility | Source |
+| --- | --- | --- |
+| Public catalog | Level details, macro credits, recording FPS, tested dates and download links | `data/macros.json`, `src/lib/macros.ts`, `src/lib/types.ts` |
+| Website | Catalog browsing, download pages, public author profiles and account/staff UI | `src/app`, `src/components` |
+| Supabase | Authentication, profiles, roles, favorites, private uploads, review state, tickets, notifications and job queues | `src/lib/supabase`, `supabase/migrations` |
+| GitHub | Catalog commits in `GDMacros-com/GDMacros` and public release assets in `GDMacros-com/GDMacros-downloads` | `src/lib/github`, `src/lib/publish` |
+| Resend | Service email, submission results, ticket notifications, notices and inbound support forwarding | `src/lib/email` |
+| Discord | Community links, optional widget and announcements for newly accepted macros | `src/lib/site.ts`, `src/lib/publish/announcement.ts` |
 
-A modal announces the server on public browsing pages. It blocks page interaction until the visitor closes it, presses Escape, chooses Maybe later or opens the invite. The browser saves `gdmacros:discord-announcement:2026-10` when it appears, so subsequent visits skip it. Clearing site data or using another browser resets this; with local storage unavailable, it is remembered only until reload. Account, admin and support routes do not trigger it.
+The public catalog is stored in Git, rather than a Supabase catalog table. Editing it requires a new deployment before public pages reflect the change. Public downloads currently point to GitHub Releases.
 
-Apply migrations through `0024_new_macro_webhook.sql` before deploying this update. Migration 0023 updates both legal document versions; 0024 queues new macro announcements. Set the server-only `NEW_MACRO_WEBHOOK` to your Discord webhook URL in Vercel Production.
+**The read-only public catalog API lives under `/api/v1` in this Next.js project.** It includes `/levels`, `/levels/{levelId}`, `/macros` and `/stats`; list routes accept `search`, `recorder`, `fps`, `page` and `limit` (default 20, maximum 100). Levels are alphabetical and recordings retain catalog order. Level filters select matching levels and return all recordings for each match; recording filters return only matching recordings. API results update with website deployments, with a five-minute CDN cache and up to one minute of stale revalidation. Responses expose only public catalog fields and download URLs; files remain hosted externally. Individual recordings do not yet have permanent API identifiers.
 
-## Recording FPS
+Configure production abuse controls through Vercel Firewall: match `/api/v1` and `/api/v1/*`, exclude `OPTIONS`, and use the agreed 60 requests per IP per 60-second fixed window with HTTP 429 responses. The application itself does not enforce a shared per-client quota. Run `npm run test:api` for API regression checks. Full developer documentation is deferred. The existing application endpoints remain separate from the public API. No Cloudflare Worker or DNS migration is required.
 
-Each macro has its own required numeric `fps` value. Any positive finite rate is accepted, including decimal rates. There is no 240 FPS cap. The submission form starts blank so the submitter must provide the rate used for that recording; the API and database enforce it too.
+## Features and routes
 
-The existing 381 catalog macros were labelled **240 FPS** when this field was introduced, as requested by the operator. This is a metadata backfill, not a conversion or independent inspection of the files. Existing pending submissions are also backfilled to 240; reviewers should correct them if necessary before publishing.
+| Area | Routes and behavior |
+| --- | --- |
+| Catalog | `/`: search by level, creator, macro author or level ID; recorder filters; alphabetical/date sorting; list/grid views; random selection; recently viewed levels |
+| Download pages | `/macro/[slug]`: a level's available recordings, individual FPS/tested dates, credits, download links, optional video and neighboring levels |
+| Public author profiles | `/author/[slug]`: credited recordings, level totals and recorder totals, generated from catalog author names |
+| Favorites | `/favorites`: browser-local while signed out and account-synced while signed in; keyed by level ID |
+| Guides and information | `/about`, `/install`, `/faq`, `/guidelines`, `/terms`, `/privacy` |
+| Authentication | `/signup`, `/login`, `/welcome`, `/forgot-password`, `/reset-password`; confirmation/callback/error routes under `/auth` |
+| Account | `/account`: account details and username changes; `/settings`: submission-result email preferences and account deletion |
+| Submissions | `/submit` and `/submissions`: private uploads, review progress and accepted submission history |
+| Notifications | `/notifications`: submission results and support activity |
+| Support | `/support`, `/support/new`, `/support/tickets/[id]`: suggestions, requests and broken-macro conversations |
+| Staff | `/admin` and the role-restricted tools listed below |
 
-List rows show the rate at the right, above download details. Grid cards and individual download cards show it too. A level with multiple recording rates shows **Mixed FPS** in the catalog, with the exact rate beside each download. Playback should use that macro's recording rate.
+Author profiles represent catalog credits, not verified ownership of a site account. Names are grouped case-insensitively with Unicode normalization; slug collisions are disambiguated. Account/settings pages link to a matching catalog credit when available. Changing an account username does not rewrite published catalog credits.
 
-## Running locally
+Favorites, recent history, sort/view preferences and other presentation settings use browser storage. Favorites merge by union on sign-in: an item removed while signed out can reappear if it remains in the account copy. Recent history is device-local and keeps six entries. See `src/lib/favorites.ts` and `src/lib/localStore.ts` for storage and synchronization rules.
 
-Use Node.js 22, matching CI.
+## Local development
+
+Use **Node.js 22**, matching CI, and npm.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. Without service credentials, you can work on the public catalog and most public pages; account and server-backed features need their configuration below.
+Open `http://localhost:3000`. The public catalog can be developed without service credentials; accounts and server-backed integrations need the configuration below. Create an untracked `.env.local` for local credentials. There is no committed environment template.
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm start` | Serve the production build |
-| `npm run validate` | Validate the catalog |
-| `npx tsc --noEmit` | Check TypeScript |
-| `npm run test:fps` | FPS parsing, catalog propagation and backfill checks |
-| `npm run test:catalog-editor` | Catalog edits, replacement validation, authorization and concurrency |
-| `npm run test:mod` | Real PostgreSQL permission and migration checks using PGlite, plus application gates |
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
 
-Other suites are `test:publish`, `test:announcements`, `test:migrate`, `test:translate`, `test:email`, `test:legal`, `test:admin`, `test:account`, `test:support` and `test:zbot`. CI runs the test suites, catalog validation, typecheck and build for PRs and pushes to `main`. Tests use local fixtures and mocked external services; they do not send real emails, post to Discord or publish real macros.
+Add server-only variables only for integrations you intend to exercise. Local publishing is not a sandbox: configured GitHub publishing targets the fixed production repositories. Automated regression suites use fixtures and mocked services instead.
+
+To run a production build locally:
+
+```sh
+npm run build
+npm start
+```
 
 ## Service configuration
 
-Set development values in your local environment and production values in the hosting dashboard. Never commit secrets. Only variables beginning with `NEXT_PUBLIC_` are intended to be exposed to browsers.
+Set development values in `.env.local` and production values in the hosting dashboard. Only `NEXT_PUBLIC_*` variables are intended for browser exposure. Never commit private keys, webhook URLs or server credentials.
 
-| Variable | Used for |
+| Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public client key; access is still governed by database policies |
-| `NEXT_PUBLIC_SITE_URL` | Auth callback origin; use the public HTTPS domain in production |
-| `SUPABASE_SECRET_KEY` | Server-only storage, auth administration and email workers |
-| `GITHUB_PUBLISHER_APP_ID` | GitHub App used to publish accepted macros |
-| `GITHUB_PUBLISHER_PRIVATE_KEY_BASE64` | Server-only base64-encoded App private key |
-| `GITHUB_PUBLISHER_INSTALLATION_ID` | Optional installation ID; otherwise resolved through the App |
-| `RESEND_SUPPORT_API_KEY` | Service and support email |
-| `RESEND_INBOUND_WEBHOOK_SECRET` | Verification of inbound Resend webhook requests |
-| `CRON_SECRET` | Authentication for scheduled maintenance |
-| `VERCEL_ANALYTICS_TOKEN` | Optional admin analytics access |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser/session client key; database permissions and RLS still govern access |
+| `NEXT_PUBLIC_SITE_URL` | Fallback auth redirect origin; browser flows normally use the current origin |
+| `SUPABASE_SECRET_KEY` | Server-only private storage, auth administration, email queues and announcement jobs |
+| `GITHUB_PUBLISHER_APP_ID` | GitHub App used by publication and the catalog editor |
+| `GITHUB_PUBLISHER_PRIVATE_KEY_BASE64` | Base64-encoded PEM private key for that App |
+| `GITHUB_PUBLISHER_INSTALLATION_ID` | Optional; otherwise resolved through the App |
+| `RESEND_SUPPORT_API_KEY` | Sending service email and retrieving/forwarding received support mail |
+| `RESEND_INBOUND_WEBHOOK_SECRET` | Signature verification for inbound Resend webhooks |
+| `NEW_MACRO_WEBHOOK` | Server-only Discord incoming webhook for newly accepted macros |
+| `CRON_SECRET` | Bearer authentication for scheduled maintenance |
+| `VERCEL_ANALYTICS_TOKEN` | Optional token for the admin traffic panel |
 | `VERCEL_ANALYTICS_PROJECT_ID` | Optional explicit project ID; otherwise uses `VERCEL_PROJECT_ID` |
 | `VERCEL_ANALYTICS_TEAM_ID` | Optional analytics team scope |
 
-Set the Supabase Auth site URL and allowed redirect URLs for the environments you use. Configure account email templates and SMTP in Supabase, and the sending domain/inbound webhook in Resend. Inbound support mail uses `/api/email/inbound`; the forwarding destination is configured in the server-side email module.
+Vercel supplies deployment metadata through `VERCEL_GIT_COMMIT_SHA`, `VERCEL_GIT_COMMIT_REF` and `VERCEL_ENV`. Publication checks the production commit through `/api/version`; it does not require a Vercel API token. `VERCEL_PROJECT_ID` is also used as an analytics fallback.
 
-Apply migrations in `supabase/migrations` in numeric order for a new database. Existing deployments must apply only unapplied migrations. Some migrations install scheduled cleanup using `pg_cron`; the target Supabase project must support that extension. If using SQL Editor manually, keep the Supabase CLI migration history consistent before later using `supabase db push`.
+### Supabase setup
 
-The GitHub App must have Contents write access to `GDMacros-com/GDMacros` and `GDMacros-com/GDMacros-downloads`. Publishing targets are fixed in `src/lib/github/config.ts`; they are not taken from requests. Changing them for another deployment requires a code review.
+1. For a new database, apply all 24 SQL migrations in `supabase/migrations` in numeric order, through `0024_new_macro_webhook.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
+2. Configure the Supabase Auth site URL and redirect allow list for production, localhost and any permitted preview origins. Confirmation and password-reset templates must point to the application's auth routes. The expected confirmation-link pattern is documented in `src/lib/supabase/config.ts`.
+3. Configure Supabase Auth email templates and SMTP separately from the application's Resend API integration.
+4. Use the role snippets in `supabase/snippets` to assign staff access. Public signup cannot assign roles.
 
-## Roles and review
+Migrations create the private `macro-submissions` storage bucket, database policies, RPCs and job queues. Some install scheduled cleanup through `pg_cron`; the target project must support that extension. A manual SQL Editor run does not update Supabase CLI migration history. Keep that history consistent before later using `supabase db push`.
 
-| Access | User | Mod | Admin |
+Historical rollout guides remain in [Moderator setup](docs/mod-role.md) and [FPS and policy rollout](docs/fps-policy-rollout.md). Their release-specific dates and tool counts describe those releases. Use this README, the current source and the latest migrations for the present feature set. In particular, the current Terms and Privacy versions in `src/lib/legal.ts` are both `2026-10-22`, synchronized by migration 0023.
+
+### GitHub publishing setup
+
+Install the GitHub App with **Contents write** access to both `GDMacros-com/GDMacros` and `GDMacros-com/GDMacros-downloads`. Repository rules must permit its catalog commits to `main`. Targets are fixed in `src/lib/github/config.ts`; a request cannot choose a repository, branch or catalog path.
+
+### Email setup
+
+Configure the sending domain and Resend API permissions for service email. Configure received support mail to call `POST /api/email/inbound` and set its signing secret. The forwarding address, destination and loop-prevention rules live in `src/lib/email/support.ts`; the destination is code configuration, not an environment variable. Auth email uses Supabase's separately configured SMTP path.
+
+## Submissions, review and publishing
+
+Uploads remain private until accepted. The server checks the authenticated user/profile, validates fields and replay structure, looks up level metadata through GDBrowser, and verifies a supplied YouTube video. Search/verification use GDBrowser and YouTube without an API key. YouTube search depends on upstream page structure; the form also supports pasted video links verified through oEmbed.
+
+| Recorder | Upload extension | Maximum file size |
+| --- | --- | --- |
+| Mega Hack | `.gdr2` | 2 MiB (`2 * 1024 * 1024` bytes; shown as 2 MB in the UI) |
+| xdBot | `.gdr2` | 2 MiB |
+| zBot | `.gdr` | 2 MiB |
+
+Each submission requires explicit positive, finite recording FPS, including decimal rates. The form starts blank and there is no 240 FPS cap. Declared recording FPS is separate from staff replay inspection and playback testing.
+
+Staff claim a submission for processing, inspect/download it, correct metadata while publication has not started, and reject it with a reason or publish it. Single and bulk publication use the same resumable pipeline:
+
+1. Reserve publication state and freeze submission details.
+2. Publish/reuse the recording as a GitHub Release asset.
+3. Commit the updated catalog, handling concurrent changes.
+4. Wait until the production `/api/version` reports the expected commit.
+5. Finalize acceptance, record history/notifications, attempt private-upload cleanup, and attempt queued email and Discord delivery.
+
+Publication progress survives failures and can be resumed by staff. A catalog commit alone does not mean acceptance is complete. Inspect the staff status and hosting logs when a job is waiting for production. The maintenance cron retries delivery jobs; it does not run the full publication pipeline.
+
+## Staff access
+
+| Tool or capability | User | Mod | Admin |
 | --- | --- | --- | --- |
-| Uploads, own account and tickets | Yes | Yes | Yes |
-| Review, inspect, edit, publish and reject submissions | No | Yes | Yes |
-| Submission blocks and unblocks | No | Yes | Yes |
-| All support tickets, replies, closure, deletion and ticket blocks | No | Yes | Yes |
-| Random quality checks | No | Yes | Yes |
-| Edit or remove published macros and change last-tested dates | No | No | Yes |
-| Account lookup, review activity, site status and mass email | No | No | Yes |
+| Own account, uploads and tickets | Yes | Yes | Yes |
+| `/admin/submissions`: review, inspect, edit, publish, reject; submission blocks | No | Yes | Yes |
+| `/admin/inbox`: all tickets, replies, closure, deletion and ticket blocks | No | Yes | Yes |
+| `/admin/quality`: random quality checks and history | No | Yes | Yes |
+| `/admin/macros`: edit/remove published recordings, replace files and change tested dates | No | No | Yes |
+| `/admin/activity`: review activity | No | No | Yes |
+| `/admin/users`: exact-username account lookup and account tools | No | No | Yes |
+| `/admin/status`: service health, operational counts and traffic statistics | No | No | Yes |
+| `/admin/notices`: preview/test/send Terms, Privacy or service notices | No | No | Yes |
 
-Roles are assigned in Supabase by the operator, not through public signup. See [Setting up moderators](docs/mod-role.md). An account with both roles retains admin access.
+Permissions are enforced in server actions/routes and database policies, not just hidden buttons. An account with both roles retains admin access. Role grants/revocation are operator SQL tasks, not public UI features. See [Moderator setup](docs/mod-role.md) and the snippets in `supabase/snippets`.
 
-Uploads are private until accepted. Mega Hack and xdBot use `.gdr2`; zBot uses `.gdr`. The file-size limit is 2 MB. The site checks the format and looks up level information on the server. Reviewers can correct metadata, including FPS, while a submission is pending and publication has not started. Their recording-file inspection is separate from the submitter's declared FPS.
+## Editing the public catalog
 
-Publishing uploads a release asset, commits the catalog, waits for the production commit to be served, then records the result and cleans up the private upload. Failed publication can be retried from its stored state. FPS is read from the submission database row and written to the public catalog, not trusted from a publish-button request.
+The preferred contribution path is the website submission form. Admins can maintain existing recordings at `/admin/macros`; reviewed manual catalog commits are also supported.
 
-Support includes suggestions, broken-macro reports and level requests. Closed tickets expire after 30 days; staff can delete them earlier. Public macros remain when an account is deleted. Existing auth, storage, GitHub and email integrations must be configured for the full workflow.
+The editor can change shared level details or individual recording metadata, replace a file, remove a recording, and set/clear its tested date. Saves require review/confirmation and use the current GitHub blob SHA to detect conflicting edits. Its success message confirms the commit; public changes appear after deployment. See [Published macro editor](docs/catalog-editor.md).
 
-## Editing the catalog
-
-The preferred contribution path is the website's submission form. Admins can edit published macros at `/admin/macros`; moderators cannot. The editor supports shared level details, per-macro metadata, replacement files and removal, with a confirmation step. It saves through the existing GitHub publisher integration and the public site updates after deployment. Manual catalog edits are also possible through a PR. See [Published macro editor](docs/catalog-editor.md). Each level contains one or more macros:
+`data/macros.json` contains an array of levels:
 
 ```json
-{
-  "name": "Example Level",
-  "creator": "LevelCreator",
-  "levelId": "12345678",
-  "video": "https://www.youtube.com/watch?v=VIDEO_ID",
-  "macros": [
-    {
-      "author": "MacroAuthor",
-      "recorder": "xdBot",
-      "downloadType": "GitHub",
-      "downloadLink": "https://github.com/OWNER/REPO/releases/download/TAG/FILE.gdr2",
-      "fps": 240,
-      "testedAt": "2026-10-07"
-    }
-  ]
-}
+[
+  {
+    "name": "Example Level",
+    "creator": "LevelCreator",
+    "levelId": "12345678",
+    "video": "https://www.youtube.com/watch?v=VIDEO_ID",
+    "macros": [
+      {
+        "author": "MacroAuthor",
+        "recorder": "xdBot",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/OWNER/REPO/releases/download/TAG/FILE.gdr2",
+        "fps": 240,
+        "testedAt": "2026-10-07"
+      }
+    ]
+  }
+]
 ```
 
-Replace example values with real data. `name`, `creator`, `levelId` and the macro fields above are required. Optional level fields are `video`, `thumbnail`, `slug`, `description` and `addedAt` (`YYYY-MM-DD`). `recorder` is exactly `Mega Hack`, `xdBot` or `zBot`. A level can contain recordings with different FPS values.
+Replace example values before use. The schema and loader live in `src/lib/types.ts` and `src/lib/macros.ts`.
 
-Optional per-macro `testedAt` is a real `YYYY-MM-DD` date, or `null`/omitted when unknown. It is shown beside the recording FPS. New publications default to the publication date, following the operator’s upload-time testing workflow. Existing dates are backfilled from first catalog appearance in Git history; this records the upload baseline, not a new playback verification. Admins can correct or clear the date, and replacing a file does not silently update it.
+- Required level fields: `name`, `creator`, `levelId`, and at least one recording in `macros`.
+- Required recording fields: `author`, `recorder`, `downloadType`, `downloadLink`, and numeric `fps` greater than zero.
+- `recorder` is exactly `Mega Hack`, `xdBot` or `zBot`. A level can have several recordings and different rates; the UI shows **Mixed FPS** where appropriate.
+- Optional level fields: `video`, `thumbnail`, `slug`, `description`, `addedAt` (`YYYY-MM-DD`). `addedAt` drives recently added/date ordering; undated levels are kept separate from dated entries.
+- Optional recording field: `testedAt`, a real `YYYY-MM-DD` date, or `null`/omitted when unknown. The editor disallows future dates. Replacing a file or editing unrelated metadata preserves the date unless explicitly changed.
+- Page slugs default to a normalized level name and must be unique. Preserve existing slugs when renaming levels to avoid breaking links. Favorites use level IDs, while recent history uses slugs.
+- Without a thumbnail override, YouTube stills are used when a video exists; otherwise the UI renders a placeholder.
+- The loader retains support for legacy flat single-recording entries and ignores wholly blank template entries. New entries should use the `macros` array.
 
-Macro pages use `/macro/<level-slug>`. Slugs must be unique. Without a thumbnail override, YouTube thumbnails are used when a video is present, otherwise a generated placeholder. The catalog supports search, recorder filtering, sorting and list/grid views. Run `npm run validate` before committing.
+The initial 381-recording FPS backfill labelled recordings as 240 FPS; it did not convert or independently inspect files. Historical tested dates were derived from first catalog appearance in Git history as an upload baseline, not a new playback check. New publications default to publication day under the operator's upload-time testing workflow. Correct or clear dates that do not represent a completed check.
 
-The MediaFire migration tool remains available as `npm run migrate:mediafire`; it is an operator tool for copying old files, not a step needed to run the website. Public macro downloads currently use GitHub Releases.
+Removing a recording changes the catalog. Removing the last recording also removes its level page after deployment. Old release assets, public copies and Git history remain. Replacement uploads use new content-addressed asset names and do not overwrite/delete the old files. Revert an incorrect catalog commit and redeploy to undo an edit.
+
+Run `npm run validate` before committing catalog changes.
+
+## Existing HTTP endpoints
+
+These are application endpoints, not a supported public developer API. Most account/staff mutations also use Next.js server actions in `src/lib/actions` and session-bound Supabase RPCs.
+
+| Method and path | Purpose and access |
+| --- | --- |
+| `GET /api/version` | Public, uncached deployment commit/ref/environment metadata used by the publisher |
+| `GET /api/search?kind=level\|video\|verify&q=...` | Signed-in submission-form level/video lookup; 20 searches/minute/account per server instance |
+| `POST /api/submissions` | Authenticated multipart replay submission; requires a profile and configured private storage |
+| `GET /api/admin/macros` | Admin-only current GitHub catalog and revision |
+| `POST /api/admin/macros` | Admin-only confirmed catalog mutation; checks matching Origin and current revision |
+| `POST /api/email/inbound` | Signed Resend incoming-mail webhook |
+| `GET /api/cron/maintenance` | Requires `Authorization: Bearer <CRON_SECRET>` |
+
+For search, `kind` is one of `level`, `video` or `verify`. The search limiter is in-memory and per instance; cold starts reset it and parallel instances do not share counters. It is not a global API quota. See `src/lib/rateLimit.ts`.
 
 ## Deployment and maintenance
 
-Connect the repository to Vercel and configure the service variables above. Keep `src/lib/site.ts` and `NEXT_PUBLIC_SITE_URL` aligned with the production domain. The publisher verifies the live deployment through `/api/version`, using the commit supplied by Vercel.
+Connect the source repository to Vercel and deploy with the default Next.js build. Configure production service variables and keep `src/lib/site.ts`'s canonical URL, Supabase Auth redirects and `NEXT_PUBLIC_SITE_URL` aligned with the intended domain.
 
-`vercel.json` schedules `/api/cron/maintenance` daily. It needs `CRON_SECRET`; inspect the admin status page and provider logs if work is stuck. Supabase has separate scheduled support-ticket cleanup.
+`vercel.json` schedules maintenance with `0 4 * * *` (daily at 04:00 UTC). The authenticated route drains submission-result email, support-ticket email and macro-announcement queues and purges expired support tickets. Supabase also has scheduled ticket cleanup. Closed/resolved tickets expire after 30 days; staff can delete them earlier. Account deletion requires a typed confirmation and withdrawal of submissions still in review; administrator accounts cannot self-delete through this tool. Published catalog recordings remain available.
 
-The old GitHub Pages workflow and export configuration remain in the repository, but static hosting cannot provide the current site's authenticated routes, server actions, API endpoints or scheduled work. Use a server-capable deployment for the complete website.
+The manually triggered `.github/workflows/deploy-pages.yml` and `NEXT_OUTPUT=export` / `NEXT_BASE_PATH` configuration are retained legacy static-export tooling. They do not provide the server runtime required by the current app; the full website is not deployable as a static-only GitHub Pages site. Some older configuration comments still describe the former static architecture.
 
-The published macro editor needs no new SQL migration or environment variables. Merge and deploy, then follow [the editor rollout checks](docs/catalog-editor.md). The earlier [FPS and policy rollout](docs/fps-policy-rollout.md) still applies to deployments that have not installed migrations 020 and 021.
+### Discord announcements
 
-## New macro announcements
+Apply migration 0024 and set `NEW_MACRO_WEBHOOK` to enable announcements. Acceptance queues a job transactionally after production verification; single/bulk publishing attempt delivery immediately and maintenance retries failures. Existing historical acceptances are not backfilled.
 
-Set `NEW_MACRO_WEBHOOK` to the Discord incoming webhook URL (a server-only secret). New accepted macros are queued transactionally when publication finishes, after production is verified live. Single and bulk publishing try delivery immediately; the existing authenticated maintenance cron retries failures daily using `CRON_SECRET`. Apply `supabase/migrations/0023_current_legal_versions.sql` and `supabase/migrations/0024_new_macro_webhook.sql` before deploying. The worker uses the existing `SUPABASE_SECRET_KEY` and GitHub catalog access.
+Announcements link to the macro's website page and include level name/ID and macro author. Private notes and emails are excluded. The payload mentions role `1562871482961371257` and disables other role/user/everyone mentions. Jobs use leases, but Discord provides no idempotency key: losing a delivery confirmation can cause a duplicate on retry. Missing configuration skips delivery attempts.
 
-The green embed includes the level name, level ID, macro creator and a link to the macro page, never a direct download. It uses the current catalog's custom slug if present. Private notes and email addresses are excluded. The accompanying message mentions role 1562871482961371257; all other role, user and everyone mentions are disabled. Missing configuration skips delivery. Jobs survive acceptance and request failures; concurrent workers use leases. Discord does not support an idempotency key, so a lost delivery confirmation can produce a duplicate on retry. Historical acceptances are not backfilled. Tests use mocked delivery and do not post to Discord.
+The community invite and widget URLs are in `src/lib/site.ts`. The About widget loads on click. The Discord announcement modal appears on selected public pages and records `gdmacros:discord-announcement:2026-10` when shown; clearing browser data allows it to appear again. It skips account, staff and support flows.
 
-## Language and analytics
+## Verification and operator tooling
 
-Google Translate's widget provides the language menu. Vercel Web Analytics and Speed Insights are mounted by the application. Video thumbnails and embeds, and the About page's Lanyard/Discord content, involve browser requests to their providers. The [Privacy Policy](https://www.gdmacros.com/privacy) describes the data flows.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Local development server |
+| `npm run build` | Production build |
+| `npm start` | Serve a production build |
+| `npm run validate` | Validate catalog structure and metadata |
+| `npx tsc --noEmit` | TypeScript check |
+| `npm run test:publish` | Resumable publisher and catalog transformations |
+| `npm run test:announcements` | Discord payloads, configuration and delivery behavior |
+| `npm run test:catalog-editor` | Catalog edits, replacement validation, authorization and conflicts |
+| `npm run test:mod` | PostgreSQL permissions/migrations through PGlite plus application access gates |
+| `npm run test:fps` | FPS parsing, propagation and backfill checks |
+| `npm run test:zbot` | zBot format/catalog behavior |
+| `npm run test:account` | Account and favorites behavior |
+| `npm run test:admin` | Staff portal and admin behavior |
+| `npm run test:support` | Ticket inbox, notifications and staff tools |
+| `npm run test:email` | Support email forwarding |
+| `npm run test:legal` | Policies, version synchronization and notices |
+| `npm run test:translate` | Language-switcher behavior |
+| `npm run test:migrate` | MediaFire migration tooling regression checks |
+| `npm run migrate:mediafire -- --status` | Inspect local migration state; an operator tool, not app setup |
 
-## Legal documents and notices
+CI (`.github/workflows/ci.yml`) runs catalog validation, typecheck, build and all regression suites on pull requests and pushes to `main`. There is no configured linter, default `npm test` or `test:all` command. Tests use local fixtures/mocks; `test:mod` applies migrations to PGlite with auth/storage fixtures and stubbed cron registration. Tests do not send real mail, post to Discord or publish live recordings. Passing them does not verify production provider configuration.
 
-Public policies are in `src/app/terms/page.tsx` and `src/app/privacy/page.tsx`. Versions in `src/lib/legal.ts` must match `private.legal_documents` through a new migration. Updating a version does not rewrite old acceptance records or send an email. Admins can send a policy notice through the existing Legal Notices tool after the matching documents are live.
+The MediaFire migration script can inventory, upload, verify and report on old downloads. It keeps resumable local state under ignored `.migration/` and can perform real network uploads. Inspect the script's actual command dispatch before use; it is not needed for normal development or publishing.
 
-The policies describe implemented behavior, not a certification of legal compliance. Deployment-specific facts such as the operator's legal identity, processing arrangements, provider regions, backups and retention need operator review. Do not invent those facts from the source code.
+## Privacy, policies and external services
+
+The application mounts Vercel Web Analytics and Speed Insights. Google Translate supplies the language widget. YouTube thumbnails/embeds and Lanyard/Discord content involve third-party browser requests; submission lookups use server-side upstream requests. The [Privacy Policy](https://www.gdmacros.com/privacy) describes these flows.
+
+Policy source lives in `src/app/terms/page.tsx` and `src/app/privacy/page.tsx`. Keep versions in `src/lib/legal.ts` synchronized with `private.legal_documents` through a new migration when policies change. Version changes do not rewrite old acceptance records or send email automatically. Admins can preview, test and send notices from `/admin/notices` after the matching documents are live. Provider regions, retention outside the application and operator identity require deployment-specific review.
+
+The installation guide documents tool-specific importing and troubleshooting. Catalog downloads are free; playback-tool availability and pricing are separate. Consult the linked tool authors' documentation for current installation and licensing details.
 
 ## Source map
 
-- `data/macros.json`: public catalog
-- `src/app`: public pages, account/staff routes and APIs
-- `src/components`: catalog, forms and staff interface
-- `src/lib/publish`: resumable publishing and catalog transformations
-- `src/lib/supabase`: session-bound clients and narrowly scoped server helpers
-- `src/lib/email`: transactional email and support forwarding
-- `supabase/migrations`: schema, permissions, RPCs and legal versions
-- `scripts`: validation, offline regression suites and migration tooling
+| Path | Contents |
+| --- | --- |
+| `data/macros.json` | Public catalog and recording metadata |
+| `src/app` | Pages, HTTP routes, auth handlers, sitemap and robots |
+| `src/components` | Catalog, account, submission, staff and support UI |
+| `src/lib/macros.ts`, `types.ts`, `authors.ts` | Catalog loading/schema and public author indexes |
+| `src/lib/favorites.ts`, `favoritesRules.ts`, `localStore.ts` | Favorites sync and device-local storage |
+| `src/lib/actions` | Account, staff, review, support, publishing and notice server actions |
+| `src/lib/supabase` | Session clients and scoped privileged server helpers |
+| `src/lib/github`, `src/lib/publish` | GitHub App access, release assets, catalog publication and announcements |
+| `src/lib/catalog-editor.ts` | Published catalog mutation and validation rules |
+| `src/lib/gdr.ts`, `gdr2.ts`, `gdr2Review.ts`, `fps.ts` | Replay validation, inspection and FPS rules |
+| `src/lib/gdbrowser.ts`, `youtube.ts` | Submission metadata lookups and video verification |
+| `src/lib/email` | Email transports, templates, forwarding and queues |
+| `src/lib/site.ts`, `legal.ts`, `admin.ts` | Branding/links, policy versions and role checks |
+| `src/proxy.ts` | Session refresh on selected account/staff/support routes |
+| `supabase/migrations`, `supabase/snippets` | Ordered schema changes and operator role/username SQL |
+| `scripts` | Catalog validation, regression suites and migration operator tooling |
+| `docs` | Detailed moderator, FPS/policy and catalog-editor rollout guides |
+| `.github/workflows` | CI and legacy manual Pages deployment |
+| `public` | Static assets and verification files |
 
-Not affiliated with, endorsed by or connected to RobTop Games.
-
-## Playback guide and pricing
-
-The installation guide covers tool-specific imports and troubleshooting. Catalog files are free to download. xdBot is free, Mega Hack is paid, and zBot requires a paid key to import premade files despite offering free recording/playback of your own run. The guide links to the tool authors’ documentation and store pages.
+Repository software is available under the [MIT license](LICENSE). Not affiliated with, endorsed by or connected to RobTop Games.

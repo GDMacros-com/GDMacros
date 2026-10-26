@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import fs from 'node:fs';
 import { createJiti } from 'jiti';
 
 const jiti = createJiti(import.meta.url, {
@@ -91,4 +92,26 @@ const route = await jiti.import('../src/app/api/v1/levels/[levelId]/route.ts');
 assert.equal((await route.GET(request(), { params: Promise.resolve({ levelId: String(known.levelId) }) })).status, 200);
 const unknown = await jiti.import('../src/app/api/v1/[...path]/route.ts');
 assert.equal((await unknown.GET(request()).json()).error.code, 'NOT_FOUND');
+// Keep the downloadable contract aligned with real responses and discovery.
+const spec = JSON.parse(fs.readFileSync('public/openapi.json', 'utf8'));
+const discovery = await publicApi(request(), 'index').json();
+assert.deepEqual(Object.keys(spec.paths).sort(), ['/api/v1', ...Object.values(discovery.data.endpoints)].sort());
+const documentedFields = name => Object.keys(spec.components.schemas[name].properties).sort();
+assert.deepEqual(Object.keys(firstBody.data[0]).sort(), documentedFields('Level'));
+assert.deepEqual(Object.keys(firstBody.data[0].macros[0]).sort(), documentedFields('Recording'));
+assert.deepEqual(Object.keys(allRecordings.data[0]).sort(), documentedFields('Macro'));
+const operationIds = [];
+function verifyReferences(value) {
+  if (!value || typeof value !== 'object') return;
+  if (value.$ref) {
+    assert.ok(value.$ref.startsWith('#/components/schemas/'));
+    assert.ok(spec.components.schemas[value.$ref.split('/').at(-1)], value.$ref);
+  }
+  for (const child of Object.values(value)) verifyReferences(child);
+}
+verifyReferences(spec);
+for (const item of Object.values(spec.paths)) for (const operation of Object.values(item)) operationIds.push(operation.operationId);
+assert.equal(new Set(operationIds).size, operationIds.length);
+assert.deepEqual(spec.components.schemas.Recording.properties.recorder.enum, ['Mega Hack', 'xdBot', 'zBot']);
+assert.equal(spec.paths['/api/v1/levels'].get.parameters.find(p => p.name === 'limit').schema.maximum, 100);
 console.log('Public API: search, filters, pagination, DTO boundaries, errors, CORS, cache headers and route handlers passed.');

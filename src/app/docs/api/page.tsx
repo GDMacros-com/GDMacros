@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 const base = "https://www.gdmacros.com";
-const sections = ["quick-start", "endpoints", "filters", "responses", "fields", "examples", "errors", "limits", "operations"];
-const headings = ["Quick start", "Endpoints", "Filters & pagination", "Response shapes", "Field reference", "Code examples", "Errors", "Limits & caching", "For maintainers"];
+const sections = ["quick-start", "endpoints", "filters", "responses", "fields", "examples", "errors", "limits"];
+const headings = ["Quick start", "Endpoints", "Filters & pagination", "Response shapes", "Field reference", "Code examples", "Errors", "Limits & caching"];
 const linkStyle = "text-accent-soft underline-offset-4 hover:underline";
 
 function Code({ title, value }: { title: string; value: string }) {
@@ -158,11 +158,6 @@ export default function ApiDocumentation() {
           <p>Successful responses permit a 300-second CDN cache and 60-second stale revalidation. Browser max-age is zero. Updates appear after website deployment and cache refresh; do not assume instant visibility. Responses intentionally omit ETags and do not offer a 304 conditional-request contract.</p>
           <p>The v1 URL versions the interface. Clients should tolerate additional response fields and handle null values. Breaking interface changes should use a new version. The catalog itself can change or remove entries without changing the API version.</p>
           <p>Read the <a href="/terms" className={linkStyle}>Terms</a> and <a href="/privacy" className={linkStyle}>Privacy Policy</a>. Questions or broken metadata can be reported through <a href="/support/new" className={linkStyle}>support</a> or the <a href="https://github.com/GDMacros-com/GDMacros/issues" className={linkStyle}>GitHub issue tracker</a>.</p>
-        </section>
-        <section id="operations"><h2>For maintainers</h2>
-          <p>The API reads the same repository catalog as the website. No additional database, credentials or DNS configuration is required. Keep <code>public/openapi.json</code>, this reference and API regression tests aligned when changing the contract.</p>
-          <p>Before releasing, run <code>npm run test:api</code>, catalog validation, TypeScript checks and the production build. Verify the production commit through <code>/api/version</code>, then smoke-test the live endpoint and CORS response headers. Firewall-generated responses must be tested on Vercel; local development does not enforce that rule.</p>
-          <p>Manage the API-only rate-limit rule in Vercel Firewall and review usage before increasing it. Roll back a bad release using the hosting deployment rollback, or revert the code change and redeploy. Keep catalog publications coordinated with rollbacks so accepted recordings remain available. API code changes do not require replaying database migrations.</p>
         </section>
       </article>
     </div>

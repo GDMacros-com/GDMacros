@@ -50,7 +50,7 @@ import { assetCandidates, releaseTagFor } from "./assetName";
  * --------------------------------
  * A submission id. That is all. Level identity, macro author, recorder, the
  * asset filename, the repository, the release tag and the catalog payload are
- * all derived here from the database row and from GDBrowser.
+ * all derived here from the database row and from Geometry Dash.
  */
 
 export type PublishState = "not_started" | "asset_uploaded" | "catalog_committed" | "live_verified";
@@ -277,7 +277,7 @@ export async function runPublish(
         ok: false,
         state,
         stage: "validating",
-        error: "GDBrowser no longer has that level id. Nothing was published.",
+        error: "Geometry Dash no longer has that level id. Nothing was published.",
       };
     }
     // "unavailable" or "timeout" falls through and uses the stored values,

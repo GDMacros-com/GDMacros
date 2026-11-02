@@ -22,11 +22,11 @@
  * a glance, and sorts correctly without a parser.
  */
 
-export const TERMS_VERSION = "2026-10-22";
-export const TERMS_EFFECTIVE_DATE = "2026-10-22";
+export const TERMS_VERSION = "2026-11-02";
+export const TERMS_EFFECTIVE_DATE = "2026-11-02";
 
-export const PRIVACY_VERSION = "2026-10-22";
-export const PRIVACY_EFFECTIVE_DATE = "2026-10-22";
+export const PRIVACY_VERSION = "2026-11-02";
+export const PRIVACY_EFFECTIVE_DATE = "2026-11-02";
 
 /** Canonical paths, so links are written once. */
 export const TERMS_PATH = "/terms";

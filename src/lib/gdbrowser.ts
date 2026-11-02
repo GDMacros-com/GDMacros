@@ -1,28 +1,14 @@
 import "server-only";
 
-/**
- * GDBrowser, the only place this project talks to it.
- *
- * Server-side only, for the same reason the desktop app puts it in the Electron
- * main process: GDBrowser sends no CORS headers for us, so a browser cannot
- * make this call at all.
- *
- * Verified against the live service on 2026-08-20, see
- * `.claude/reference/upstream-services.md`. Two things there are worth
- * repeating because they are not what you would guess:
- *
- *   * A MISSING LEVEL ANSWERS HTTP 500 WITH THE BODY `-1`, not 404. So status
- *     alone can never decide "not found", and a 500 must not be reported as an
- *     outage. The body is the signal.
- *   * The creator is a plain string in `author`. There is no nested object.
+/** Direct Geometry Dash metadata lookups. The historical filename keeps existing
+ * callers compatible; no request is made to GDBrowser. Protocol reference:
+ * https://boomlings.dev/endpoints/levels/getGJLevels21
+ * Server-side only. No player credentials or visitor identity are sent.
  */
-
-const BASE = "https://gdbrowser.com/api";
+const ENDPOINT = "https://www.boomlings.com/database/getGJLevels21.php";
 const TIMEOUT_MS = 8000;
-const MAX_RESULTS = 12;
 export const MAX_QUERY_LENGTH = 60;
 
-/** The only fields we take. Everything else GDBrowser returns is ignored. */
 export interface GdLevel {
   levelId: string;
   name: string;
@@ -44,15 +30,6 @@ export type GdResult<T> = { ok: true; data: T } | { ok: false; reason: GdFailure
  */
 export type GdFailure = "not-found" | "bad-request" | "unavailable" | "timeout";
 
-/* ------------------------------------------------------------------ */
-/* A short cache                                                       */
-/* ------------------------------------------------------------------ */
-
-/**
- * Levels barely change, and a submitter will look the same one up repeatedly
- * while filling the form. This keeps that off GDBrowser without pretending to
- * be a real cache: it is per server instance, bounded, and short lived.
- */
 const CACHE_MS = 5 * 60 * 1000;
 const CACHE_MAX = 200;
 const cache = new Map<string, { at: number; value: unknown }>();
@@ -76,154 +53,101 @@ function remember(key: string, value: unknown) {
   cache.set(key, { at: Date.now(), value });
 }
 
-/* ------------------------------------------------------------------ */
-/* Parsing                                                             */
-/* ------------------------------------------------------------------ */
 
-const num = (v: unknown): number | null => {
-  const n = typeof v === "number" ? v : Number(v);
+function pairs(value: string, separator = ":"): Record<string, string> {
+  const parts = value.split(separator);
+  const result: Record<string, string> = Object.create(null);
+  if (parts.length % 2) throw new Error("Malformed metadata");
+  for (let i = 0; i < parts.length; i += 2) result[parts[i]] = parts[i + 1];
+  return result;
+}
+const number = (value: string | undefined): number | null => {
+  if (value === undefined || value.trim() === "") return null;
+  const n = Number(value);
   return Number.isFinite(n) ? n : null;
 };
-const text = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+const OFFICIAL_SONGS = ["Stereo Madness", "Back On Track", "Polargeist", "Dry Out", "Base After Base", "Cant Let Go", "Jumper", "Time Machine", "Cycles", "xStep", "Clutterfunk", "Theory of Everything", "Electroman Adventures", "Clubstep", "Electrodynamix", "Hexagon Force", "Blast Processing", "Theory of Everything 2", "Geometrical Dominator", "Deadlocked", "Fingerdash", "Dash"];
 
-/**
- * Validates the shape rather than trusting it. A response that does not carry a
- * usable name and id is treated as no result at all, which is what stops a
- * changed upstream format from quietly producing empty submissions.
- */
-function toLevel(raw: unknown): GdLevel | null {
-  if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown>;
-
-  const levelId = text(r.id);
-  const name = text(r.name);
-  if (!/^[0-9]{1,12}$/.test(levelId)) return null;
-  if (!name) return null;
-
-  return {
-    levelId,
-    name,
-    // GDBrowser returns an empty author for some levels rather than omitting it.
-    creator: text(r.author) || "Unknown",
-    difficulty: text(r.difficulty),
-    downloads: num(r.downloads),
-    likes: num(r.likes),
-    length: text(r.length),
-    stars: num(r.stars),
-    songName: text(r.songName),
-    platformer: r.platformer === true,
-  };
+function parse(body: string): GdLevel[] {
+  const sections = body.trim().split("#");
+  if (sections.length < 4 || !sections[0]) throw new Error("Malformed search response");
+  const creators = new Map(sections[1].split("|").filter(Boolean).map(row => {
+    const [id, name] = row.split(":");
+    return [id, name] as const;
+  }));
+  const songs = new Map(sections[2].split("~:~").filter(Boolean).map(row => {
+    const fields = pairs(row, "~|~");
+    return [fields["1"], fields["2"]] as const;
+  }));
+  return sections[0].split("|").map(row => {
+    const r = pairs(row);
+    if (!/^[0-9]{1,12}$/.test(r["1"] ?? "") || !r["2"]?.trim()) throw new Error("Invalid level");
+    let difficulty = "N/A";
+    if (r["25"] === "1") difficulty = "Auto";
+    else if (r["17"] === "1") difficulty = ({ "3": "Easy Demon", "4": "Medium Demon", "0": "Hard Demon", "5": "Insane Demon", "6": "Extreme Demon" } as Record<string, string>)[r["43"]] ?? "Hard Demon";
+    else if (Number(r["8"]) > 0) difficulty = ["N/A", "Easy", "Normal", "Hard", "Harder", "Insane"][Math.round(Number(r["9"]) / Number(r["8"]))] ?? "N/A";
+    const platformer = r["15"] === "5";
+    return {
+      levelId: r["1"], name: r["2"].trim(), creator: creators.get(r["6"]) || "Unknown",
+      difficulty, downloads: number(r["10"]), likes: number(r["14"]),
+      length: ["Tiny", "Short", "Medium", "Long", "XL", "Platformer"][Number(r["15"])] ?? "",
+      stars: number(r["18"]), platformer,
+      songName: Number(r["35"]) > 0 ? songs.get(r["35"]) || "" : OFFICIAL_SONGS[Number(r["12"])] || "",
+    };
+  });
 }
 
-/* ------------------------------------------------------------------ */
-/* Requests                                                            */
-/* ------------------------------------------------------------------ */
-
-async function get(path: string): Promise<{ status: number; body: string } | "timeout" | null> {
+async function request(query: string): Promise<GdResult<GdLevel[]>> {
   try {
-    const res = await fetch(`${BASE}${path}`, {
-      headers: { "User-Agent": "GDMacros-Website" },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      cache: "no-store",
+    const response = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "User-Agent": "", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret: "Wmfd2893gb7", gameVersion: "22", binaryVersion: "51", type: "0", str: query, page: "0" }),
+      signal: AbortSignal.timeout(TIMEOUT_MS), cache: "no-store",
     });
-    return { status: res.status, body: await res.text() };
+    const body = await response.text();
+    // HTTP failures and challenges must never be mistaken for deleted levels.
+    if (!response.ok) return { ok: false, reason: "unavailable" };
+    if (body.trim() === "-1") return { ok: true, data: [] };
+    return { ok: true, data: parse(body) };
   } catch (e) {
-    // A timeout is worth telling apart from being offline, because the wording
-    // a visitor should see differs.
-    if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) return "timeout";
-    return null;
+    return { ok: false, reason: e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError") ? "timeout" : "unavailable" };
   }
 }
 
-/** `-1` is GDBrowser's "no such level", and it arrives with a 500. */
-const isMissing = (body: string) => body.trim() === "-1";
-
-/**
- * Accepts a bare id, or anything containing one, so pasting a GDBrowser link or
- * a level URL works as well as typing the number. Same idea as the desktop app.
- */
 export function extractLevelId(input: string): string | null {
   const t = String(input ?? "").trim();
   if (/^[0-9]{1,12}$/.test(t)) return t;
-  const m = t.match(/([0-9]{3,12})/);
-  return m ? m[1] : null;
+  return t.match(/([0-9]{3,12})/)?.[1] ?? null;
 }
 
-/**
- * One level, by id. This is the call the submit route uses to re-verify a
- * submission, so it is the one that decides what actually gets stored.
- */
 export async function lookupLevel(rawId: string): Promise<GdResult<GdLevel>> {
   const id = extractLevelId(rawId);
   if (!id) return { ok: false, reason: "bad-request" };
-
-  const key = `level:${id}`;
-  const hit = cached<GdLevel>(key);
+  const hit = cached<GdLevel>(`level:${id}`);
   if (hit) return { ok: true, data: hit };
-
-  const res = await get(`/level/${encodeURIComponent(id)}`);
-  if (res === "timeout") return { ok: false, reason: "timeout" };
-  if (res === null) return { ok: false, reason: "unavailable" };
-  if (isMissing(res.body)) return { ok: false, reason: "not-found" };
-  if (res.status >= 400) return { ok: false, reason: "unavailable" };
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(res.body);
-  } catch {
-    return { ok: false, reason: "unavailable" };
-  }
-
-  const level = toLevel(parsed);
+  const result = await request(id);
+  if (!result.ok) return result;
+  // Numeric searches must resolve the exact ID, never a similarly named level.
+  const level = result.data.find(level => level.levelId === id);
   if (!level) return { ok: false, reason: "not-found" };
-
-  remember(key, level);
+  remember(`level:${id}`, level);
   return { ok: true, data: level };
 }
 
-/**
- * Levels by name. Returns at most MAX_RESULTS, because this feeds a picker and
- * a long list is neither useful nor kind to GDBrowser.
- */
 export async function searchLevels(rawQuery: string): Promise<GdResult<GdLevel[]>> {
   const query = String(rawQuery ?? "").trim();
   if (!query || query.length > MAX_QUERY_LENGTH) return { ok: false, reason: "bad-request" };
-
-  // A pure number is an id, and looking it up directly is both faster and more
-  // accurate than searching for it as text.
   if (/^[0-9]{1,12}$/.test(query)) {
-    const one = await lookupLevel(query);
-    // Written out rather than as a ternary so the narrowing is explicit: a
-    // single-level result has to become a one-element list.
-    if (!one.ok) return { ok: false, reason: one.reason };
-    return { ok: true, data: [one.data] };
+    const result = await lookupLevel(query);
+    return result.ok ? { ok: true, data: [result.data] } : result;
   }
-
   const key = `search:${query.toLowerCase()}`;
   const hit = cached<GdLevel[]>(key);
   if (hit) return { ok: true, data: hit };
-
-  const res = await get(`/search/${encodeURIComponent(query)}?count=${MAX_RESULTS}`);
-  if (res === "timeout") return { ok: false, reason: "timeout" };
-  if (res === null) return { ok: false, reason: "unavailable" };
-  if (isMissing(res.body)) return { ok: true, data: [] };
-  if (res.status >= 400) return { ok: false, reason: "unavailable" };
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(res.body);
-  } catch {
-    return { ok: false, reason: "unavailable" };
-  }
-  if (!Array.isArray(parsed)) return { ok: false, reason: "unavailable" };
-
-  const levels = parsed
-    .map(toLevel)
-    .filter((l): l is GdLevel => l !== null)
-    .slice(0, MAX_RESULTS);
-
-  remember(key, levels);
-  return { ok: true, data: levels };
+  const result = await request(query);
+  if (result.ok) remember(key, result.data);
+  return result;
 }
 
 /** The wording a visitor sees. No upstream text, ever. */

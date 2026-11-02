@@ -96,14 +96,14 @@ Vercel supplies deployment metadata through `VERCEL_GIT_COMMIT_SHA`, `VERCEL_GIT
 
 ### Supabase setup
 
-1. For a new database, apply all 24 SQL migrations in `supabase/migrations` in numeric order, through `0024_new_macro_webhook.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
+1. For a new database, apply all 25 SQL migrations in `supabase/migrations` in numeric order, through `0025_direct_gd_legal_versions.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
 2. Configure the Supabase Auth site URL and redirect allow list for production, localhost and any permitted preview origins. Confirmation and password-reset templates must point to the application's auth routes. The expected confirmation-link pattern is documented in `src/lib/supabase/config.ts`.
 3. Configure Supabase Auth email templates and SMTP separately from the application's Resend API integration.
 4. Use the role snippets in `supabase/snippets` to assign staff access. Public signup cannot assign roles.
 
 Migrations create the private `macro-submissions` storage bucket, database policies, RPCs and job queues. Some install scheduled cleanup through `pg_cron`; the target project must support that extension. A manual SQL Editor run does not update Supabase CLI migration history. Keep that history consistent before later using `supabase db push`.
 
-Historical rollout guides remain in [Moderator setup](docs/mod-role.md) and [FPS and policy rollout](docs/fps-policy-rollout.md). Their release-specific dates and tool counts describe those releases. Use this README, the current source and the latest migrations for the present feature set. In particular, the current Terms and Privacy versions in `src/lib/legal.ts` are both `2026-10-22`, synchronized by migration 0023.
+Historical rollout guides remain in [Moderator setup](docs/mod-role.md) and [FPS and policy rollout](docs/fps-policy-rollout.md). Their release-specific dates and tool counts describe those releases. Use this README, the current source and the latest migrations for the present feature set. In particular, the current Terms and Privacy versions in `src/lib/legal.ts` are both `2026-11-02`, synchronized by migration 0025.
 
 ### GitHub publishing setup
 
@@ -115,7 +115,7 @@ Configure the sending domain and Resend API permissions for service email. Confi
 
 ## Submissions, review and publishing
 
-Uploads remain private until accepted. The server checks the authenticated user/profile, validates fields and replay structure, looks up level metadata through GDBrowser, and verifies a supplied YouTube video. Search/verification use GDBrowser and YouTube without an API key. YouTube search depends on upstream page structure; the form also supports pasted video links verified through oEmbed.
+Uploads remain private until accepted. The server checks the authenticated user/profile, validates fields and replay structure, looks up level metadata directly through the Geometry Dash servers, and verifies a supplied YouTube video. Search/verification use Geometry Dash and YouTube without a user API key. YouTube search depends on upstream page structure; the form also supports pasted video links verified through oEmbed.
 
 | Recorder | Upload extension | Maximum file size |
 | --- | --- | --- |
@@ -290,3 +290,9 @@ The installation guide documents tool-specific importing and troubleshooting. Ca
 | `public` | Static assets and verification files |
 
 Repository software is available under the [MIT license](LICENSE). Not affiliated with, endorsed by or connected to RobTop Games.
+
+### Direct Geometry Dash lookups (2 November 2026)
+
+Level search and verification now POST directly to `https://www.boomlings.com/database/getGJLevels21.php`, following [GD Docs](https://boomlings.dev/endpoints/levels/getGJLevels21). `src/lib/gdbrowser.ts` retains its historical filename and exported interface for compatibility, but makes no GDBrowser API requests. The server sends an empty User-Agent and form-encoded public search parameters, without player credentials or visitor identity. Responses are parsed into the existing level model, with exact-ID matching, an eight-second timeout and a bounded five-minute cache. Searches return the upstream first page (up to ten results). HTTP errors and malformed responses are treated as unavailable, never as a deleted level. GDBrowser links remain external browsing links.
+
+Pending submissions keep their IDs, uploaded files, review state and previously verified metadata. Publishing still uses the stored metadata during an upstream outage; no submission migration or resubmission is required. Apply migration 0025 to synchronize legal versions without changing submissions or historical signup acceptances. No notice is drafted, queued or sent by this update. Run `npm run test:gd` for protocol and failure-path checks.

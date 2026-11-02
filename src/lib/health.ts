@@ -30,7 +30,7 @@ export const CHECK_LABELS: Record<CheckId, string> = {
   supabase: "Supabase",
   github: "GitHub publishing",
   vercel: "Vercel deployment",
-  gdbrowser: "GDBrowser",
+  gdbrowser: "Geometry Dash servers",
   youtube: "YouTube verification",
   resend: "Resend",
   lanyard: "Lanyard",

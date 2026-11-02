@@ -327,10 +327,12 @@ export default function PrivacyPage() {
               to GitHub, under GitHub&apos;s own terms.
             </>,
             <>
-              <span className="font-semibold text-text">GDBrowser</span> is used to look up Geometry
-              Dash level details. Those lookups are made by our server, not by your browser, so
-              those lookups do not pass your account identity to GDBrowser. Opening a GD Browser
-              link yourself does contact it directly.
+              <span className="font-semibold text-text">RobTop Games / Geometry Dash servers</span> receive
+              the level name or ID needed to search for and verify Geometry Dash level details.
+              These requests are made by our server; we do not send your account identity, email
+              address or browser IP address with them. The service receives our server IP address.
+              GDBrowser is no longer used for these lookups. Opening an external GD Browser
+              level link yourself contacts GDBrowser directly from your browser.
             </>,
             <>
               <span className="font-semibold text-text">YouTube</span> provides showcase videos.

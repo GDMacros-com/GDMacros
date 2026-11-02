@@ -180,9 +180,8 @@ async function checkVercel() {
 
 async function checkGdbrowser() {
   return probe("gdbrowser", async () => {
-    // Stereo Madness. The first level in the game, so it cannot be deleted or
-    // renamed out from under this check.
-    const res = await lookupLevel("128");
+    // A real online level; built-in levels are not server search records.
+    const res = await lookupLevel("10565740");
     if (!res.ok) return { state: "down" as const, detail: `Lookup failed: ${res.reason}` };
     return { state: "ok" as const, detail: `Resolved "${res.data.name}"` };
   });

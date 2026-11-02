@@ -22,7 +22,8 @@
     "test:fps": "node scripts/test-fps.mjs",
     "test:catalog-editor": "node scripts/test-catalog-editor.mjs",
     "test:announcements": "node scripts/test-announcements.mjs",
-    "test:api": "node scripts/test-api.mjs"
+    "test:api": "node scripts/test-api.mjs",
+    "test:gd": "node scripts/test-gd.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

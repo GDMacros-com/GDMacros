@@ -77,7 +77,8 @@ const src = {
     read("supabase/migrations/0019_mod_role.sql") +
     read("supabase/migrations/0021_current_legal_versions.sql") +
     read("supabase/migrations/0022_discord_privacy_version.sql") +
-    read("supabase/migrations/0023_current_legal_versions.sql"),
+    read("supabase/migrations/0023_current_legal_versions.sql") +
+    read("supabase/migrations/0025_direct_gd_legal_versions.sql"),
   ownerCard: read("src/components/DiscordOwnerCard.tsx"),
 };
 
@@ -264,7 +265,7 @@ check("privacy covers Vercel analytics", /Web Analytics and Speed Insights/i.tes
 check("privacy covers local storage keys", /gdm-theme/.test(src.privacy) && /gdmacros:favorites/.test(src.privacy));
 check("privacy covers the supabase session cookie", /session cookie/i.test(src.privacy));
 check("privacy covers google translate", /googtrans/i.test(src.privacy));
-check("privacy says GDBrowser lookups are server side", /made by our server/i.test(src.privacy));
+check("privacy says Geometry Dash lookups are server side", /made by our server/i.test(src.privacy));
 check("privacy says youtube search uses no api key", /uses no API key/i.test(src.privacy));
 check("privacy does not claim a YouTube Data API key", !/YouTube Data API/i.test(src.privacy));
 check("privacy covers Lanyard on the about page", /Lanyard/.test(src.privacy));

@@ -73,6 +73,9 @@ jobs:
       - name: Public catalog API
         run: npm run test:api
 
+      - name: Direct Geometry Dash lookups
+        run: npm run test:gd
+
       - name: Publisher
         run: npm run test:publish
 

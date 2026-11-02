@@ -243,7 +243,7 @@ export default function TermsPage() {
       <Section title="Services we depend on">
         <p>
           {site.name} runs on services we do not control: GitHub, Supabase, Vercel, Resend, YouTube,
-          GDBrowser, Google Translate, Lanyard and Discord. If one of them has an outage or changes its
+          Geometry Dash servers operated by RobTop Games, GDBrowser (when you open an external level link), Google Translate, Lanyard and Discord. If one of them has an outage or changes its
           rules, parts of the site can stop working, and that is outside our hands. Their own terms
           apply when you interact with them directly, such as when you download a file from GitHub,
           watch an embedded video or use the language menu.

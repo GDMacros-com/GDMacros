@@ -11,7 +11,7 @@ import { isClean, validateFile, type FieldErrors } from "@/lib/submissions";
  * The submission form.
  *
  * The level and the video are CHOSEN rather than typed. The level name, id and
- * creator come from GDBrowser, and the video from a real YouTube result, so a
+ * creator come from Geometry Dash servers, and the video from a real YouTube result, so a
  * submission arrives with data that already agrees with reality.
  *
  * None of that is a security boundary. The server re-fetches the level by id
@@ -250,8 +250,8 @@ export default function SubmitForm({ username }: { username: string }) {
       <div className="card p-5">
         <h2 className="text-[15px] font-bold text-text">1. The level</h2>
         <p className="mt-1 text-[12.5px] text-muted">
-          Search by name or paste the level ID. The details come from GDBrowser, so they are always
-          right.
+          Search by name or paste the level ID. The details are verified directly with the Geometry Dash
+          servers.
         </p>
 
         {level ? (

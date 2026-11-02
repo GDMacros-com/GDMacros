@@ -4498,5 +4498,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-69230086/ChesszDC-The-Devourer-xdBot.gdr2"
       }
     ]
+  },
+  {
+    "name": "Silent Acropolis",
+    "creator": "ThePurgatory",
+    "levelId": "111237270",
+    "video": "https://www.youtube.com/watch?v=E7BVW_xS4S8",
+    "addedAt": "2026-11-02",
+    "macros": [
+      {
+        "author": "ChesszDC",
+        "recorder": "xdBot",
+        "fps": 1000,
+        "testedAt": "2026-11-02",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-111237270/ChesszDC-Silent-Acropolis-xdBot.gdr2"
+      }
+    ]
   }
 ]

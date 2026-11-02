@@ -88,7 +88,7 @@ export default function EditSubmission({
     <div className="mt-3.5 rounded-xl border border-accent/30 bg-surface-2/40 p-4">
       <p className="text-[12.5px] font-semibold text-text">Edit details</p>
       <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-        Changing the level ID re-reads the name and creator from GDBrowser. A video link is checked
+        Changing the level ID re-reads the name and creator from the Geometry Dash servers. A video link is checked
         with YouTube before it is saved. Leave the video empty to remove it.
       </p>
 
@@ -113,7 +113,7 @@ export default function EditSubmission({
           />
           {idChanged && (
             <span className="mt-1 block text-[11px] text-amber-400">
-              Taken from GDBrowser for the new ID.
+              Taken from the Geometry Dash servers for the new ID.
             </span>
           )}
         </label>

@@ -47,7 +47,7 @@ export type EditResult =
  * This mirrors what the submit route already does. The reviewer is trusted, but
  * "trusted" is not the same as "cannot make a typo", and a level name that
  * disagrees with the level ID produces a catalog entry and an asset filename
- * that are both wrong. Whatever GDBrowser says for the ID is what gets stored.
+ * that are both wrong. Whatever Geometry Dash says for the ID is what gets stored.
  */
 export async function updateSubmission(id: string, fields: EditFields): Promise<EditResult> {
   const user = await getUser();
@@ -85,12 +85,12 @@ export async function updateSubmission(id: string, fields: EditFields): Promise<
         ok: false,
         error:
           level.reason === "not-found"
-            ? "No level with that ID on GDBrowser."
-            : "Could not reach GDBrowser to confirm that level.",
+            ? "No level with that ID on Geometry Dash."
+            : "Could not reach Geometry Dash to confirm that level.",
       };
     }
     payload.p_level_id = levelId;
-    // Taken from GDBrowser, not from the form, for the same reason the submit
+    // Taken from Geometry Dash, not from the form, for the same reason the submit
     // route does it: the name and creator should describe the ID being stored.
     payload.p_level_name = level.data.name;
     payload.p_level_creator = level.data.creator ?? "";

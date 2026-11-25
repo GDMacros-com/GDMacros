@@ -76,6 +76,7 @@ export default function SubmitForm({ username }: { username: string }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const versionDialog = useRef<HTMLDialogElement>(null);
 
   async function searchLevels() {
     const q = levelQuery.trim();
@@ -154,8 +155,9 @@ export default function SubmitForm({ username }: { username: string }) {
     }
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setFormError(null);
 
     const next: FieldErrors = {};
@@ -169,11 +171,11 @@ export default function SubmitForm({ username }: { username: string }) {
     setErrors(next);
     if (!isClean(next)) return;
 
-    if (!window.confirm(`Are you on Geometry Dash ${CURRENT_GAME_VERSION}, and did you record this macro on that version?`)) {
-      setFormError(`Uploads require a macro recorded on Geometry Dash ${CURRENT_GAME_VERSION}.`);
-      return;
-    }
+    versionDialog.current?.showModal();
+  }
 
+  async function uploadConfirmed() {
+    versionDialog.current?.close();
     setBusy(true);
     try {
       const body = new FormData();
@@ -549,11 +551,9 @@ export default function SubmitForm({ username }: { username: string }) {
             <p className="mt-1.5 text-[12px] text-rose">{errors.file}</p>
           ) : (
             <p className="mt-1.5 text-[12px] text-muted">
-              {recorder === "zBot"
-                ? "A ZBot .gdr file, up to 2 MB."
-                : recorder
-                  ? `A ${recorder} ${macroFileExtension(recorder)} file, up to 2 MB.`
-                  : "Silicate uses .slc, zBot uses .gdr, and Mega Hack and Eclipse use .gdr2. Up to 2 MB."}
+              {recorder
+                ? `Upload a ${macroFileExtension(recorder)} file recorded with ${recorder}. Up to 2 MB.`
+                : "Silicate uses .slc, zBot uses .gdr, and Mega Hack and Eclipse use .gdr2. Up to 2 MB."}
             </p>
           )}
         </div>
@@ -561,6 +561,36 @@ export default function SubmitForm({ username }: { username: string }) {
         <FormError>{formError}</FormError>
         <SubmitButton busy={busy}>Send for review</SubmitButton>
       </div>
+      <dialog
+        ref={versionDialog}
+        aria-labelledby="upload-version-title"
+        aria-describedby="upload-version-description"
+        className="m-auto w-[90vw] max-w-sm rounded-2xl border border-border bg-surface p-5 text-text shadow-xl backdrop:bg-black/60"
+      >
+        <h2 id="upload-version-title" className="text-lg font-bold">Are you on Geometry Dash {CURRENT_GAME_VERSION}?</h2>
+        <p id="upload-version-description" className="mt-2 text-sm text-muted">
+          Confirm that you recorded this macro on {CURRENT_GAME_VERSION} to send it for review.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              versionDialog.current?.close();
+              setFormError(`Uploads require a macro recorded on Geometry Dash ${CURRENT_GAME_VERSION}.`);
+            }}
+            className="rounded-lg border border-border px-3.5 py-2 text-sm font-semibold hover:bg-surface-2"
+          >
+            No
+          </button>
+          <button
+            type="button"
+            onClick={uploadConfirmed}
+            className="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+          >
+            Yes, continue
+          </button>
+        </div>
+      </dialog>
     </form>
   );
 }

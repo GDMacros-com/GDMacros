@@ -95,7 +95,7 @@ for (const [name, file] of [
   check(`the ${name} route exists`, fs.existsSync(path.join(ROOT, file)));
 }
 
-check("the hub offers exactly eight tools", (src.hub.match(/href: "\/admin\//g) ?? []).length === 8);
+check("the hub offers nine tools including the legacy release operation", (src.hub.match(/href: "\/admin\//g) ?? []).length === 9 && src.hub.includes("/admin/legacy-releases"));
 check("the hub links check submissions", src.hub.includes('"/admin/submissions"'));
 check("the hub links mail everyone", src.hub.includes('"/admin/notices"'));
 check("the hub links statistics", src.hub.includes('"/admin/status"'));

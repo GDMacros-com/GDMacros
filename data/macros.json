@@ -32,5 +32,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-68553037/ChesszDC-Blood-in-the-Water-Mega-Hack.gdr2"
       }
     ]
+  },
+  {
+    "name": "KOCMOC UNLEASHED",
+    "creator": "Prismarin1706",
+    "levelId": "135262094",
+    "video": "https://www.youtube.com/watch?v=H6v5U_yT2cU",
+    "addedAt": "2026-11-25",
+    "macros": [
+      {
+        "author": "Itsagelaaaaa",
+        "recorder": "Eclipse",
+        "fps": 60,
+        "testedAt": "2026-11-25",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-135262094/Itsagelaaaaa-KOCMOC-UNLEASHED-Eclipse.gdr2"
+      }
+    ]
   }
 ]

@@ -315,7 +315,7 @@ export async function runPublish(
         };
       }
 
-      const tag = currentReleaseTagFor(sub.level_id);
+      const tag = sub.release_tag ?? currentReleaseTagFor(sub.level_id);
 
       // Reuse the release recorded earlier if there is one; otherwise find or
       // create it. createLevelRelease absorbs the two-admins-same-new-level
@@ -369,11 +369,17 @@ export async function runPublish(
           p_asset_sha256: digest,
         });
         if (intentErr) {
+          const tagRejected = intentErr.code === "23514" && intentErr.message.includes("publish_tag_shape");
+          await noteError(supabase, submissionId, "uploading", tagRejected
+            ? "Database rejected the versioned GitHub release tag."
+            : "Could not reserve a GitHub asset filename.");
           return {
             ok: false,
             state,
             stage: "uploading",
-            error: "The publication could not be prepared. Nothing was published. Retry is safe.",
+            error: tagRejected
+              ? "The database rejected the release tag. Apply migration 0027 and retry."
+              : "The publisher could not save the filename reservation. Retry is safe.",
           };
         }
 

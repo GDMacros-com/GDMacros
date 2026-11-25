@@ -124,7 +124,7 @@ check(
 );
 check("the profile page is labelled a profile", /Profile/.test(src.authorPage));
 check("macro detail links author credits", /\/author\/\$\{author\.slug\}/.test(src.macroPage));
-check("author links are outside the download anchor", src.macroPage.indexOf("href={`/author/") < src.macroPage.indexOf("href={macro.downloadLink}"));
+check("author links are outside the download anchor", src.macroPage.indexOf("href={`/author/") < src.macroPage.indexOf("href={downloadLink}"));
 check("the sitemap includes every author page", /getAllAuthors/.test(src.sitemap) && /\/author\//.test(src.sitemap));
 check("the former owner name passes the client availability check", usernames.usernameProblem("Spypiexj8") === null);
 check("the former owner role is revoked defensively", /delete from public\.user_roles[\s\S]*role = 'admin'[\s\S]*username_lower = 'spypiexj8'/.test(src.formerOwnerRemoval));

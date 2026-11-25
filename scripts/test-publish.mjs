@@ -93,6 +93,7 @@ const load = (rel) => jiti.import(path.join(ROOT, rel));
 function makeGitHub() {
   const gh = {
     releases: [], // { id, tag_name, name, upload_url }
+    refs: new Map(), // tag -> commit SHA
     assets: new Map(), // releaseId -> [{ id, name, size, browser_download_url, digest }]
     catalog: { text: "[]\n", sha: "sha-0" },
     commits: [],
@@ -125,6 +126,22 @@ function makeGitHub() {
     }
     if (/\/repos\/[^/]+\/[^/]+\/installation$/.test(url)) {
       return json({ id: 42 });
+    }
+
+    if (method === "GET" && /\/releases\?per_page=/.test(url)) return json(gh.releases);
+    const ref = url.match(/\/git\/ref\/tags\/([^/?]+)$/);
+    if (ref) {
+      const sha = gh.refs.get(decodeURIComponent(ref[1]));
+      return sha ? json({ object: { sha, type: "commit" } }) : json({}, 404);
+    }
+    const patch = url.match(/\/releases\/(\d+)$/);
+    if (method === "PATCH" && patch) {
+      const release = gh.releases.find((entry) => entry.id === Number(patch[1]));
+      if (!release) return json({}, 404);
+      const body = JSON.parse(init.body);
+      gh.refs.set(body.tag_name, body.target_commitish);
+      Object.assign(release, body);
+      return json(release);
     }
 
     // Release by tag
@@ -646,6 +663,25 @@ async function main() {
       globalThis.fetch = realFetch;
     }
   }
+
+  await scenario(async (gh) => {
+    const releases = await load("src/lib/github/releases.ts");
+    gh.releases.push(
+      { id: 50, tag_name: "level-123", name: "Legacy Test", upload_url: "" },
+      { id: 51, tag_name: "level-2.2091-123", name: "Test", upload_url: "" },
+    );
+    gh.refs.set("level-123", "a".repeat(40));
+    gh.assets.set(50, [{ id: 70, name: "replay.gdr2" }]);
+    let result = await releases.renameLegacyReleases();
+    eq("legacy releases: a title already prefixed still moves", result.renamed, 1);
+    eq("legacy releases: archive tag has a legacy prefix", gh.releases[0].tag_name, "legacy-level-123");
+    eq("legacy releases: title prefix is not repeated", gh.releases[0].name, "Legacy Test");
+    eq("legacy releases: original Git commit is preserved", gh.refs.get("legacy-level-123"), "a".repeat(40));
+    eq("legacy releases: existing asset identity is preserved", gh.assets.get(50)[0].id, 70);
+    eq("legacy releases: current tag stays current", gh.releases[1].tag_name, "level-2.2091-123");
+    result = await releases.renameLegacyReleases();
+    eq("legacy releases: repeat runs skip migrated tags", result.renamed, 0);
+  });
 
   // -- happy path, brand new level release --
   await scenario(async (gh) => {

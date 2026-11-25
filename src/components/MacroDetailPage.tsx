@@ -23,6 +23,7 @@ import {
   levelUrl,
 } from "@/lib/format";
 import { findAuthorByName } from "@/lib/authors";
+import { legacyReleaseDownload } from "@/lib/github/legacy-tag";
 import { getLevelBySlug, getNeighbours } from "@/lib/macros";
 import { site } from "@/lib/site";
 import { macroPath, type Level, type Macro } from "@/lib/types";
@@ -67,7 +68,11 @@ export function macroMetadata(slug: string, legacy = false): Metadata {
 }
 
 /** One download card: "Macro 1", who recorded it, and where to get it. */
-function MacroCardBlock({ macro, legacy }: { macro: Macro; legacy: boolean }) {
+function MacroCardBlock({ macro, legacy, slug }: { macro: Macro; legacy: boolean; slug: string }) {
+  const archivePath = legacy && process.env.NEXT_OUTPUT !== "export" && legacyReleaseDownload(macro.downloadLink)
+    ? `/legacy/download/${slug}/${macro.position}`
+    : null;
+  const downloadLink = archivePath ?? macro.downloadLink;
   const accent = hostAccent(macro.downloadType);
   const unavailable = isPlaceholderLink(macro.downloadLink);
   const fileName = unavailable ? null : fileNameFromUrl(macro.downloadLink);
@@ -125,7 +130,7 @@ function MacroCardBlock({ macro, legacy }: { macro: Macro; legacy: boolean }) {
             is the shape Google's deceptive-download rule is written against.
           */}
           <a
-            href={macro.downloadLink}
+            href={downloadLink}
             target="_blank"
             rel="noopener noreferrer nofollow"
             className="block px-5 pt-4 pb-3 text-center transition-colors duration-200 hover:bg-surface-2 active:scale-[0.98] active:duration-75"
@@ -157,7 +162,7 @@ function MacroCardBlock({ macro, legacy }: { macro: Macro; legacy: boolean }) {
             </p>
           </a>
           <div className="border-t border-border-soft px-5 py-2.5 text-center">
-            <CopyButton value={macro.downloadLink} />
+            <CopyButton value={archivePath ? new URL(archivePath, site.url).href : macro.downloadLink} />
           </div>
         </>
       )}
@@ -254,7 +259,7 @@ export default function MacroDetailPage({ slug, legacy = false }: { slug: string
           className={`flex flex-wrap justify-center gap-3 ${many ? "sm:gap-4" : ""}`}
         >
           {level.macros.map((macro) => (
-            <MacroCardBlock key={`${macro.position}-${macro.author}`} macro={macro} legacy={legacy} />
+            <MacroCardBlock key={`${macro.position}-${macro.author}`} macro={macro} legacy={legacy} slug={level.slug} />
           ))}
         </div>
 

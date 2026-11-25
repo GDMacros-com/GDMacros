@@ -1,8 +1,10 @@
 import "server-only";
 
 import type { CatalogAuthor } from "./authors";
+import { legacyReleaseDownload } from "./github/legacy-tag";
 import { getAllLevels } from "./macros";
 import type { PublishedSubmissionRow, PublishedSubmissionView } from "./submissions";
+import { macroPath } from "./types";
 
 /**
  * What fills the "Accepted and live" panel on /submissions.
@@ -60,14 +62,17 @@ export interface OwnedMacroView {
 /** Download URL to catalog location, built once per render. */
 function catalogIndex(): Map<string, { href: string; addedAt: string | null; levelName: string; levelId: string }> {
   const index = new Map<string, { href: string; addedAt: string | null; levelName: string; levelId: string }>();
-  for (const level of getAllLevels()) {
+  for (const level of [...getAllLevels(), ...getAllLevels(true)]) {
     for (const macro of level.macros) {
-      index.set(macro.downloadLink, {
-        href: `/macro/${level.slug}#macro-${macro.position}`,
+      const location = {
+        href: `${macroPath(level.slug, level.legacy)}#macro-${macro.position}`,
         addedAt: level.addedAt ?? null,
         levelName: level.name,
         levelId: String(level.levelId),
-      });
+      };
+      index.set(macro.downloadLink, location);
+      const newArchiveUrl = level.legacy && legacyReleaseDownload(macro.downloadLink);
+      if (newArchiveUrl) index.set(newArchiveUrl, location);
     }
   }
   return index;

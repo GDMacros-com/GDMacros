@@ -1,8 +1,10 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 import { ghFetch, GitHubError } from "./client";
 import { DOWNLOADS_REPO, GITHUB_API, GITHUB_ORG, GITHUB_UPLOADS } from "./config";
+import { legacyReleaseTag } from "./legacy-tag";
 
 /**
  * Releases in `GDMacros-com/GDMacros-downloads`.
@@ -36,7 +38,19 @@ export interface GhAsset {
   digest?: string | null;
 }
 
-/** Applies the archive label without changing tags, assets, or download URLs. */
+interface GitTagRef {
+  object: { sha: string; type: string };
+}
+
+async function getTagRef(tag: string) {
+  const { data } = await ghFetch<GitTagRef | null>({
+    url: `${REPO_BASE}/git/ref/tags/${encodeURIComponent(tag)}`,
+    allow404: true,
+  });
+  return data?.object ?? null;
+}
+
+/** Retags the existing release in place so asset IDs and download counts survive. */
 export async function renameLegacyReleases() {
   const releases: GhRelease[] = [];
   for (let page = 1; ; page++) {
@@ -45,17 +59,33 @@ export async function renameLegacyReleases() {
     if (data.length < 100) break;
   }
 
-  const pending = releases.filter((release) =>
-    /^level-\d+$/.test(release.tag_name) && !/^Legacy /i.test(release.name ?? ""),
-  );
-  const batch = pending.slice(0, 15);
+  const pending = releases.flatMap((release) => {
+    const tag = legacyReleaseTag(release.tag_name);
+    return tag ? [{ release, tag }] : [];
+  });
+  const batch = pending.slice(0, 10);
   let renamed = 0;
-  for (const release of batch) {
-    await ghFetch<GhRelease>({
+  for (const { release, tag } of batch) {
+    const source = await getTagRef(release.tag_name);
+    const target = await getTagRef(tag);
+    if (!source || source.type !== "commit" || (target && target.sha !== source.sha)) {
+      throw new Error(`Cannot safely move release ${release.tag_name} to ${tag}`);
+    }
+    const name = release.name?.trim() || release.tag_name;
+    // Space out writes to stay within GitHub's secondary limits.
+    await delay(1_000);
+    const { data } = await ghFetch<GhRelease>({
       method: "PATCH",
       url: `${REPO_BASE}/releases/${release.id}`,
-      body: { name: `Legacy ${release.name ?? release.tag_name}` },
+      body: {
+        name: /^Legacy /i.test(name) ? name : `Legacy ${name}`,
+        tag_name: tag,
+        target_commitish: source.sha,
+      },
     });
+    if (data.id !== release.id || data.tag_name !== tag) {
+      throw new Error(`GitHub did not move release ${release.tag_name} to ${tag}`);
+    }
     renamed++;
   }
   return { renamed, remaining: pending.length - renamed };

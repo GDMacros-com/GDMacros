@@ -96,7 +96,7 @@ Vercel supplies deployment metadata through `VERCEL_GIT_COMMIT_SHA`, `VERCEL_GIT
 
 ### Supabase setup
 
-1. For a new database, apply all 26 SQL migrations in `supabase/migrations` in numeric order, through `0026_geometry_dash_22091.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
+1. For a new database, apply all 27 SQL migrations in `supabase/migrations` in numeric order, through `0027_versioned_release_tags.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
 2. Configure the Supabase Auth site URL and redirect allow list for production, localhost and any permitted preview origins. Confirmation and password-reset templates must point to the application's auth routes. The expected confirmation-link pattern is documented in `src/lib/supabase/config.ts`.
 3. Configure Supabase Auth email templates and SMTP separately from the application's Resend API integration.
 4. Use the role snippets in `supabase/snippets` to assign staff access. Public signup cannot assign roles.

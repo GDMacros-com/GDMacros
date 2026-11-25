@@ -17,7 +17,7 @@ export default async function LegacyReleasesPage() {
     <div className="mx-auto w-full max-w-[740px] px-4 py-10 sm:px-6">
       <BackToAdmin />
       <h1 className="mt-4 text-2xl font-extrabold text-text">2.2081 GitHub releases</h1>
-      <p className="mt-2 text-sm text-muted">Use the GitHub publisher to add “Legacy” to the existing release titles. The tags and download links stay the same.</p>
+      <p className="mt-2 text-sm text-muted">Use the GitHub publisher to move the 2.2081 releases to Legacy tags. Downloads from the archive continue to work as each release moves.</p>
       <LegacyReleaseTool />
     </div>
   );

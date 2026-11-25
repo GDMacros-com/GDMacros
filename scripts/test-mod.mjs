@@ -160,8 +160,11 @@ await check('mods can edit, claim, release and run the full publish lifecycle', 
   await rows('select public.release_processing($1)',[submission]);
   await rows('select public.start_processing($1)',[submission]);
   await rows('select public.begin_publish($1)',[submission]);
-  await rows('select public.record_publish_intent($1,1,$2,$3,$4)',[submission,'level-123','test.gdr2','a'.repeat(64)]);
-  await rows('select public.record_publish_asset($1,1,$2,2,$3,$4,$5)',[submission,'level-123','test.gdr2','https://example.test/test.gdr2','a'.repeat(64)]);
+  const intent = 'select public.record_publish_intent($1,1,$2,$3,$4)';
+  await assert.rejects(rows(intent,[submission,'level-2x2091-123','test.gdr2','a'.repeat(64)]), /publish_tag_shape/);
+  await rows(intent,[submission,'level-123','test.gdr2','a'.repeat(64)]);
+  await rows(intent,[submission,'level-2.2091-123','test.gdr2','a'.repeat(64)]);
+  await rows('select public.record_publish_asset($1,1,$2,2,$3,$4,$5)',[submission,'level-2.2091-123','test.gdr2','https://example.test/test.gdr2','a'.repeat(64)]);
   await rows('select public.record_publish_commit($1,$2)',[submission,'b'.repeat(40)]);
   await rows('select public.record_publish_live($1)',[submission]);
   await rows('select public.finish_processing($1)',[submission]);

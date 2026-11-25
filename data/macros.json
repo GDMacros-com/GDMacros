@@ -49,5 +49,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-135262094/Itsagelaaaaa-KOCMOC-UNLEASHED-Eclipse.gdr2"
       }
     ]
+  },
+  {
+    "name": "Robmoc",
+    "creator": "Itsagelaaaa",
+    "levelId": "152139257",
+    "video": "https://www.youtube.com/watch?v=AXP5l1-x1i0",
+    "addedAt": "2026-11-25",
+    "macros": [
+      {
+        "author": "Itsagelaaaaa",
+        "recorder": "Eclipse",
+        "fps": 60,
+        "testedAt": "2026-11-25",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-152139257/Itsagelaaaaa-Robmoc-Eclipse.gdr2"
+      }
+    ]
   }
 ]

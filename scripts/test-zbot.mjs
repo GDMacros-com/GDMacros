@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createJiti } from "jiti";
 
-const catalog = JSON.parse(fs.readFileSync("data/macros.json", "utf8"));
+const catalog = JSON.parse(fs.readFileSync("data/macros-2.2081.json", "utf8"));
 const types = fs.readFileSync("src/lib/types.ts", "utf8");
 const submissions = fs.readFileSync("src/lib/submissions.ts", "utf8");
 const submitForm = fs.readFileSync("src/components/submissions/SubmitForm.tsx", "utf8");
@@ -17,6 +17,7 @@ const jiti = createJiti(path.join(process.cwd(), "scripts", "test-zbot.mjs"), {
   moduleCache: false,
 });
 const gdr = await jiti.import(path.join(process.cwd(), "src/lib/gdr.ts"));
+const { checkReplay } = await jiti.import(path.join(process.cwd(), "src/lib/replay.ts"));
 const names = await jiti.import(path.join(process.cwd(), "src/lib/publish/assetName.ts"));
 const submissionRules = await jiti.import(path.join(process.cwd(), "src/lib/submissions.ts"));
 
@@ -26,12 +27,12 @@ const all = catalog.flatMap((level) =>
 const xdBot = all.filter((macro) => macro.recorder === "xdBot");
 const zBot = all.filter((macro) => macro.recorder === "zBot");
 
-assert.match(types, /RECORDERS = \["Mega Hack", "xdBot", "zBot"\]/);
-assert.match(types, /SUBMISSION_RECORDERS = RECORDERS/);
+assert.match(types, /LEGACY_RECORDERS = \["Mega Hack", "xdBot", "zBot"\]/);
+assert.match(types, /SUBMISSION_RECORDERS = \["Mega Hack", "zBot", "Silicate", "Eclipse"\]/);
 assert.match(submissions, /SUBMISSION_RECORDERS/);
 assert.match(submitForm, /SUBMISSION_RECORDERS/);
 assert.match(submitForm, /\.gdr,\.gdr2/);
-assert.match(publisher, /sub\.recorder === "zBot" \? checkGdr\(file\.bytes\) : checkGdr2\(file\.bytes\)/);
+assert.match(publisher, /checkReplay\(file\.bytes, sub\.recorder\)/);
 assert.match(migration, /recorder in \('xdBot', 'Mega Hack', 'zBot'\)/);
 
 assert.equal(
@@ -45,6 +46,17 @@ assert.equal(
 assert.equal(submissionRules.validateFile({ name: "macro.gdr", size: 100 }, "zBot"), null);
 assert.match(submissionRules.validateFile({ name: "macro.gdr2", size: 100 }, "zBot"), /\.gdr files/);
 assert.equal(submissionRules.validateFile({ name: "macro.gdr2", size: 100 }, "xdBot"), null);
+assert.equal(submissionRules.validateFile({ name: "macro.slc", size: 100 }, "Silicate"), null);
+assert.equal(submissionRules.validateFile({ name: "macro.gdr2", size: 100 }, "Eclipse"), null);
+assert.match(submissionRules.validateFile({ name: "macro.gdr2", size: 100 }, "Silicate"), /\.slc files/);
+const slc = Buffer.alloc(75);
+slc.write("SLC3RPLY");
+slc.writeUInt16LE(64, 8);
+slc.writeDoubleLE(240, 10);
+slc[74] = 0xcc;
+assert.equal(checkReplay(slc, "Silicate").ok, true);
+assert.equal(checkReplay(slc, "Eclipse").ok, false);
+assert.equal(checkReplay(slc.subarray(0, -1), "Silicate").ok, false);
 
 const bytes = [];
 const str = (value) => {
@@ -111,9 +123,9 @@ assert.equal(
   "Backrooms has no XD Bot source and must remain unconverted",
 );
 
-assert.match(install, /initial zBot collection was converted from compatible xdBot recordings/i);
-assert.match(install, /Native zBot recordings can also be submitted/i);
+assert.match(install, /\.gdr for zBot|zBot uses \.gdr/i);
+assert.match(install, /zBot.*\.gdr/i);
 assert.match(install, /Open zBot on Geode/);
-assert.match(install, /zBot entries use \.gdr/i);
+assert.match(install, /zBot uses \.gdr/i);
 
 console.log(`ZBot catalog verified: ${zBot.length} converted downloads from ${xdBot.length} XD Bot sources.`);

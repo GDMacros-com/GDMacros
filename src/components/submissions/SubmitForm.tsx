@@ -4,7 +4,7 @@ import { parseFps } from "@/lib/fps";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { AuthField, FormError, SubmitButton } from "@/components/auth/fields";
-import { SUBMISSION_RECORDERS, macroFileExtension } from "@/lib/types";
+import { CURRENT_GAME_VERSION, SUBMISSION_RECORDERS, macroFileExtension } from "@/lib/types";
 import { isClean, validateFile, type FieldErrors } from "@/lib/submissions";
 
 /**
@@ -169,9 +169,15 @@ export default function SubmitForm({ username }: { username: string }) {
     setErrors(next);
     if (!isClean(next)) return;
 
+    if (!window.confirm(`Are you on Geometry Dash ${CURRENT_GAME_VERSION}, and did you record this macro on that version?`)) {
+      setFormError(`Uploads require a macro recorded on Geometry Dash ${CURRENT_GAME_VERSION}.`);
+      return;
+    }
+
     setBusy(true);
     try {
       const body = new FormData();
+      body.append("gameVersion", CURRENT_GAME_VERSION);
       // The name and creator are sent for completeness, but the server refetches
       // the level by id and uses its own answer, so these cannot decide anything.
       body.append("levelName", level!.name);
@@ -530,7 +536,7 @@ export default function SubmitForm({ username }: { username: string }) {
             id="file"
             ref={fileRef}
             type="file"
-            accept={recorder ? macroFileExtension(recorder) : ".gdr,.gdr2"}
+            accept={recorder ? macroFileExtension(recorder) : ".gdr,.gdr2,.slc"}
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null);
               setErrors((p) => ({ ...p, file: undefined }));
@@ -546,8 +552,8 @@ export default function SubmitForm({ username }: { username: string }) {
               {recorder === "zBot"
                 ? "A ZBot .gdr file, up to 2 MB."
                 : recorder
-                  ? `A ${recorder} .gdr2 file, up to 2 MB.`
-                  : "A .gdr file for ZBot, or a .gdr2 file for Mega Hack and xdBot. Up to 2 MB."}
+                  ? `A ${recorder} ${macroFileExtension(recorder)} file, up to 2 MB.`
+                  : "Silicate uses .slc, zBot uses .gdr, and Mega Hack and Eclipse use .gdr2. Up to 2 MB."}
             </p>
           )}
         </div>

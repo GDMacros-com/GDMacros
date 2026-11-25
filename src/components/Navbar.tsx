@@ -31,9 +31,9 @@ interface MenuItem {
 const MORE_ITEMS: MenuItem[] = [
   { label: "How to install", href: "/install", desc: "Loading a macro into the game" },
   { label: "Favorites", href: "/favorites", desc: "Macros you saved in this browser" },
-  { label: "FAQ", href: "/faq", desc: "Bannable? How to open .gdr and .gdr2 files?" },
+  { label: "FAQ", href: "/faq", desc: "Macro formats, compatibility and playback" },
   { label: "Guidelines", href: "/guidelines", desc: "What gets accepted, and how" },
-  { label: "Submit a macro", href: "/submit", desc: "Send a Mega Hack, xdBot or zBot macro" },
+  { label: "Submit a macro", href: "/submit", desc: "Send a Geometry Dash 2.2091 macro" },
   { label: "Your submissions", href: "/submissions", desc: "Status of what you sent in" },
   { label: "Support tickets", href: "/support", desc: "Private conversations with the admins" },
   { label: "Send a suggestion", href: "/support/new", desc: "Tell us what would improve GDMacros" },
@@ -268,6 +268,9 @@ export default function Navbar() {
             <ListIcon className="h-4 w-4" />
             Macros
           </Link>
+          <Link href="/legacy" className="rounded-lg px-2.5 py-2 text-[13.5px] font-medium text-text-dim hover:bg-surface-2 hover:text-text">
+            2.2081
+          </Link>
           <NavMenu label="More" icon={CompassIcon} items={MORE_ITEMS} />
           <LanguageMenu />
         </nav>
@@ -333,6 +336,7 @@ export default function Navbar() {
             <AdminLink mobile />
           </div>
           <MenuLink item={{ label: "All macros", href: "/" }} onNavigate={() => setMobileOpen(false)} />
+          <MenuLink item={{ label: "2.2081", href: "/legacy" }} onNavigate={() => setMobileOpen(false)} />
           {MORE_ITEMS.map((item) => (
             <MenuLink key={item.label} item={item} onNavigate={() => setMobileOpen(false)} />
           ))}

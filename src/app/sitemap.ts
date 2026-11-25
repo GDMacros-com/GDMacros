@@ -3,6 +3,7 @@ import path from "node:path";
 import type { MetadataRoute } from "next";
 import { getAllAuthors } from "@/lib/authors";
 import { getAllLevels } from "@/lib/macros";
+import { macroPath } from "@/lib/types";
 import { site } from "@/lib/site";
 
 // Required by `output: 'export'` (the GitHub Pages path); a no-op on Vercel.
@@ -26,15 +27,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = site.url.replace(/\/$/, "");
   const lastModified = catalogModified();
 
-  const staticPages = ["", "/install", "/faq", "/guidelines", "/about", "/privacy", "/terms", "/docs/api"].map((page) => ({
+  const staticPages = ["", "/legacy", "/install", "/faq", "/guidelines", "/about", "/privacy", "/terms", "/docs/api"].map((page) => ({
     url: `${base}${page}`,
     lastModified,
     changeFrequency: "weekly" as const,
     priority: page === "" ? 1 : 0.5,
   }));
 
-  const macroPages = getAllLevels().map((level) => ({
-    url: `${base}/macro/${level.slug}`,
+  const macroPages = [...getAllLevels(), ...getAllLevels(true)].map((level) => ({
+    url: `${base}${macroPath(level.slug, level.legacy)}`,
     lastModified,
     changeFrequency: "monthly" as const,
     priority: 0.8,

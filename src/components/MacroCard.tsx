@@ -3,7 +3,7 @@
 import FpsBadge from "./FpsBadge";
 import Link from "next/link";
 import { hostAccent } from "@/lib/format";
-import type { Level } from "@/lib/types";
+import { macroPath, type Level } from "@/lib/types";
 import { useSpotlight } from "@/lib/useSpotlight";
 import CreditTabs from "./CreditTabs";
 import Thumb from "./Thumb";
@@ -18,7 +18,7 @@ export default function MacroCard({ level, index }: { level: Level; index: numbe
 
   return (
     <Link
-      href={`/macro/${level.slug}`}
+      href={macroPath(level.slug, level.legacy)}
       prefetch={false}
       {...spotlight}
       style={

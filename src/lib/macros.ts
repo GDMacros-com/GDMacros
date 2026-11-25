@@ -1,9 +1,9 @@
 import { validDate } from "./catalog-editor";
 import fs from "node:fs";
 import path from "node:path";
-import { RECORDERS, type Level, type LevelInput, type Macro } from "./types";
+import { LEGACY_RECORDERS, SUBMISSION_RECORDERS, type Level, type LevelInput, type Macro } from "./types";
 
-const DATA_FILE = path.join(process.cwd(), "data", "macros.json");
+
 
 export function slugify(input: string): string {
   return input
@@ -68,26 +68,27 @@ export function isBlankTemplate(entry: LevelInput): boolean {
   return levelBlank && macrosBlank;
 }
 
-let cache: Level[] | null = null;
+const cache = new Map<boolean, Level[]>();
 
 /** Read and normalise `data/macros.json` at build time. */
-export function getAllLevels(): Level[] {
-  if (cache) return cache;
+export function getAllLevels(legacy = false): Level[] {
+  const cached = cache.get(legacy);
+  if (cached) return cached;
+  const filename = legacy ? "macros-2.2081.json" : "macros.json";
+  const dataFile = path.join(process.cwd(), "data", filename);
+  const recorders: readonly string[] = legacy ? LEGACY_RECORDERS : SUBMISSION_RECORDERS;
 
-  if (!fs.existsSync(DATA_FILE)) {
-    cache = [];
-    return cache;
-  }
+  if (!fs.existsSync(dataFile)) return [];
 
   let raw: unknown;
   try {
-    raw = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    raw = JSON.parse(fs.readFileSync(dataFile, "utf8"));
   } catch (err) {
-    throw new Error(`data/macros.json is not valid JSON: ${(err as Error).message}`);
+    throw new Error(`data/${filename} is not valid JSON: ${(err as Error).message}`);
   }
 
   if (!Array.isArray(raw)) {
-    throw new Error("data/macros.json must contain an array of levels.");
+    throw new Error(`data/${filename} must contain an array of levels.`);
   }
 
   const seen = new Set<string>();
@@ -95,7 +96,7 @@ export function getAllLevels(): Level[] {
   const levels = (raw as LevelInput[])
     .filter((entry) => !isBlankTemplate(entry))
     .map((entry, i) => {
-      const where = `data/macros.json[${i}]`;
+      const where = `data/${filename}[${i}]`;
 
       for (const field of ["name", "creator", "levelId"] as const) {
         if (blank(entry[field])) {
@@ -115,9 +116,9 @@ export function getAllLevels(): Level[] {
             throw new Error(`${at} is missing required field "${field}".`);
           }
         }
-        if (!RECORDERS.includes(m.recorder as (typeof RECORDERS)[number])) {
+        if (!recorders.includes(m.recorder ?? "")) {
           throw new Error(
-            `${at} has recorder "${m.recorder}". Must be one of: ${RECORDERS.join(", ")}.`,
+            `${at} has recorder "${m.recorder}". Must be one of: ${recorders.join(", ")}.`,
           );
         }
         if (typeof m.fps !== "number" || !Number.isFinite(m.fps) || m.fps <= 0) {
@@ -150,6 +151,7 @@ export function getAllLevels(): Level[] {
         description: entry.description,
         addedAt: entry.addedAt,
         slug,
+        legacy,
         youtubeId,
         // Two sizes on purpose. The list renders these between 74 and 225px
         // wide, where mqdefault (320x180) is still oversampled and weighs 44%
@@ -179,17 +181,17 @@ export function getAllLevels(): Level[] {
     a.name.localeCompare(b.name, "en", { numeric: true, sensitivity: "base" }),
   );
 
-  cache = levels;
-  return cache;
+  cache.set(legacy, levels);
+  return levels;
 }
 
-export function getLevelBySlug(slug: string): Level | undefined {
-  return getAllLevels().find((l) => l.slug === slug);
+export function getLevelBySlug(slug: string, legacy = false): Level | undefined {
+  return getAllLevels(legacy).find((l) => l.slug === slug);
 }
 
 /** Alphabetical neighbours, for the prev/next links on a detail page. */
-export function getNeighbours(slug: string): { prev: Level | null; next: Level | null } {
-  const all = getAllLevels();
+export function getNeighbours(slug: string, legacy = false): { prev: Level | null; next: Level | null } {
+  const all = getAllLevels(legacy);
   const i = all.findIndex((l) => l.slug === slug);
   if (i === -1) return { prev: null, next: null };
   return { prev: all[i - 1] ?? null, next: all[i + 1] ?? null };

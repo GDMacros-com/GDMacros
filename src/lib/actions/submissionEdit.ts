@@ -8,8 +8,7 @@ import { canonicalUrl, verifyVideo, videoIdFromUrl } from "@/lib/youtube";
 import { lookupLevel } from "@/lib/gdbrowser";
 import { SUBMISSION_RECORDERS } from "@/lib/types";
 import { safeDetail } from "@/lib/health";
-import { checkGdr } from "@/lib/gdr";
-import { checkGdr2 } from "@/lib/gdr2";
+import { checkReplay } from "@/lib/replay";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 
 /**
@@ -134,12 +133,10 @@ export async function updateSubmission(id: string, fields: EditFields): Promise<
   if (fields.recorder?.trim()) {
     const recorder = fields.recorder.trim();
     if (!(SUBMISSION_RECORDERS as readonly string[]).includes(recorder)) {
-      return { ok: false, error: "Recorder must be Mega Hack, xdBot or zBot." };
+      return { ok: false, error: "Recorder must be Mega Hack, zBot, Silicate or Eclipse." };
     }
 
-    // A recorder edit can also change the required file format. Confirm the
-    // private bytes before saving so the queue cannot claim zBot while holding
-    // a `.gdr2`, or claim Mega Hack/xdBot while holding a `.gdr`.
+    // A recorder edit can change the file format. Check the stored bytes.
     const { data: stored } = await supabase
       .from("submissions")
       .select("id,submitted_by")
@@ -149,16 +146,8 @@ export async function updateSubmission(id: string, fields: EditFields): Promise<
 
     const file = await downloadSubmissionObject(stored.submitted_by, stored.id);
     if (!file.ok) return { ok: false, error: "The submitted file could not be checked." };
-    const format = recorder === "zBot" ? checkGdr(file.bytes) : checkGdr2(file.bytes);
-    if (!format.ok) {
-      return {
-        ok: false,
-        error:
-          recorder === "zBot"
-            ? "That upload is not a valid zBot .gdr file."
-            : `That upload is not a valid ${recorder} .gdr2 file.`,
-      };
-    }
+    const format = checkReplay(file.bytes, recorder);
+    if (!format.ok) return { ok: false, error: format.error ?? "This file does not match the selected recorder." };
     payload.p_recorder = recorder;
   }
   if (fields.macroAuthor?.trim()) payload.p_macro_author = fields.macroAuthor.trim();

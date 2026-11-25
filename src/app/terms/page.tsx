@@ -89,7 +89,7 @@ export default function TermsPage() {
         <p>
           {site.name} is an independent fan project. It is not affiliated with, endorsed by, or
           connected to RobTop Games. Geometry Dash and its assets belong to their owners. The same
-          goes for the replay tools: Mega Hack, xdBot and zBot are made by other people and are not ours.
+          goes for the replay tools: Mega Hack, zBot, Silicate and Eclipse are developed by third parties.
         </p>
       </Section>
 
@@ -131,7 +131,7 @@ export default function TermsPage() {
           items={[
             "You recorded it, or you have permission from the person who did to submit and distribute it.",
             "The level, recorder, recording FPS, author and other details you enter are accurate as far as you know.",
-            "The file is a genuine .gdr or .gdr2 macro and not malware, a joke file, or anything designed to cause harm.",
+            "The file is a genuine gameplay replay and not malware, a joke file, or anything designed to cause harm.",
           ]}
         />
         <p>

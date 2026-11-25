@@ -3,12 +3,11 @@ import { isCurrentUserAdmin } from "@/lib/admin";
 import { getCatalogFile, commitCatalog, isConcurrencyConflict } from "@/lib/github/contents";
 import { isPublisherConfigured } from "@/lib/github/config";
 import { createLevelRelease, getReleaseByTag, uploadMacroAsset, sha256Hex } from "@/lib/github/releases";
-import { assetBaseName, releaseTagFor } from "@/lib/publish/assetName";
+import { assetBaseName, currentReleaseTagFor } from "@/lib/publish/assetName";
 import { editCatalog, type EditorFields } from "@/lib/catalog-editor";
 import { macroFileExtension } from "@/lib/types";
 import { MAX_FILE_BYTES, validateFile } from "@/lib/submissions";
-import { checkGdr } from "@/lib/gdr";
-import { checkGdr2 } from "@/lib/gdr2";
+import { checkReplay } from "@/lib/replay";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,11 +58,11 @@ export async function POST(request: NextRequest) {
       if (fileError) return bad(400, fileError);
       const bytes = new Uint8Array(await file.arrayBuffer());
       if (!bytes.length || bytes.length > MAX_FILE_BYTES) return bad(400, "The file limit is 2 MB.");
-      const checked = fields.recorder === "zBot" ? checkGdr(bytes) : checkGdr2(bytes);
+      const checked = checkReplay(bytes, fields.recorder);
       if (!checked.ok) return bad(400, checked.error || "The replacement is not a valid replay file.");
       // Content-addressed replacement: never overwrite or delete the old asset.
       // A retry reuses this upload, including after a failed catalog commit.
-      const tag = releaseTagFor(fields.levelId);
+      const tag = currentReleaseTagFor(fields.levelId);
       const release = await getReleaseByTag(tag) ?? await createLevelRelease(tag, fields.name, fields.levelId);
       const name = `${assetBaseName({ macroAuthor:fields.author, levelName:fields.name, recorder:fields.recorder })}-edit-${sha256Hex(bytes)}${macroFileExtension(fields.recorder)}`;
       const result = await uploadMacroAsset(release.id, name, bytes);

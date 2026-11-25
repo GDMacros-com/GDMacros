@@ -36,6 +36,31 @@ export interface GhAsset {
   digest?: string | null;
 }
 
+/** Applies the archive label without changing tags, assets, or download URLs. */
+export async function renameLegacyReleases() {
+  const releases: GhRelease[] = [];
+  for (let page = 1; ; page++) {
+    const { data } = await ghFetch<GhRelease[]>({ url: `${REPO_BASE}/releases?per_page=100&page=${page}` });
+    releases.push(...data);
+    if (data.length < 100) break;
+  }
+
+  const pending = releases.filter((release) =>
+    /^level-\d+$/.test(release.tag_name) && !/^Legacy /i.test(release.name ?? ""),
+  );
+  const batch = pending.slice(0, 15);
+  let renamed = 0;
+  for (const release of batch) {
+    await ghFetch<GhRelease>({
+      method: "PATCH",
+      url: `${REPO_BASE}/releases/${release.id}`,
+      body: { name: `Legacy ${release.name ?? release.tag_name}` },
+    });
+    renamed++;
+  }
+  return { renamed, remaining: pending.length - renamed };
+}
+
 /** SHA-256 of the bytes we are about to upload, for recovery matching. */
 export function sha256Hex(bytes: Uint8Array): string {
   return createHash("sha256").update(Buffer.from(bytes)).digest("hex");

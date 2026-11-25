@@ -148,7 +148,7 @@ check("the component calls the ticket action with only a slug", /createBrokenMac
 check("the action resolves the slug from the server catalog", /getLevelBySlug\(slug\.trim\(\)\)/.test(src.supportActions));
 check("the action includes every known download in the private first message", /level\.macros[\s\S]*macro\.downloadLink/.test(src.supportActions));
 check("the action never accepts macro metadata from the browser", /createBrokenMacroTicket\(slug: string\)/.test(src.supportActions));
-const macroPage = read("src/app/macro/[slug]/page.tsx");
+const macroPage = read("src/components/MacroDetailPage.tsx");
 check("the macro page passes only the trusted lookup key", /<ReportBroken[\s\S]{0,120}slug=\{level\.slug\}/.test(macroPage) && !/macros=\{level\.macros\.map/.test(macroPage));
 
 /* ------------------------------------------------------------------ *
@@ -179,8 +179,8 @@ check(
   "FAQ does not claim every level has every recorder",
   !/every level has both/i.test(src.faq),
 );
-check("FAQ says replay files are not executables", /neither format is an installer or executable/i.test(src.faq));
-check("catalog currently has macros to count", levelCount > 0 && macroCount > 0, `${levelCount}/${macroCount}`);
+check("FAQ says replay files are not executables", /cannot run on its own|no installer/i.test(src.faq));
+check("catalog counts remain coherent", macroCount >= levelCount, `${levelCount}/${macroCount}`);
 
 /* ------------------------------------------------------------------ *
  * 4. Terms and Privacy

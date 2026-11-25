@@ -81,7 +81,7 @@ await check('mods see only their three tools; admins retain all eight', async ()
   for (const route of ['submissions','inbox','quality']) assert.ok(html.includes(`href="/admin/${route}"`));
   for (const route of ['users','notices','status','activity','macros']) assert.ok(!html.includes(`href="/admin/${route}"`));
   roles = ['admin'];
-  assert.equal((renderToStaticMarkup(await page()).match(/href="\/admin\//g) ?? []).length,8);
+  assert.equal((renderToStaticMarkup(await page()).match(/href="\/admin\//g) ?? []).length,9);
 });
 await check('users cannot open moderation routes; mods cannot open administrative routes', async () => {
   for (const name of ['submissions','inbox','quality','users','notices','status','activity','macros']) {

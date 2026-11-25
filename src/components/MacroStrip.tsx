@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Level } from "@/lib/types";
+import { macroPath, type Level } from "@/lib/types";
 import Thumb from "./Thumb";
 
 /**
@@ -35,7 +35,7 @@ export default function MacroStrip({
         {levels.map((level) => (
           <Link
             key={level.slug}
-            href={`/macro/${level.slug}`}
+            href={macroPath(level.slug, level.legacy)}
             prefetch={false}
             className="card group flex items-center gap-3 p-2.5 transition-[border-color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/40"
           >

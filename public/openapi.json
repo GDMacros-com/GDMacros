@@ -136,8 +136,9 @@
               "type": "string",
               "enum": [
                 "Mega Hack",
-                "xdBot",
-                "zBot"
+                "zBot",
+                "Silicate",
+                "Eclipse"
               ]
             }
           },
@@ -251,8 +252,9 @@
               "type": "string",
               "enum": [
                 "Mega Hack",
-                "xdBot",
-                "zBot"
+                "zBot",
+                "Silicate",
+                "Eclipse"
               ]
             }
           },
@@ -466,8 +468,9 @@
               "type": "string",
               "enum": [
                 "Mega Hack",
-                "xdBot",
-                "zBot"
+                "zBot",
+                "Silicate",
+                "Eclipse"
               ]
             }
           },
@@ -581,8 +584,9 @@
               "type": "string",
               "enum": [
                 "Mega Hack",
-                "xdBot",
-                "zBot"
+                "zBot",
+                "Silicate",
+                "Eclipse"
               ]
             }
           },
@@ -846,8 +850,9 @@
             "type": "string",
             "enum": [
               "Mega Hack",
-              "xdBot",
-              "zBot"
+              "zBot",
+              "Silicate",
+              "Eclipse"
             ],
             "description": "Exact recorder name, including case and spaces."
           },
@@ -974,8 +979,9 @@
             "type": "string",
             "enum": [
               "Mega Hack",
-              "xdBot",
-              "zBot"
+              "zBot",
+              "Silicate",
+              "Eclipse"
             ],
             "description": "Exact recorder name, including case and spaces."
           },
@@ -1175,8 +1181,9 @@
                       "type": "string",
                       "enum": [
                         "Mega Hack",
-                        "xdBot",
-                        "zBot"
+                        "zBot",
+                        "Silicate",
+                        "Eclipse"
                       ]
                     },
                     "macros": {

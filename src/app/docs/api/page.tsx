@@ -34,7 +34,7 @@ function Table({ columns, rows }: { columns: string[]; rows: React.ReactNode[][]
 }
 
 const curl = `curl "${base}/api/v1/levels?search=acheron&limit=5"`;
-const js = `const params = new URLSearchParams({ recorder: "xdBot", fps: "240", limit: "20" });
+const js = `const params = new URLSearchParams({ recorder: "Eclipse", fps: "240", limit: "20" });
 const response = await fetch("${base}/api/v1/macros?" + params);
 if (!response.ok) {
   // Firewall errors may be plain text or HTML: do not assume JSON.
@@ -118,7 +118,7 @@ export default function ApiDocumentation() {
         <section id="filters"><h2>Filters &amp; pagination</h2>
           <Table columns={["Parameter", "Default / allowed values", "Behavior"]} rows={[
             ["search", "Optional; at most 100 characters after trimming", "Case-insensitive literal substring. Not fuzzy search, a regex, or the website’s multi-word search."],
-            ["recorder", "Mega Hack, xdBot, zBot", "Exact spelling and case. Encode spaces with URLSearchParams or %20."],
+            ["recorder", "Mega Hack, zBot, Silicate, Eclipse", "Exact spelling and case. Encode spaces with URLSearchParams or %20."],
             ["fps", "Positive finite number, including 59.94 or 360", "Exact recording-rate match. Scientific notation is accepted; zero, negatives and Infinity are rejected."],
             ["page", "1; integer from 1 to 1,000,000", "One-based page number; plain digits with no leading zero."],
             ["limit", "20; integer from 1 to 100", "Maximum number of levels or recordings on a page."],
@@ -130,16 +130,16 @@ export default function ApiDocumentation() {
         </section>
         <section id="responses"><h2>Response shapes</h2>
           <p>The following examples illustrate the structure; names and counts are examples, not current catalog totals. Missing optional values are returned as null.</p>
-          <Code title="Level list response" value={JSON.stringify({data:[{levelId:"12345678",name:"Example Level",creator:"LevelCreator",slug:"example-level",url:`${base}/macro/example-level`,description:null,videoUrl:null,thumbnailUrl:null,addedAt:"2026-10-27",macros:[{author:"MacroAuthor",recorder:"xdBot",fps:240,testedAt:null,downloadType:"GitHub",downloadUrl:"https://github.com/OWNER/REPO/releases/download/TAG/FILE.gdr2"}]}],pagination:{page:1,limit:20,total:1,totalPages:1}},null,2)} />
+          <Code title="Level list response" value={JSON.stringify({data:[{levelId:"12345678",name:"Example Level",creator:"LevelCreator",slug:"example-level",url:`${base}/macro/example-level`,description:null,videoUrl:null,thumbnailUrl:null,addedAt:"2026-10-27",macros:[{author:"MacroAuthor",recorder:"Eclipse",fps:240,testedAt:null,downloadType:"GitHub",downloadUrl:"https://github.com/OWNER/REPO/releases/download/TAG/FILE.gdr2"}]}],pagination:{page:1,limit:20,total:1,totalPages:1}},null,2)} />
           <p>A single level response is <code>{'{ "data": { ...level fields, "macros": [...] } }'}</code> with no pagination. Recording lists use <code>{'{ "data": [{ ...recording fields, "level": { ...level fields } }], "pagination": { ... } }'}</code>; their nested level has no macros array.</p>
-          <Code title="Statistics response" value={JSON.stringify({data:{levels:1,macros:2,recorders:[{recorder:"Mega Hack",macros:0},{recorder:"xdBot",macros:2},{recorder:"zBot",macros:0}]}},null,2)} />
+          <Code title="Statistics response" value={JSON.stringify({data:{levels:1,macros:2,recorders:[{recorder:"Mega Hack",macros:0},{recorder:"Eclipse",macros:2},{recorder:"zBot",macros:0}]}},null,2)} />
         </section>
         <section id="fields"><h2>Field reference</h2>
           <h3>Level fields</h3><Table columns={["Field", "Type", "Meaning"]} rows={fieldRows(schemas.LevelSummary.properties)} />
           <p>Level list and detail responses also include <code>macros</code>, an array containing at least one recording. Every field listed above is present, including nullable fields.</p>
           <h3>Recording fields</h3><Table columns={["Field", "Type", "Meaning"]} rows={fieldRows(schemas.Recording.properties)} />
           <p>Individual recordings do not have permanent API IDs. Do not use array position as a permanent identifier. Slugs, author credits and download URLs may change after catalog edits. Level IDs are strings; preserve their representation when constructing requests.</p>
-          <p>Mega Hack and xdBot submissions use .gdr2; zBot uses .gdr. The API returns existing URLs without converting files. Download directly from downloadUrl and retain author credits. A tested date or FPS label is metadata, not a guarantee of compatibility with every game or tool version.</p>
+          <p>Mega Hack and Eclipse use .gdr2, zBot uses .gdr, and Silicate uses .slc. The API returns existing URLs without converting files. Download directly from downloadUrl and retain author credits. A tested date or FPS label is metadata, not a guarantee of compatibility with every game or tool version.</p>
           <h3>Pagination fields</h3><Table columns={["Field", "Meaning"]} rows={[["page","Requested one-based page"],["limit","Requested page size"],["total","Number of matching levels or recordings across all pages"],["totalPages","Ceiling of total ÷ limit; zero when there are no matches"]]} />
         </section>
         <section id="examples"><h2>Code examples</h2>

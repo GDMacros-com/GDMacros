@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "validate": "node scripts/validate-macros.mjs",
+    "validate": "node scripts/validate-macros.mjs && node scripts/validate-macros.mjs --legacy",
     "test:publish": "node scripts/test-publish.mjs",
     "test:migrate": "node scripts/test-migrate.mjs",
     "test:translate": "node scripts/test-translate.mjs",

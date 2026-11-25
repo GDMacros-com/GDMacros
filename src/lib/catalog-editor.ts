@@ -1,4 +1,4 @@
-import { RECORDERS, type LevelInput, type MacroInput } from "./types";
+import { SUBMISSION_RECORDERS, type SubmissionRecorder, type LevelInput, type MacroInput } from "./types";
 import { parseFps } from "./fps";
 
 export type EditorFields = {
@@ -41,7 +41,7 @@ export function validateEditor(value: unknown, oldThumbnail = ""): string | null
   for (const key of ["name", "creator", "author", "downloadType"] as const) if (!fields[key].trim()) return `Enter ${key}.`;
   if (!/^(?:0|[1-9][0-9]{0,11})$/.test(fields.levelId)) return "Enter a numeric level ID.";
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fields.slug)) return "Use lowercase letters, numbers and hyphens for the page URL.";
-  if (!RECORDERS.includes(fields.recorder as MacroInput["recorder"])) return "Choose a supported recorder.";
+  if (!SUBMISSION_RECORDERS.includes(fields.recorder as SubmissionRecorder)) return "Choose a supported recorder.";
   if (parseFps(fields.fps) === null) return "Enter a positive recording FPS.";
   if (!httpsUrl(fields.downloadLink)) return "Use a complete HTTPS download link without credentials.";
   if (fields.video) {

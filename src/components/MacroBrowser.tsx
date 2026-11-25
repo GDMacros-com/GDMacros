@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { migrateStoredFavorites } from "@/lib/favorites";
-import { RECORDERS, type Level, type Recorder } from "@/lib/types";
+import { LEGACY_RECORDERS, SUBMISSION_RECORDERS, macroPath, type Level, type Recorder } from "@/lib/types";
 import MacroCard from "./MacroCard";
 import RecentlyViewed from "./RecentlyViewed";
 import MacroRow from "./MacroRow";
@@ -59,7 +59,8 @@ type RecorderFilter = Recorder | "all";
  */
 const STAGGER_CAP = 12;
 
-export default function MacroBrowser({ levels }: { levels: Level[] }) {
+export default function MacroBrowser({ levels, legacy = false }: { levels: Level[]; legacy?: boolean }) {
+  const recorders: readonly Recorder[] = legacy ? LEGACY_RECORDERS : SUBMISSION_RECORDERS;
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>("list");
   const [recorder, setRecorder] = useState<RecorderFilter>("all");
@@ -74,7 +75,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
   useEffect(() => {
     migrateStoredFavorites(
       levels.map((l) => ({ slug: l.slug, levelId: String(l.levelId) })),
-      true,
+      false,
     );
   }, [levels]);
 
@@ -85,7 +86,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
     if (p.get("view") === "grid") setView("grid");
 
     const r = p.get("recorder");
-    const matched = RECORDERS.find((v) => v.toLowerCase() === r?.toLowerCase());
+    const matched = recorders.find((v) => v.toLowerCase() === r?.toLowerCase());
     if (matched) setRecorder(matched);
 
     // A link wins over the remembered preference, so a shared URL always shows
@@ -99,7 +100,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
     if (p.get("view") !== "grid" && safeRead(VIEW_KEY) === "grid") setView("grid");
 
     hydrated.current = true;
-  }, []);
+  }, [recorders]);
 
   // Keep the URL shareable.
   useEffect(() => {
@@ -166,7 +167,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
   function goRandom() {
     if (results.length === 0) return;
     const pick = results[Math.floor(Math.random() * results.length)];
-    router.push(`/macro/${pick.slug}`);
+    router.push(macroPath(pick.slug, legacy));
   }
 
   return (
@@ -245,7 +246,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
           ariaLabel="Filter by recorder"
           value={recorder}
           onChange={setRecorder}
-          options={(["all", ...RECORDERS] as RecorderFilter[]).map((value) => ({
+          options={(["all", ...recorders] as RecorderFilter[]).map((value) => ({
             value,
             label:
               value === "all" ? (
@@ -288,7 +289,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
       </div>
 
       {/* History stays available across recorder filters. */}
-      {!query && <RecentlyViewed levels={levels} />}
+      {!legacy && !query && <RecentlyViewed levels={levels} />}
 
       {results.length === 0 ? (
         <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">
@@ -298,7 +299,7 @@ export default function MacroBrowser({ levels }: { levels: Level[] }) {
           <p className="text-[15px] font-semibold text-text">No macros found</p>
           <p className="max-w-sm text-[13px] text-muted">
             {levels.length === 0
-              ? "The catalog is empty. Add an entry to data/macros.json to get started."
+              ? "New recordings will appear here after review."
               : query
                 ? `Nothing matches "${query}"${recorder !== "all" ? ` for ${recorder}` : ""}.`
                 : `No macros recorded with ${recorder}.`}

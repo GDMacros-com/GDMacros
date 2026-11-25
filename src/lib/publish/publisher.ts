@@ -2,8 +2,7 @@ import "server-only";
 import { sendMacroAnnouncement } from "./announcement";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { checkGdr } from "@/lib/gdr";
-import { checkGdr2 } from "@/lib/gdr2";
+import { checkReplay } from "@/lib/replay";
 import { lookupLevel } from "@/lib/gdbrowser";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 import {
@@ -25,7 +24,7 @@ import { githubErrorMessage } from "@/lib/github/client";
 import { isPublisherConfigured } from "@/lib/github/config";
 import { site } from "@/lib/site";
 import { applyPublication, todayIso } from "./catalog";
-import { assetCandidates, releaseTagFor } from "./assetName";
+import { assetCandidates, currentReleaseTagFor } from "./assetName";
 
 /**
  * The automated publisher.
@@ -207,6 +206,9 @@ export async function runPublish(
   const { data, error } = await supabase.rpc("begin_publish", { p_id: submissionId });
   if (error) {
     const msg = String(error.message ?? "");
+    if (msg.includes("game version")) {
+      return { ok: false, state: "not_started", stage: "validating", error: "This submission needs to be uploaded again for Geometry Dash 2.2091." };
+    }
     if (msg.includes("not authorised")) {
       return { ok: false, state: "not_started", stage: "validating", error: "You do not have permission to do that." };
     }
@@ -302,7 +304,7 @@ export async function runPublish(
 
       // Revalidate the bytes themselves. They passed this at submission time,
       // but this is the last moment before they become permanently public.
-      const check = sub.recorder === "zBot" ? checkGdr(file.bytes) : checkGdr2(file.bytes);
+      const check = checkReplay(file.bytes, sub.recorder);
       if (!check.ok) {
         await noteError(supabase, submissionId, "validating", "macro revalidation failed");
         return {
@@ -313,7 +315,7 @@ export async function runPublish(
         };
       }
 
-      const tag = releaseTagFor(sub.level_id);
+      const tag = currentReleaseTagFor(sub.level_id);
 
       // Reuse the release recorded earlier if there is one; otherwise find or
       // create it. createLevelRelease absorbs the two-admins-same-new-level

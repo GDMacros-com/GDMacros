@@ -73,8 +73,8 @@ const ticket = (await rows("select * from public.create_support_ticket('suggesti
 await as('other');
 const otherTicket = (await rows("select * from public.create_support_ticket('suggestion','Other ticket','Another private thread')"))[0].ticket_id;
 await db.exec('reset role');
-const submission = (await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps)
-  values ($1,'Test level','123','xdBot','Tester',100,240) returning id`, [ids.user]))[0].id;
+const submission = (await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps,game_version)
+  values ($1,'Test level','123','Eclipse','Tester',100,240,'2.2091') returning id`, [ids.user]))[0].id;
 
 await check('anonymous callers cannot read moderation data or execute moderation functions', async () => {
   await as('anon');
@@ -155,7 +155,7 @@ await check('owner replies notify admins and mods once even when an account has 
 });
 await check('mods can edit, claim, release and run the full publish lifecycle', async () => {
   await as('mod');
-  await rows('select public.admin_update_submission($1,$2,$3,$4,$5,$6,$7)',[submission,'Edited level','123',null,null,'xdBot','Tester']);
+  await rows('select public.admin_update_submission($1,$2,$3,$4,$5,$6,$7)',[submission,'Edited level','123',null,null,'Mega Hack','Tester']);
   await rows('select public.start_processing($1)',[submission]);
   await rows('select public.release_processing($1)',[submission]);
   await rows('select public.start_processing($1)',[submission]);
@@ -259,7 +259,12 @@ await check('declared FPS survives submission, staff editing and the publish sna
   const id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
   await db.query("insert into storage.objects(bucket_id,name) values ('macro-submissions',$1)",[`${ids.user}/${id}.gdr2`]);
   await as('user');
-  await rows('select public.create_submission($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[id,'FPS test','999',null,null,'xdBot','Tester',null,100,59.94]);
+  const create = 'select public.create_submission($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)';
+  const fields = [id,'FPS test','999',null,null,'Silicate','Tester',null,100,59.94];
+  await assert.rejects(rows(create, [...fields, '2.2081']), /confirm game version/);
+  await assert.rejects(rows(create, [...fields, null]), /confirm game version/);
+  await assert.rejects(rows(create, [...fields.slice(0, 5), 'xdBot', ...fields.slice(6), '2.2091']), /unsupported recorder/);
+  await rows(create, [...fields, '2.2091']);
   assert.equal((await rows('select fps from public.submissions where id=$1',[id]))[0].fps,59.94);
   await denied('select public.admin_update_submission(p_id => $1, p_fps => $2)',[id,360]);
   await as('mod');

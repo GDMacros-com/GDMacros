@@ -177,7 +177,7 @@ export default function PrivacyPage() {
         <Bullets
           items={[
             "Which account submitted it, and the level, video link, recorder, recording FPS, macro author and any notes you entered.",
-            "The .gdr or .gdr2 file itself.",
+            "The replay file and the game version you confirm before uploading.",
             "Timestamps and the current review status.",
           ]}
         />
@@ -369,10 +369,6 @@ export default function PrivacyPage() {
           </span>
           . The old copies still exist as a fallback in case something ever needs to be restored from
           them. We are not putting a date on removing them.
-        </p>
-        <p>
-          The MediaFire links on the install page are a separate thing. They are how you download
-          xdBot itself, and they are not macro downloads.
         </p>
       </Section>
 

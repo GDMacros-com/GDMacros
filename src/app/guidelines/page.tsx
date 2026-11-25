@@ -13,7 +13,7 @@ const SECTIONS = [
   {
     title: "What belongs here",
     items: [
-      "Macros recorded with Mega Hack, xdBot or zBot. Nothing else is accepted.",
+      "Macros recorded on Geometry Dash 2.2091 with Mega Hack, zBot, Silicate or Eclipse.",
       "Any positive recording FPS is accepted. State the actual rate used for your macro; decimals are allowed.",
       "The level has to exist in-game and have a working level ID.",
       "A showcase video is optional but encouraged. It becomes the entry's thumbnail automatically.",
@@ -22,7 +22,7 @@ const SECTIONS = [
   {
     title: "What gets rejected",
     items: [
-      "Anything recorded with a tool other than Mega Hack, xdBot or zBot.",
+      "Anything recorded with a tool other than Mega Hack, zBot, Silicate or Eclipse.",
       "Reuploads. If the macro isn't yours, it doesn't get posted.",
       "Macros presented as legitimate completions. This is a macro index, not a records list.",
       "Entries with a level ID that doesn't resolve on GD Browser.",
@@ -69,8 +69,7 @@ export default function GuidelinesPage() {
         <h2 className="text-[17px] font-bold text-text">Submitting</h2>
         <p className="mt-2 text-[14.5px] leading-relaxed text-text-dim">
           You don&apos;t need to host the file anywhere. Sign in, fill in the level name, the level
-          creator, the level ID and who recorded it, then attach the matching file: .gdr for zBot
-          or .gdr2 for Mega Hack and xdBot. We review it, upload it ourselves and add it to the
+          creator, the level ID and who recorded it, then attach the matching replay file. Use .gdr for zBot, .slc for Silicate, or .gdr2 for Mega Hack and Eclipse. We review it, upload it ourselves and add it to the
           catalog for you.
         </p>
         <Link

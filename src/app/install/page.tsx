@@ -6,19 +6,17 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "How to Install Geometry Dash Macros",
   description:
-    "Step-by-step guide to installing and playing Geometry Dash macros with xdBot, zBot or Mega Hack, including .gdr and .gdr2 files.",
+    "Step-by-step guide to installing and playing Geometry Dash macros with Silicate, Eclipse, zBot or Mega Hack.",
   alternates: { canonical: "/install" },
   openGraph: {
     title: `How to Install Geometry Dash Macros | ${site.name}`,
     description:
-      "Step-by-step guide to installing and playing Geometry Dash macros with xdBot, zBot or Mega Hack.",
+      "Step-by-step guide to installing and playing Geometry Dash macros with Silicate, Eclipse, zBot or Mega Hack.",
     url: "/install",
     type: "article",
   },
 };
 
-const XDBOT_PC = "https://raw.githubusercontent.com/GDMacros-com/GDMacros-downloads/refs/heads/main/zilko.xdbot.geode";
-const XDBOT_MOBILE = "https://raw.githubusercontent.com/GDMacros-com/GDMacros-downloads/refs/heads/main/zilko.xdbot.geode";
 const MEGA_HACK_STORE = "https://absolllute.com/store/mega-hack";
 const ZBOT_STORE = "https://zbot.figmentcoding.me/";
 const ZBOT_PAGE = "https://geode-sdk.org/mods/fig.zbot";
@@ -64,7 +62,7 @@ const howToJsonLd = {
     "Choose a compatible replay tool, install and activate it, then download and play a matching macro from the beginning.",
   step: [
     { "@type": "HowToStep", name: "Install Geode", text: "Install the Geode mod loader for Geometry Dash." },
-    { "@type": "HowToStep", name: "Get a macro bot", text: "Choose xdBot, zBot with a paid import key, or Mega Hack." },
+    { "@type": "HowToStep", name: "Get a macro bot", text: "Choose Silicate, Eclipse, zBot with a paid import key, or Mega Hack." },
     { "@type": "HowToStep", name: "Install the mod", text: "Follow your tool’s installer; manual Geode packages go in geode/mods." },
     { "@type": "HowToStep", name: "Download a macro", text: "Download the macro file for the level you want." },
     { "@type": "HowToStep", name: "Load the macro", text: "Import the matching file, select playback and restart the level from the beginning." },
@@ -90,19 +88,23 @@ export default function InstallPage() {
       </p>
 
       {/* The free/paid split is the first thing anyone wants to know. */}
-      <div className="mt-8 grid gap-2.5 sm:grid-cols-3">
+      <div className="mt-8 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card p-4">
           <div className="flex items-center justify-between gap-2">
             <p translate="no" className="notranslate text-[16px] font-bold text-text">
-              xdBot
+              Silicate
             </p>
             <span className="rounded-md border border-green/35 bg-green/12 px-2 py-0.5 text-[11.5px] font-semibold text-green">
               Free
             </span>
           </div>
           <p className="mt-1.5 text-[13px] leading-snug text-muted">
-            What most macros here use. Needs a manual install now, see below.
+            Replay recording and playback for Windows and Linux through Wine.
           </p>
+        </div>
+        <div className="card p-4">
+          <Link href="#eclipse" className="text-[16px] font-bold text-accent-soft hover:underline">Eclipse Menu</Link>
+          <p className="mt-1.5 text-[13px] leading-snug text-muted">Free Geode mod menu with a Replay Bot.</p>
         </div>
         <div className="card p-4">
           <div className="flex items-center justify-between gap-2">
@@ -135,7 +137,7 @@ export default function InstallPage() {
       <section className="card mt-8 p-5">
         <h2 className="text-[17px] font-bold text-text">Before you start</h2>
         <p className="mt-2 text-[14.5px] leading-relaxed text-text-dim">
-          For xdBot, zBot and the Geode edition of Mega Hack, install the <Ext href="https://geode-sdk.org/install">Geode mod loader</Ext> for your device first. Launch the game and check for the Geode button on the main menu. Mega Hack also offers a standalone Windows installer. A tool must support your game version and device; installing Geode alone does not make every mod compatible.
+          For Silicate, Eclipse, zBot and the Geode edition of Mega Hack, install the <Ext href="https://geode-sdk.org/install">Geode mod loader</Ext> for your device first. Launch the game and check for the Geode button on the main menu. Mega Hack also offers a standalone Windows installer. A tool must support your game version and device; installing Geode alone does not make every mod compatible.
         </p>
         <p className="mt-3 text-[13px] leading-relaxed text-muted">
           Macros only work in a modded client. They will not do anything in a clean copy of the game,
@@ -143,81 +145,35 @@ export default function InstallPage() {
         </p>
       </section>
 
-      {/* ------------------------------- xdBot ------------------------------- */}
-      <section className="mt-10">
-        <div className="flex flex-wrap items-baseline gap-2.5">
-          <h2 translate="no" className="notranslate text-[20px] font-bold text-text">
-            xdBot
-          </h2>
-          <span className="rounded-md border border-green/35 bg-green/12 px-2 py-0.5 text-[11.5px] font-semibold text-green">
-            Free
-          </span>
-          <span className="rounded-md border border-border bg-surface-2 px-2 py-0.5 font-mono text-[11.5px] text-muted">
-            .gdr2
-          </span>
-        </div>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">
-          Most macros in the catalog are xdBot recordings.
-        </p>
-
-        <div className="mt-4 rounded-xl border border-amber/40 bg-amber/10 px-4 py-3">
-          <p className="text-[13.5px] leading-relaxed text-amber">
-            <span className="font-semibold">Check the build before installing.</span> The <Ext href="https://github.com/ZiLko/xdBot">original xdBot repository</Ext> was archived in June 2025. The download links below are community-provided builds on MediaFire; we have not verified their maintenance status or compatibility with every current game version.
-          </p>
-        </div>
-
-        <ol className="mt-6 space-y-4">
-          <Step n={1} title="Download the .geode file">
-            Pick the build for your device:
-            <span className="mt-2 flex flex-wrap gap-2">
-              <Ext href={XDBOT_PC}>
-                <span className="inline-flex rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[13px] font-semibold text-text-dim transition-colors hover:border-accent/40 hover:text-accent-soft">
-                  Download for PC
-                </span>
-              </Ext>
-              <Ext href={XDBOT_MOBILE}>
-                <span className="inline-flex rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[13px] font-semibold text-text-dim transition-colors hover:border-accent/40 hover:text-accent-soft">
-                  Download for mobile
-                </span>
-              </Ext>
-            </span>
-            <span className="mt-2 block text-[12.5px] text-muted">
-              Both are hosted on MediaFire. The file is called{" "}
-              <span className="font-mono">zilko.xdbot.geode</span>.
-            </span>
+      <section id="silicate" className="mt-10 scroll-mt-24">
+        <h2 className="text-[20px] font-bold text-text">Silicate <span className="ml-2 font-mono text-sm text-muted">.slc</span></h2>
+        <ol className="mt-5 space-y-4">
+          <Step n={1} title="Get the 2.2091 build">
+            Follow the developer’s download link on the <Ext href="https://silicate.dev/">official Silicate site</Ext> for Geometry Dash 2.2091. Silicate supports Windows and Linux through Wine.
           </Step>
-
-          <Step n={2} title="Find your Geode mods folder">
-            Open Geode&apos;s settings and use <span className="font-medium">Open Mods Folder</span> where available, or locate <span className="font-mono">geode/mods</span> inside the game directory. On Steam, Manage → Browse local files opens the game directory. See the <Ext href="https://geode-sdk.org/faq">official Geode FAQ</Ext> for platform-specific help; do not guess a mobile folder path.
+          <Step n={2} title="Install Silicate">
+            With Geode installed, open its Settings in Geometry Dash and choose Install from File. Select the Silicate <code>.geode</code> package and restart the game.
           </Step>
-
-          <Step n={3} title="Drop the file in and restart">
-            Put <span className="font-mono">zilko.xdbot.geode</span> straight into that mods folder.
-            Do not unzip it and do not rename it. Close Geometry Dash fully and open it again, and
-            Geode loads the mod on startup.
-          </Step>
-
-          <Step n={4} title="Check it loaded">
-            Open the Geode menu in game and look for xdBot in your installed mods. If it is not
-            there, check the folder and restart. If Geode reports an incompatible game version or missing dependency, resolve that message before loading a replay.
-          </Step>
-
-          <Step n={5} title="Download a macro and load it">
-            Grab a macro from the{" "}
-            <Link href="/" className="font-medium text-accent-soft underline-offset-2 hover:underline">
-              catalog
-            </Link>
-            , start the level it was made for, then pause. Open xdBot from its button in the corner
-            of the pause screen, press <span className="font-medium text-text-dim">Load</span> and
-            pick the file.
-          </Step>
-
-          <Step n={6} title="Play it back">
-            Select playback mode, match the recording FPS shown on the macro page and restart the level from the beginning. A recording made from the beginning will not line up with an arbitrary start position.
+          <Step n={3} title="Record or play a replay">
+            Open Silicate and use its replay controls to record and save your run. To play a download, put the <code>.slc</code> file in Silicate’s replays folder, select it in the replay menu and start the level from the beginning.
           </Step>
         </ol>
       </section>
 
+      <section id="eclipse" className="mt-10 scroll-mt-24">
+        <h2 className="text-[20px] font-bold text-text">Eclipse Menu <span className="ml-2 font-mono text-sm text-muted">.gdr2</span></h2>
+        <ol className="mt-5 space-y-4">
+          <Step n={1} title="Install Eclipse in Geode">
+            With Geode installed, open its Download tab in Geometry Dash. Search for Eclipse, install <Ext href="https://eclipse.menu/">Eclipse Menu</Ext> and restart the game.
+          </Step>
+          <Step n={2} title="Open the Replay Bot">
+            Press <kbd>Tab</kbd> on PC or tap the floating Eclipse button on mobile. Open the Replay Bot and choose Record, then save the replay as <code>.gdr2</code>.
+          </Step>
+          <Step n={3} title="Load a download">
+            Open Shortcuts and choose Save folder. Put the <code>.gdr2</code> file in the <code>replays</code> folder. Select it in the Replay Bot, enable playback and restart the level.
+          </Step>
+        </ol>
+      </section>
       {/* -------------------------------- zBot ------------------------------- */}
       <section className="mt-10">
         <div className="flex flex-wrap items-baseline gap-2.5">
@@ -232,8 +188,7 @@ export default function InstallPage() {
           </span>
         </div>
         <p className="mt-2 text-[14px] leading-relaxed text-muted">
-          The initial zBot collection was converted from compatible xdBot recordings while keeping
-          the same level and macro-author credit. Native zBot recordings can also be submitted.
+          Match the recording and the replay tool to your Geometry Dash version.
         </p>
 
         <div className="card mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
@@ -316,7 +271,7 @@ export default function InstallPage() {
             <span className="font-semibold">
               Use the file made for your playback tool.
             </span>{" "}
-            Mega Hack and xdBot entries use .gdr2, while zBot entries use .gdr. Check the recorder on
+            Mega Hack and Eclipse use .gdr2, zBot uses .gdr, and Silicate uses .slc. Check the recorder on
             each download card and take the one that matches your setup.
           </p>
         </div>
@@ -347,7 +302,7 @@ export default function InstallPage() {
       <section className="card mt-10 p-5">
         <h2 className="text-[17px] font-bold text-text">If the file will not import</h2>
         <p className="mt-2 text-[14.5px] leading-relaxed text-text-dim">
-          Check the tool label and extension first: zBot uses .gdr; xdBot and Mega Hack entries use .gdr2. Renaming an extension does not convert a replay. Download again if you saved a web page instead of the file, or if the download is empty. For zBot, confirm your paid key is active and the file is in the replays folder. For Geode errors, check the mod&apos;s supported game version before trying the replay again.
+          Check the tool label and extension first: Silicate uses .slc, zBot uses .gdr, and Eclipse and Mega Hack use .gdr2. Renaming an extension does not convert a replay. Download again if you saved a web page instead of the file, or if the download is empty. For zBot, confirm your paid key is active and the file is in the replays folder. For Geode errors, check the mod&apos;s supported game version before trying the replay again.
         </p>
         <p className="mt-3 text-[14.5px] leading-relaxed text-text-dim">
           Still stuck? <Link href="/support" className="text-accent-soft hover:underline">Send a support ticket</Link> with the level name or ID, macro author, recorder and version, your device, recording FPS and the error or failure point. This lets staff identify the exact download. Read the <Link href="/guidelines" className="text-accent-soft hover:underline">submission guidelines</Link> if you have a corrected recording to share.

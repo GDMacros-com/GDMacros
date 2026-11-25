@@ -535,7 +535,7 @@ async function main() {
    * developer's platform rather than the serialiser.
    */
   const real = fs
-    .readFileSync(path.join(ROOT, "data", "macros.json"), "utf8")
+    .readFileSync(path.join(ROOT, "data", "macros-2.2081.json"), "utf8")
     .split("\r\n")
     .join("\n");
   const counts = catalog.catalogCounts(real);
@@ -592,7 +592,7 @@ async function main() {
   eq("new level without a video omits the key", "video" in noVideo, false);
 
   check("refuses a non-https download link", catalog.applyPublication(real, { ...pubExisting, downloadLink: "http://x/y.gdr2" }).ok === false);
-  check("refuses an unknown recorder", catalog.applyPublication(real, { ...pubExisting, recorder: "Eclipse" }).ok === false);
+  check("refuses an unknown recorder", catalog.applyPublication(real, { ...pubExisting, recorder: "Unknown" }).ok === false);
   check("refuses a non-numeric level id", catalog.applyPublication(real, { ...pubExisting, levelId: "abc" }).ok === false);
   check("refuses invalid json", catalog.applyPublication("{not json", pubExisting).ok === false);
 
@@ -653,7 +653,7 @@ async function main() {
     let r = await pub.runPublish(db.client, UUID_B);
     check("happy: waits for production", r.ok && r.stage === "waiting-for-production", JSON.stringify(r));
     eq("happy: release created", gh.releases.length, 1);
-    eq("happy: release tag", gh.releases[0].tag_name, "level-73667628");
+    eq("happy: release tag", gh.releases[0].tag_name, "level-2.2091-73667628");
     eq("happy: release title is the level name", gh.releases[0].name, "Acheron");
     eq("happy: one asset", gh.assets.get(gh.releases[0].id).length, 1);
     eq("happy: asset filename", gh.assets.get(gh.releases[0].id)[0].name, "Zoink-Acheron-Mega-Hack.gdr2");
@@ -724,7 +724,7 @@ async function main() {
       422,
       { message: "Validation Failed", errors: [{ message: "already_exists" }] },
     );
-    gh.releases.push({ id: 777, tag_name: "level-73667628", name: "Acheron", upload_url: "" });
+    gh.releases.push({ id: 777, tag_name: "level-2.2091-73667628", name: "Acheron", upload_url: "" });
     gh.assets.set(777, []);
 
     const r = await pub.runPublish(db.client, UUID_B);
@@ -866,7 +866,7 @@ async function main() {
     const dbB = makeSupabase(baseSubmission({
       submission_id: "44444444-4444-4444-8444-444444444444",
       macro_author: "OtherPlayer",
-      recorder: "xdBot",
+      recorder: "Eclipse",
     fps: 240,
     }));
     const [ra, rb] = await Promise.all([

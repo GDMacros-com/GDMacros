@@ -363,7 +363,7 @@ check("a missing recorder is bucketed, not dropped", health.catalogStats([{ macr
 const real = JSON.parse(read("data/macros.json"));
 const realStats = health.catalogStats(real);
 eq("the real catalog counts its own levels", realStats.levels, real.length);
-check("the real catalog has macros", realStats.macros > 0, String(realStats.macros));
+check("the real catalog has valid totals", realStats.macros >= realStats.levels, String(realStats.macros));
 check(
   "no catalog total is hardcoded in the board",
   // Layout numbers are not data. Percentages, pixel sizes and the sparkline's

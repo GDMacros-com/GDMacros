@@ -18,7 +18,7 @@ const levelCount = () => getAllLevels().length;
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: `Common questions about Geometry Dash macros, .gdr and .gdr2 files, and how ${site.name} works.`,
+  description: `Common questions about Geometry Dash macros, .slc, .gdr and .gdr2 files, and how ${site.name} works.`,
 };
 
 interface Item {
@@ -68,41 +68,34 @@ function items(levels: number, macros: number): Item[] {
       ),
     },
     {
-      q: "What are .gdr2 and .gdr files?",
+      q: "Which macro file should I download?",
       plain:
-        ".gdr2 and .gdr are replay data files containing the recorded inputs for one level. Mega Hack and xdBot entries use .gdr2, while zBot entries use .gdr. Neither format is an installer or executable.",
+        "Match the recorder label and game version. Silicate uses .slc, zBot uses .gdr, and Eclipse and Mega Hack use .gdr2.",
       a: (
         <>
-          Both are replay data files containing the inputs for one level. Mega Hack and xdBot entries
-          use <span className="font-mono">.gdr2</span>, while zBot entries use{" "}
-          <span className="font-mono">.gdr</span>. Neither format is an installer or executable.
+          Match the recorder label to your replay tool. Silicate uses <code>.slc</code>, zBot uses <code>.gdr</code>, and Eclipse and Mega Hack use <code>.gdr2</code>.{" "}
+          The main catalog is for 2.2091. The <Link href="/legacy" className="font-medium text-accent-soft hover:underline">2.2081 archive</Link> contains older recordings.
         </>
       ),
     },
     {
-      q: "Mega Hack, xdBot or zBot: which download do I take?",
+      q: "How do I install Silicate or Eclipse?",
       plain:
-        "Take the file labelled for the replay tool you use. Mega Hack and xdBot entries use .gdr2; zBot entries use .gdr. Every download card clearly identifies its tool.",
+        "Install Geode first. Get the 2.2091 Silicate build through the developer’s official site, or search for Eclipse in Geode’s Download tab.",
       a: (
         <>
-          Take the one that matches the tool you actually use. Every download is labelled with its
-          replay tool, so pick the label that matches your setup. Mega Hack and xdBot entries use{" "}
-          <span className="font-mono">.gdr2</span>; zBot entries use{" "}
-          <span className="font-mono">.gdr</span>.
-          <br />
-          <br />
-          Most levels here carry a version for each recorder, but not every level has to, so check
-          the labels on the page before downloading.
+          Install Geode first. Follow the <Link href="/install#silicate" className="font-medium text-accent-soft hover:underline">Silicate setup</Link> for its 2.2091 build or the{" "}
+          <Link href="/install#eclipse" className="font-medium text-accent-soft hover:underline">Eclipse setup</Link> to install it in Geode and use the Replay Bot.
         </>
       ),
     },
     {
       q: "How do I install and play one?",
       plain:
-        "Install the matching replay tool, put the downloaded .gdr or .gdr2 file where that tool can load it, then play it from inside the game. The install page has the full walkthrough.",
+        "Install the matching replay tool, put the downloaded .slc, .gdr or .gdr2 file where that tool can load it, then play it from inside the game. The install page has the full walkthrough.",
       a: (
         <>
-          Install the matching replay tool, load its .gdr or .gdr2 download, then play it in game. The{" "}
+          Install the matching replay tool, load its .slc, .gdr or .gdr2 download, then play it in game. The{" "}
           <Link href="/install" className="text-accent-soft hover:underline">
             install guide
           </Link>{" "}
@@ -126,10 +119,10 @@ function items(levels: number, macros: number): Item[] {
     {
       q: "What exactly am I downloading?",
       plain:
-        "A single .gdr or .gdr2 replay file. There is no installer and no executable. The filename and the host are shown on the button before you click it.",
+        "A single .slc, .gdr or .gdr2 replay file. There is no installer and no executable. The filename and the host are shown on the button before you click it.",
       a: (
         <>
-          A single .gdr or .gdr2 replay file. No installer, no executable, nothing that runs on its
+          A single .slc, .gdr or .gdr2 replay file. It contains recorded inputs and cannot run on its
           own. The filename and the host are both shown on the download button before you click it.
         </>
       ),
@@ -144,7 +137,7 @@ function items(levels: number, macros: number): Item[] {
           <Link href="/install" className="text-accent-soft hover:underline">
             install guide
           </Link>{" "}
-          covers what is currently known to work, including the mobile build of xdBot.
+          has device and game-version requirements for each tool.
         </>
       ),
     },
@@ -232,14 +225,14 @@ function items(levels: number, macros: number): Item[] {
     },
     {
       q: `Is ${site.name} free?`,
-      plain: `Yes. The site, the catalog and every download are free. The replay tools are made by other people and have their own pricing: xdBot is free; Mega Hack is paid, and zBot requires a paid key to import premade files like our downloads.`,
+      plain: `Yes. The site, the catalog and every download are free. The replay tools are made by other people and have their own pricing: Silicate and Eclipse are free; Mega Hack is paid, and zBot requires a paid key to import premade files like our downloads.`,
       a: (
         <>
           Yes. The site, the catalog and all {macros} downloads across {levels} levels are free, with
           no account required and nothing to pay.
           <br />
           <br />
-          The replay tools are separate products made by other people. xdBot is free. Mega Hack is paid, and zBot requires a paid key to import premade files like our downloads. None of them is ours.
+          The replay tools are separate products made by other people. Silicate and Eclipse are free. Mega Hack is paid, and zBot requires a paid key to import premade files like our downloads. None of them is ours.
         </>
       ),
     },

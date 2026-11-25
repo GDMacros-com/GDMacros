@@ -5,6 +5,8 @@ import { canCurrentUserModerate } from "@/lib/admin";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 import { readGdrMetadata } from "@/lib/gdr";
+import { readSilicateHeader } from "@/lib/replay";
+import { currentReleaseTagFor } from "@/lib/publish/assetName";
 import { readGdr2Metadata } from "@/lib/gdr2";
 import { getReleaseByTag, listReleaseAssets } from "@/lib/github/releases";
 import { getAllLevels } from "@/lib/macros";
@@ -64,7 +66,7 @@ export interface InspectResult {
  */
 async function checkPublishedDuplicate(levelId: string, sha256: string): Promise<NonNullable<InspectResult["duplicateCheck"]>> {
   try {
-    const release = await getReleaseByTag(`level-${levelId}`);
+    const release = await getReleaseByTag(currentReleaseTagFor(levelId));
     if (!release) return { status: "clear" };
 
     const assets = await listReleaseAssets(release.id);
@@ -121,8 +123,9 @@ export async function inspectSubmission(id: string): Promise<InspectResult> {
 
   const recorder = String(data.recorder ?? "");
   const gdrMeta = recorder === "zBot" ? readGdrMetadata(file.bytes) : null;
-  const gdr2Meta = recorder !== "zBot" ? readGdr2Metadata(file.bytes) : null;
-  if (!gdrMeta && !gdr2Meta) {
+  const silicate = recorder === "Silicate" ? readSilicateHeader(file.bytes) : null;
+  const gdr2Meta = recorder !== "zBot" && recorder !== "Silicate" ? readGdr2Metadata(file.bytes) : null;
+  if (!gdrMeta && !gdr2Meta && !silicate) {
     return {
       ok: false,
       error:
@@ -138,7 +141,11 @@ export async function inspectSubmission(id: string): Promise<InspectResult> {
     recorder: String(data.recorder ?? ""),
   };
 
-  const findings = gdrMeta
+  const findings: Finding[] = silicate ? [
+    { id: "recorder", level: "info", label: "Replay format", value: `Silicate SLC v${silicate.version}` },
+    { id: "framerate", level: "info", label: "Tick rate", value: `${silicate.tps} TPS` },
+    { id: "sha256", level: "info", label: "SHA-256", value: sha256 },
+  ] : gdrMeta
     ? reviewGdrFindings(gdrMeta, claim, file.bytes.byteLength, sha256)
     : reviewFindings(gdr2Meta!, claim, file.bytes.byteLength, sha256);
   const duplicateCheck = await checkPublishedDuplicate(claim.levelId, sha256);

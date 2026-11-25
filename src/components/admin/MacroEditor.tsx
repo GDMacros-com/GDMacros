@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { editorFields, validateEditor, type EditorFields } from "@/lib/catalog-editor";
-import { RECORDERS, type LevelInput } from "@/lib/types";
+import { SUBMISSION_RECORDERS, macroFileExtension, type LevelInput } from "@/lib/types";
 
 type Snapshot = { sha: string; levels: LevelInput[] };
 const inputClass = "mt-1 w-full min-w-0 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text";
@@ -78,7 +78,7 @@ export default function MacroEditor() {
     return <label key={key} className={`block text-sm text-text-dim ${["description", "downloadLink", "video", "thumbnail"].includes(key) ? "sm:col-span-2" : ""}`}>
       {labels[key]}
       {key === "description" ? <textarea className={inputClass} rows={3} value={fields[key]} onChange={e => change(e.target.value)} />
-        : key === "recorder" ? <select className={inputClass} value={fields[key]} onChange={e => change(e.target.value)}>{RECORDERS.map(r => <option key={r}>{r}</option>)}</select>
+        : key === "recorder" ? <select className={inputClass} value={fields[key]} onChange={e => change(e.target.value)}>{SUBMISSION_RECORDERS.map(r => <option key={r}>{r}</option>)}</select>
         : <input className={inputClass} type={key.endsWith("At") ? "date" : key === "fps" ? "number" : "text"} step={key === "fps" ? "any" : undefined}
           max={key.endsWith("At") ? new Date().toISOString().slice(0,10) : undefined} value={fields[key]} onChange={e => change(e.target.value)} />}
     </label>;
@@ -109,7 +109,7 @@ export default function MacroEditor() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">{macroKeys.map(field)}</div>
         <p className="mt-2 text-xs text-muted">Only set the tested date for a completed playback check. Leave it blank if unknown. Replacing a file does not change this date automatically.</p>
         <label className="mt-4 block text-sm">Replace macro file (optional)
-          <input key={selected?.join("-")} className={`${inputClass} overflow-hidden`} type="file" accept={fields.recorder === "zBot" ? ".gdr" : ".gdr2"}
+          <input key={selected?.join("-")} className={`${inputClass} overflow-hidden`} type="file" accept={macroFileExtension(fields.recorder)}
             onChange={e => { setFile(e.target.files?.[0] || null); setConfirm(null); }} />
         </label>
         <p className="mt-2 text-xs text-muted">Up to 2 MB. A replacement supplies a new GitHub download URL. Old files remain available at their existing URLs.</p>

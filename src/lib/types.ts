@@ -1,15 +1,21 @@
 /** Every playback format that can appear in the public catalog. */
-export const RECORDERS = ["Mega Hack", "xdBot", "zBot"] as const;
+export const CURRENT_GAME_VERSION = "2.2091";
+export const LEGACY_GAME_VERSION = "2.2081";
+export const SUBMISSION_RECORDERS = ["Mega Hack", "zBot", "Silicate", "Eclipse"] as const;
+export const LEGACY_RECORDERS = ["Mega Hack", "xdBot", "zBot"] as const;
+export const RECORDERS = [...SUBMISSION_RECORDERS, "xdBot"] as const;
+
+export function macroPath(slug: string, legacy = false) {
+  return `${legacy ? "/legacy" : ""}/macro/${slug}`;
+}
 
 export type Recorder = (typeof RECORDERS)[number];
-
-/** Playback formats accepted by the submission and publishing pipeline. */
-export const SUBMISSION_RECORDERS = RECORDERS;
 
 export type SubmissionRecorder = (typeof SUBMISSION_RECORDERS)[number];
 
 /** Public file extension used by each recorder. */
-export function macroFileExtension(recorder: string): ".gdr" | ".gdr2" {
+export function macroFileExtension(recorder: string): ".gdr" | ".gdr2" | ".slc" {
+  if (recorder === "Silicate") return ".slc";
   return recorder === "zBot" ? ".gdr" : ".gdr2";
 }
 
@@ -95,4 +101,5 @@ export interface Level {
   youtubeId: string | null;
   /** Pre-lowercased haystack for the search box. */
   searchIndex: string;
+  legacy?: boolean;
 }

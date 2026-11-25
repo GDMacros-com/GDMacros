@@ -123,9 +123,7 @@ export function validateFile(
   const expected = macroFileExtension(recorder);
   if (!file) return `Choose the ${expected} macro file.`;
   if (!file.name.toLowerCase().endsWith(expected)) {
-    return recorder === "zBot"
-      ? "ZBot macros must be .gdr files."
-      : `${recorder || "Mega Hack and xdBot"} macros must be .gdr2 files.`;
+    return `${recorder || "These"} macros must be ${expected} files.`;
   }
   if (file.size === 0) return "That file is empty.";
   if (file.size > MAX_FILE_BYTES) return "The file is too large. The limit is 2 MB.";
@@ -180,7 +178,7 @@ export function submissionErrorMessage(raw: unknown): string {
   if (t.includes("video_url_safe")) return "That video link is not a valid http or https link.";
   if (t.includes("reason_len")) return "That reason is too long.";
   if (t.includes("file_size")) return "The file is too large. The limit is 2 MB.";
-  if (t.includes("recorder")) return "Choose Mega Hack, xdBot or zBot.";
+  if (t.includes("recorder")) return "Choose Mega Hack, zBot, Silicate or Eclipse.";
 
   return "Something went wrong. Please try again.";
 }

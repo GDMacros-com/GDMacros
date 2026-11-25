@@ -5,8 +5,8 @@ import {
   isStorageAdminConfigured,
   putSubmissionObject,
 } from "@/lib/supabase/storage-admin";
-import { checkGdr2 } from "@/lib/gdr2";
-import { checkGdr } from "@/lib/gdr";
+import { CURRENT_GAME_VERSION } from "@/lib/types";
+import { checkReplay } from "@/lib/replay";
 import { lookupLevel } from "@/lib/gdbrowser";
 import { canonicalUrl, verifyVideo, videoIdFromUrl } from "@/lib/youtube";
 import {
@@ -86,6 +86,10 @@ export async function POST(request: NextRequest) {
     return bad(400, "That upload was not readable. Try again.");
   }
 
+  if (form.get("gameVersion") !== CURRENT_GAME_VERSION) {
+    return bad(400, `Confirm Geometry Dash ${CURRENT_GAME_VERSION} before uploading.`);
+  }
+
   const fields = {
     levelName: String(form.get("levelName") ?? ""),
     levelId: String(form.get("levelId") ?? ""),
@@ -118,7 +122,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const macro = fields.recorder === "zBot" ? checkGdr(bytes) : checkGdr2(bytes);
+  const macro = checkReplay(bytes, fields.recorder);
   if (!macro.ok) {
     return bad(400, "Some fields need fixing.", { file: macro.error });
   }
@@ -189,6 +193,7 @@ export async function POST(request: NextRequest) {
     p_video_url: videoUrl,
     p_recorder: values.recorder,
     p_fps: values.fps,
+    p_game_version: CURRENT_GAME_VERSION,
     p_macro_author: values.macroAuthor,
     p_notes: values.notes,
     p_file_size: bytes.byteLength,

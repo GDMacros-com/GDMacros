@@ -1,6 +1,6 @@
 # GDMacros
 
-[GDMacros](https://www.gdmacros.com) is a community catalog of Geometry Dash macros for **Mega Hack, xdBot and zBot**. Browsing and downloading are free and do not require an account. Accounts add synced favorites, submissions, notifications and private support tickets.
+[GDMacros](https://www.gdmacros.com) is a community catalog of Geometry Dash macros for **Mega Hack, zBot, Silicate and Eclipse**. Browsing and downloading are free and do not require an account. Accounts add synced favorites, submissions, notifications and private support tickets.
 
 This README describes the source tree reviewed on **26 October 2026**. It documents implemented behavior; it does not confirm which migrations or credentials have been applied to production.
 
@@ -17,7 +17,7 @@ The site uses Next.js 16, React 19, TypeScript and Tailwind CSS 4. Vercel is the
 | Resend | Service email, submission results, ticket notifications, notices and inbound support forwarding | `src/lib/email` |
 | Discord | Community links, optional widget and announcements for newly accepted macros | `src/lib/site.ts`, `src/lib/publish/announcement.ts` |
 
-The public catalog is stored in Git, rather than a Supabase catalog table. Editing it requires a new deployment before public pages reflect the change. Public downloads currently point to GitHub Releases.
+The public catalog is stored in Git, rather than a Supabase catalog table. Editing it requires a new deployment before public pages reflect the change. Public downloads currently point to GitHub Releases. The current 2.2091 catalog uses `data/macros.json`. The 2.2081 archive is served at `/legacy` from `data/macros-2.2081.json`.
 
 **The read-only public catalog API lives under `/api/v1` in this Next.js project.** It includes `/levels`, `/levels/{levelId}`, `/macros` and `/stats`; list routes accept `search`, `recorder`, `fps`, `page` and `limit` (default 20, maximum 100). Levels are alphabetical and recordings retain catalog order. Level filters select matching levels and return all recordings for each match; recording filters return only matching recordings. API results update with website deployments, with a five-minute CDN cache and up to one minute of stale revalidation. Responses expose only public catalog fields and download URLs; files remain hosted externally. Individual recordings do not yet have permanent API identifiers.
 
@@ -96,7 +96,7 @@ Vercel supplies deployment metadata through `VERCEL_GIT_COMMIT_SHA`, `VERCEL_GIT
 
 ### Supabase setup
 
-1. For a new database, apply all 25 SQL migrations in `supabase/migrations` in numeric order, through `0025_direct_gd_legal_versions.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
+1. For a new database, apply all 26 SQL migrations in `supabase/migrations` in numeric order, through `0026_geometry_dash_22091.sql`. Existing deployments must apply only unapplied migrations, following any migration-specific rollout requirements.
 2. Configure the Supabase Auth site URL and redirect allow list for production, localhost and any permitted preview origins. Confirmation and password-reset templates must point to the application's auth routes. The expected confirmation-link pattern is documented in `src/lib/supabase/config.ts`.
 3. Configure Supabase Auth email templates and SMTP separately from the application's Resend API integration.
 4. Use the role snippets in `supabase/snippets` to assign staff access. Public signup cannot assign roles.

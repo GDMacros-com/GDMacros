@@ -244,7 +244,7 @@ eq("a mixed catalog counts only the MediaFire ones", tool.mediafireCount([
 ]), 1);
 
 // The real production catalog must report zero.
-const realCatalog = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "macros.json"), "utf8"));
+const realCatalog = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "macros-2.2081.json"), "utf8"));
 eq("the REAL current catalog has 0 MediaFire entries", tool.mediafireCount(realCatalog), 0);
 // Not a literal: the publisher grows this file in production, and the property
 // that matters after the cutover is that NOTHING is MediaFire-hosted, whatever

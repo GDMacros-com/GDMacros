@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 // Each tool and server action checks its own permissions.
 const TOOLS = [
+  { href: "/admin/legacy-releases", title: "Archive GitHub releases", description: "Rename the 2.2081 release titles with the publisher.", Icon: ListIcon },
   { href: "/admin/macros", title: "Edit published macros", description: "Correct details, replace a file, remove an entry or update its tested date.", Icon: ListIcon },
   {
     href: "/admin/submissions",

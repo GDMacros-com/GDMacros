@@ -13,7 +13,7 @@ const gdr = await jiti.import('../src/lib/gdr.ts');
 const gdr2 = await jiti.import('../src/lib/gdr2.ts');
 const assets = await jiti.import('../src/lib/publish/assetName.ts');
 const { applyPublication } = await jiti.import('../src/lib/publish/catalog.ts');
-const macro = {author:'Author',recorder:'xdBot',fps:240,testedAt:'2026-01-01',downloadType:'GitHub',downloadLink:'https://example.test/one.gdr2'};
+const macro = {author:'Author',recorder:'Eclipse',fps:240,testedAt:'2026-01-01',downloadType:'GitHub',downloadLink:'https://example.test/one.gdr2'};
 const level = {name:'Level One',creator:'Creator',levelId:'123',description:'Keep this',macros:[macro,{...macro,author:'Other'}],custom:'preserve'};
 const initial = JSON.stringify([level,{...level,name:'Second',levelId:'456',macros:[macro]}],null,2)+'\n';
 const fields = editor.editorFields(level,macro);
@@ -39,7 +39,7 @@ await test('invalid input, unsafe links, dates and duplicate identities cannot e
  assert.equal(editor.validDate('2024-02-29','2026-01-01'),true);assert.equal(editor.validDate('2025-02-29','2026-01-01'),false);
 });
 await test('publisher dates new uploads and editor accepts every current entry',()=>{
- const result=applyPublication('[]',{levelId:'1',levelName:'Test',levelCreator:'Creator',videoUrl:null,macroAuthor:'Author',recorder:'xdBot',fps:240,downloadLink:'https://example.test/a',addedAt:'2026-01-01'});
+ const result=applyPublication('[]',{levelId:'1',levelName:'Test',levelCreator:'Creator',videoUrl:null,macroAuthor:'Author',recorder:'Eclipse',fps:240,downloadLink:'https://example.test/a',addedAt:'2026-01-01'});
  assert.equal(JSON.parse(result.json)[0].macros[0].testedAt,'2026-01-01');
  for(const l of JSON.parse(fs.readFileSync('data/macros.json','utf8'))) for(const m of l.macros) assert.equal(editor.validateEditor(editor.editorFields(l,m),l.thumbnail),null,l.name);
 });
@@ -52,7 +52,7 @@ const mocks={
  '@/lib/github/config':{isPublisherConfigured:true},
  '@/lib/github/contents':{getCatalogFile:async()=>{reads++;if(revoke)admin=false;return {text:initial,sha};},commitCatalog:async(...args)=>{if(conflict)throw Error('conflict');commits.push(args);return {commitSha:'b'.repeat(40)};},isConcurrencyConflict:e=>e.message==='conflict'},
  '@/lib/github/releases':{getReleaseByTag:async()=>({id:1}),createLevelRelease:async()=>{throw Error('unexpected creation');},uploadMacroAsset:async()=>{uploads++;return {asset:{browser_download_url:'https://github.com/example/replacement.gdr'}};},sha256Hex:()=> 'c'.repeat(64)},
- '@/lib/publish/assetName':assets,'@/lib/catalog-editor':editor,'@/lib/types':types,'@/lib/submissions':submissions,'@/lib/gdr':gdr,'@/lib/gdr2':gdr2,
+ '@/lib/publish/assetName':assets,'@/lib/catalog-editor':editor,'@/lib/types':types,'@/lib/submissions':submissions,'@/lib/replay':{checkReplay:(bytes, recorder)=>recorder==='zBot'?gdr.checkGdr(bytes):gdr2.checkGdr2(bytes)},
 };
 const exports={};vm.runInNewContext(code,{exports,require:n=>{assert.ok(n in mocks,n);return mocks[n];},URL,File,Uint8Array,FormData,JSON,Number,Error,console});
 function request({origin='https://gdmacros.com',token=sha,confirmed='yes',operation='save',values={...fields,author:'Edited'},file}={}){

@@ -97,14 +97,14 @@ export function reviewFindings(
   });
 
   /* ---- the recorder it was written for ---- */
-  const guess = recorderFromFile(meta);
+  const guess = /eclipse/i.test(meta.botName) ? "Eclipse" : recorderFromFile(meta);
   const recorderMatches = guess === claim.recorder.trim();
   findings.push({
     id: "recorder",
-    level: recorderMatches ? "ok" : "warn",
+    level: recorderMatches ? "ok" : claim.recorder === "Eclipse" ? "info" : "warn",
     label: "Recorder the file looks written for",
-    value: guess,
-    note: recorderMatches
+    value: claim.recorder === "Eclipse" && !recorderMatches ? (meta.botName || "Unknown GDR2 recorder") : guess,
+    note: recorderMatches || (claim.recorder === "Eclipse" && guess !== "Eclipse")
       ? undefined
       : `The form says ${claim.recorder}. The extension block is ${
           meta.extensionBytes > 0 ? "present, which is how a raw xdBot recording looks" : "absent, which is how a recording converted for Mega Hack looks"

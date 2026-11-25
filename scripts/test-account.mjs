@@ -9,6 +9,7 @@ import { createJiti } from "jiti";
 import { clearAuthCookiesAtScopes } from "@supabase/ssr";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 
 const ROOT = process.cwd();
 let passed = 0;
@@ -56,7 +57,7 @@ const src = {
     read("supabase/migrations/0025_direct_gd_legal_versions.sql"),
   authors: read("src/lib/authors.ts"),
   authorPage: read("src/app/author/[slug]/page.tsx"),
-  macroPage: read("src/app/macro/[slug]/page.tsx"),
+  macroPage: read("src/components/MacroDetailPage.tsx"),
   sitemap: read("src/app/sitemap.ts"),
   submissionsPage: read("src/app/submissions/page.tsx"),
   submissionsUi: read("src/components/submissions/MySubmissions.tsx"),
@@ -85,8 +86,22 @@ const src = {
 };
 
 console.log("Catalog-credit authors");
-const allAuthors = authors.getAllAuthors();
+const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "gdmacros-account-"));
+process.on("exit", () => {
+  process.chdir(ROOT);
+  fs.rmSync(fixture, { recursive: true, force: true });
+});
+const archive = JSON.parse(read("data/macros-2.2081.json"));
+const current = archive.map(level => ({
+  ...level, macros: level.macros.map(macro => ({
+    ...macro, recorder: macro.recorder === "xdBot" ? "Eclipse" : macro.recorder,
+  })),
+}));
+fs.mkdirSync(path.join(fixture, "data"));
+fs.writeFileSync(path.join(fixture, "data/macros.json"), JSON.stringify(current));
+process.chdir(fixture);
 const allLevels = macros.getAllLevels();
+const allAuthors = authors.getAllAuthors();
 const macroCount = allLevels.reduce((sum, level) => sum + level.macros.length, 0);
 check("the catalog has author pages", allAuthors.length > 0);
 eq("every macro appears under exactly one author", allAuthors.reduce((sum, author) => sum + author.macroCount, 0), macroCount);

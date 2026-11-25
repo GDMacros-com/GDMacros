@@ -16,7 +16,7 @@
  * luck. See `.claude/reference/cross-project.md`.
  */
 
-import { RECORDERS, type Recorder } from "@/lib/types";
+import { SUBMISSION_RECORDERS, type SubmissionRecorder } from "@/lib/types";
 
 /** Where an automatically published macro lives. Matches the app's host list. */
 export const PUBLISHED_DOWNLOAD_TYPE = "GitHub";
@@ -137,7 +137,7 @@ export function applyPublication(currentText: string, input: PublicationInput): 
   if (!input.downloadLink || !/^https:\/\//i.test(input.downloadLink)) {
     return { ok: false, error: "Refusing to write a download link that is not https." };
   }
-  if (!RECORDERS.includes(input.recorder as Recorder)) {
+  if (!SUBMISSION_RECORDERS.includes(input.recorder as SubmissionRecorder)) {
     return { ok: false, error: `Unknown recorder: ${input.recorder}` };
   }
   if (!/^[0-9]{1,12}$/.test(String(input.levelId))) {

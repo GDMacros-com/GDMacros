@@ -15,12 +15,11 @@ export default function FavoritesList({ levels }: { levels: Level[] }) {
   const { favorites, ready, toggle } = useFavorites();
   const [confirming, setConfirming] = useState(false);
 
-  // This page has the whole catalog, so it can finish the slug to level id
-  // migration outright, including dropping entries for levels that are gone.
+  // Preserve older favorites that are outside the current catalog.
   useEffect(() => {
     migrateStoredFavorites(
       levels.map((l) => ({ slug: l.slug, levelId: String(l.levelId) })),
-      true,
+      false,
     );
   }, [levels]);
 

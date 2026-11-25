@@ -4,12 +4,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const file = path.join(process.cwd(), "data", "macros.json");
+const legacy = process.argv.includes("--legacy");
+const filename = legacy ? "macros-2.2081.json" : "macros.json";
+const file = path.join(process.cwd(), "data", filename);
 const errors = [];
 const warnings = [];
 
 if (!fs.existsSync(file)) {
-  console.error("data/macros.json not found.");
+  console.error(`data/${filename} not found.`);
   process.exit(1);
 }
 
@@ -17,12 +19,12 @@ let data;
 try {
   data = JSON.parse(fs.readFileSync(file, "utf8"));
 } catch (err) {
-  console.error(`data/macros.json is not valid JSON: ${err.message}`);
+  console.error(`data/${filename} is not valid JSON: ${err.message}`);
   process.exit(1);
 }
 
 if (!Array.isArray(data)) {
-  console.error("data/macros.json must contain an array of levels.");
+  console.error(`data/${filename} must contain an array of levels.`);
   process.exit(1);
 }
 
@@ -31,7 +33,7 @@ const slugify = (s) =>
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /** Keep in sync with RECORDERS in src/lib/types.ts. */
-const RECORDERS = ["Mega Hack", "xdBot", "zBot"];
+const RECORDERS = legacy ? ["Mega Hack", "xdBot", "zBot"] : ["Mega Hack", "zBot", "Silicate", "Eclipse"];
 const LEVEL_REQUIRED = ["name", "creator", "levelId"];
 const MACRO_REQUIRED = ["author", "recorder", "downloadType", "downloadLink"];
 

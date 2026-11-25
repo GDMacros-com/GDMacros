@@ -45,11 +45,11 @@ export default function HomePage() {
           {macroCount > 0 ? (
             <>
               {macroCount} free macro{macroCount === 1 ? "" : "s"} across {levels.length} level
-              {levels.length === 1 ? "" : "s"}, available for Mega Hack, xdBot and zBot. Search by level,
+              {levels.length === 1 ? "" : "s"}, recorded on Geometry Dash 2.2091. Search by level,
               creator, macro author or level ID.
             </>
           ) : (
-            site.description
+            "The Geometry Dash 2.2091 catalog is awaiting its first uploads."
           )}
         </p>
 
@@ -66,7 +66,7 @@ export default function HomePage() {
           <Link href="/install" className="font-medium text-accent-soft underline-offset-2 hover:underline">
             how to install a macro
           </Link>{" "}
-          if you have not used one before.
+          if you have not used one before. Browse the <Link href="/legacy" className="font-medium text-accent-soft hover:underline">2.2081 archive</Link> for older recordings.
         </p>
       </div>
       <MacroBrowser levels={levels} />

@@ -1,11 +1,26 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import fs from 'node:fs';
+import os from 'node:os';
 import { createJiti } from 'jiti';
 
 const jiti = createJiti(import.meta.url, {
   alias: { '@': path.join(process.cwd(), 'src') }, moduleCache: false,
 });
+const root = process.cwd();
+const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "gdmacros-api-"));
+process.on("exit", () => {
+  process.chdir(root);
+  fs.rmSync(fixture, { recursive: true, force: true });
+});
+const archive = JSON.parse(fs.readFileSync(path.join(root, "data/macros-2.2081.json"), "utf8"));
+const current = archive.map(level => ({
+  ...level, macros: level.macros.map(macro => ({ ...macro, recorder: macro.recorder === "xdBot" ? "Eclipse" : macro.recorder })),
+}));
+fs.mkdirSync(path.join(fixture, "data"));
+fs.writeFileSync(path.join(fixture, "data/macros.json"), JSON.stringify(current));
+process.chdir(fixture);
+
 const { publicApi, apiOptions } = await jiti.import('../src/lib/public-api.ts');
 const { getAllLevels } = await jiti.import('../src/lib/macros.ts');
 const levels = getAllLevels();
@@ -47,7 +62,7 @@ assert.equal(publicApi(request(), 'level', 'bad').status, 400);
 assert.equal(publicApi(request(), 'level', '999999999999').status, 404);
 assert.equal(publicApi(request('?page=1'), 'level', String(known.levelId)).status, 400);
 
-for (const recorder of ['Mega Hack','xdBot','zBot']) {
+for (const recorder of ['Mega Hack','zBot','Silicate','Eclipse']) {
   const filtered = await publicApi(request(`?recorder=${encodeURIComponent(recorder)}&fps=240&limit=100`), 'macros').json();
   assert.ok(filtered.data.every(macro => macro.recorder === recorder && macro.fps === 240));
   const matchedLevels = await list(`?recorder=${encodeURIComponent(recorder)}&fps=240&limit=100`).json();
@@ -93,7 +108,7 @@ assert.equal((await route.GET(request(), { params: Promise.resolve({ levelId: St
 const unknown = await jiti.import('../src/app/api/v1/[...path]/route.ts');
 assert.equal((await unknown.GET(request()).json()).error.code, 'NOT_FOUND');
 // Keep the downloadable contract aligned with real responses and discovery.
-const spec = JSON.parse(fs.readFileSync('public/openapi.json', 'utf8'));
+const spec = JSON.parse(fs.readFileSync(path.join(root, 'public/openapi.json'), 'utf8'));
 const discovery = await publicApi(request(), 'index').json();
 assert.deepEqual(Object.keys(spec.paths).sort(), ['/api/v1', ...Object.values(discovery.data.endpoints)].sort());
 const documentedFields = name => Object.keys(spec.components.schemas[name].properties).sort();
@@ -112,6 +127,6 @@ function verifyReferences(value) {
 verifyReferences(spec);
 for (const item of Object.values(spec.paths)) for (const operation of Object.values(item)) operationIds.push(operation.operationId);
 assert.equal(new Set(operationIds).size, operationIds.length);
-assert.deepEqual(spec.components.schemas.Recording.properties.recorder.enum, ['Mega Hack', 'xdBot', 'zBot']);
+assert.deepEqual(spec.components.schemas.Recording.properties.recorder.enum, ['Mega Hack', 'zBot', 'Silicate', 'Eclipse']);
 assert.equal(spec.paths['/api/v1/levels'].get.parameters.find(p => p.name === 'limit').schema.maximum, 100);
 console.log('Public API: search, filters, pagination, DTO boundaries, errors, CORS, cache headers and route handlers passed.');

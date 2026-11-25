@@ -24,7 +24,7 @@
  * import. That is what lets the tests exercise it directly.
  */
 
-import { macroFileExtension } from "@/lib/types";
+import { CURRENT_GAME_VERSION, macroFileExtension } from "@/lib/types";
 
 /** Per-segment cap, so one absurd level name cannot eat the whole filename. */
 const MAX_SEGMENT = 48;
@@ -126,4 +126,8 @@ export function releaseTagFor(levelId: string | number): string {
     throw new Error("Refusing to build a release tag from a non-numeric level id");
   }
   return `level-${id}`;
+}
+
+export function currentReleaseTagFor(levelId: string | number): string {
+  return releaseTagFor(levelId).replace(/^level-/, `level-${CURRENT_GAME_VERSION}-`);
 }

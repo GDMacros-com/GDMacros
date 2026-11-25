@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   // types into Google.
   title: "About Geometry Dash Macros",
   description:
-    "GDMacros is a free catalog of Geometry Dash macros for extreme demons and every other level, available for Mega Hack, xdBot and zBot and hosted by us.",
+    "GDMacros is a free catalog of Geometry Dash macros for extreme demons and every other level, available for Mega Hack, zBot, Silicate and Eclipse and hosted by us.",
   alternates: { canonical: "/about" },
 };
 
@@ -48,7 +48,7 @@ export default function AboutPage() {
       />
       <p className="mt-3 text-[15px] leading-relaxed text-muted">
         {site.name} is a free catalog of Geometry Dash macros. Every macro here plays back a real
-        level, is labelled for Mega Hack, xdBot or zBot, and costs nothing to download.
+        level, is labelled for Mega Hack, zBot, Silicate or Eclipse, and costs nothing to download.
       </p>
 
       {count > 0 && (

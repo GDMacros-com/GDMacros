@@ -1,7 +1,7 @@
 import { getAllLevels } from "./macros";
 import { parseFps } from "./fps";
 import { site } from "./site";
-import { RECORDERS, type Level, type Macro } from "./types";
+import { SUBMISSION_RECORDERS, type Level, type Macro } from "./types";
 
 // Only public catalog fields cross this boundary. Never spread database rows.
 function recording(macro: Macro) {
@@ -45,8 +45,8 @@ function filters(url: URL) {
   const search = (url.searchParams.get("search") ?? "").trim().toLowerCase();
   if (search.length > 100) throw new InvalidQuery("search must be at most 100 characters.");
   const recorder = url.searchParams.get("recorder");
-  if (recorder !== null && !RECORDERS.some(value => value === recorder)) {
-    throw new InvalidQuery(`recorder must be one of: ${RECORDERS.join(", ")}.`);
+  if (recorder !== null && !SUBMISSION_RECORDERS.some(value => value === recorder)) {
+    throw new InvalidQuery(`recorder must be one of: ${SUBMISSION_RECORDERS.join(", ")}.`);
   }
   const rawFps = url.searchParams.get("fps");
   const fps = rawFps === null ? null : parseFps(rawFps);
@@ -140,7 +140,7 @@ export function publicApi(request: Request, resource: Resource, levelId?: string
     const macros = levels.flatMap(level => level.macros);
     return json(request, { data: {
       levels: levels.length, macros: macros.length,
-      recorders: RECORDERS.map(recorder => ({ recorder, macros: macros.filter(macro => macro.recorder === recorder).length })),
+      recorders: SUBMISSION_RECORDERS.map(recorder => ({ recorder, macros: macros.filter(macro => macro.recorder === recorder).length })),
     } });
   } catch (error) {
     if (error instanceof InvalidQuery) {

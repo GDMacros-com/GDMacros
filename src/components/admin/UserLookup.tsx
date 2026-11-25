@@ -5,6 +5,8 @@ import CopyButton from "@/components/CopyButton";
 import { lookupAdminUser, type AdminUserView } from "@/lib/actions/adminUsers";
 import { banSubmissionEmail, unbanSubmissionEmail } from "@/lib/actions/submissions";
 import { unbanSupportTicketUser } from "@/lib/actions/supportTickets";
+import StaffRoleEditor from "./StaffRoleEditor";
+import { STAFF_ROLE_LABELS, type StaffRoleAccount } from "@/lib/staffRoles";
 
 function date(value: string | null) {
   if (!value) return "Never";
@@ -26,15 +28,23 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default function UserLookup() {
+export default function UserLookup({
+  ownerId = null,
+  staffRoles = null,
+}: {
+  ownerId?: string | null;
+  staffRoles?: StaffRoleAccount[] | null;
+}) {
   const [username, setUsername] = useState("");
   const [account, setAccount] = useState<AdminUserView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [banReason, setBanReason] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   async function load(name = username) {
+    setSelectedStaffId(null);
     setError(null);
     setBusy("lookup");
     const result = await lookupAdminUser(name);
@@ -47,6 +57,8 @@ export default function UserLookup() {
     setAccount(result.account);
     setUsername(result.account.username);
   }
+
+  const selectedStaff = staffRoles?.find((entry) => entry.user_id === selectedStaffId);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -108,9 +120,6 @@ export default function UserLookup() {
             {busy === "lookup" ? "Looking up..." : "Look up account"}
           </button>
         </div>
-        <p className="mt-2 text-[12px] leading-relaxed text-muted">
-          This is an exact lookup, not an account directory. The email is shown only on this admin page.
-        </p>
       </form>
 
       {error && <p role="alert" className="mt-3 rounded-xl border border-rose/30 bg-rose/10 px-4 py-3 text-[12.5px] text-rose">{error}</p>}
@@ -139,6 +148,17 @@ export default function UserLookup() {
             <Stat label="Published by account" value={account.publishedSubmissions} />
             <Stat label="Support tickets" value={`${account.openSupportTickets} open · ${account.supportTickets} total`} />
           </div>
+
+          {ownerId && (
+            <StaffRoleEditor
+              key={`${account.id}:${account.roles.join(",")}`}
+              account={{ user_id: account.id, username: account.username, roles: account.roles }}
+              ownerId={ownerId}
+              onSaved={(role) => setAccount((current) =>
+                current?.id === account.id ? { ...current, isAdmin: role === "admin", roles: role ? [role] : [] } : current
+              )}
+            />
+          )}
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-border-soft p-4">
@@ -182,6 +202,43 @@ export default function UserLookup() {
               )}
             </div>
           </div>
+        </section>
+      )}
+
+      {ownerId && (
+        <section className="card mt-4 p-4 sm:p-6">
+          <h2 className="text-[16px] font-bold text-text">Accounts with staff roles</h2>
+          {staffRoles === null ? (
+            <p className="mt-2 text-[12.5px] text-rose">Staff roles could not be loaded.</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-border-soft">
+              {staffRoles.map((entry) => (
+                <li key={entry.user_id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-[13px]">
+                  <button
+                    type="button"
+                    disabled={busy !== null}
+                    onClick={() => {
+                      setError(null);
+                      setAccount(null);
+                      setSelectedStaffId(entry.user_id);
+                    }}
+                    className="break-all font-semibold text-accent-soft hover:underline disabled:opacity-60"
+                  >
+                    {entry.username ?? entry.user_id}
+                  </button>
+                  <span className="text-muted">{entry.roles.map((role) => STAFF_ROLE_LABELS[role]).join(", ")}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {selectedStaff && (
+            <StaffRoleEditor
+              key={`${selectedStaff.user_id}:${selectedStaff.roles.join(",")}`}
+              account={selectedStaff}
+              ownerId={ownerId}
+              onSaved={() => setSelectedStaffId(null)}
+            />
+          )}
         </section>
       )}
     </>

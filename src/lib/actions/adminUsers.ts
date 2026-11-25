@@ -4,6 +4,8 @@ import { isCurrentUserAdmin } from "@/lib/admin";
 import { adminAccountSnapshot } from "@/lib/supabase/auth-admin";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { USERNAME_PATTERN } from "@/lib/username";
+import { revalidatePath } from "next/cache";
+import { isStaffRole, type StaffRole, type StaffRoleAccount } from "@/lib/staffRoles";
 
 export interface AdminUserView {
   id: string;
@@ -13,6 +15,7 @@ export interface AdminUserView {
   lastSignInAt: string | null;
   emailConfirmedAt: string | null;
   isAdmin: boolean;
+  roles: StaffRole[];
   pendingSubmissions: number;
   publishedSubmissions: number;
   supportTickets: number;
@@ -49,10 +52,11 @@ export async function lookupAdminUser(username: string): Promise<AdminUserLookup
   if (!profile) return { ok: false, error: "No account has that username." };
 
   try {
-    const [snapshot, submissionBans, supportBans] = await Promise.all([
+    const [snapshot, submissionBans, supportBans, owner] = await Promise.all([
       adminAccountSnapshot(profile.id),
       supabase.rpc("list_submission_bans"),
       supabase.rpc("list_support_ticket_bans"),
+      supabase.rpc("can_manage_staff_roles"),
     ]);
     if (!snapshot) return { ok: false, error: "The profile exists, but its login account no longer does." };
 
@@ -74,6 +78,7 @@ export async function lookupAdminUser(username: string): Promise<AdminUserLookup
         lastSignInAt: snapshot.lastSignInAt,
         emailConfirmedAt: snapshot.emailConfirmedAt,
         isAdmin: snapshot.roles.includes("admin"),
+        roles: owner.data === true ? snapshot.roles.filter(isStaffRole).sort() : [],
         pendingSubmissions: snapshot.pendingSubmissions,
         publishedSubmissions: snapshot.publishedSubmissions,
         supportTickets: snapshot.supportTickets,
@@ -89,4 +94,41 @@ export async function lookupAdminUser(username: string): Promise<AdminUserLookup
   } catch {
     return { ok: false, error: "Account activity could not be loaded. Check the Supabase secret key." };
   }
+}
+
+export async function listManagedStaffRoles(): Promise<StaffRoleAccount[] | null> {
+  if (!(await getUser())) return null;
+  const supabase = await createClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("list_staff_roles");
+  return error ? null : data as StaffRoleAccount[];
+}
+
+export async function updateStaffRole(
+  accountId: string,
+  expected: StaffRole[],
+  role: StaffRole | null,
+  sure: boolean,
+  slider: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!(await getUser())) return { ok: false, error: "You do not have permission to do that." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, error: "Role management is unavailable right now." };
+  const owner = await supabase.rpc("can_manage_staff_roles");
+  if (owner.data !== true) return { ok: false, error: "You do not have permission to do that." };
+  if (sure !== true || slider !== 100) return { ok: false, error: "Complete both confirmation steps first." };
+  if ((role !== null && !isStaffRole(role)) || !Array.isArray(expected) || !expected.every(isStaffRole)) {
+    return { ok: false, error: "Select a valid role." };
+  }
+
+  const { error } = await supabase.rpc("set_staff_role", {
+    p_user_id: accountId, p_expected: [...expected].sort(), p_role: role,
+  });
+  if (error?.message.includes("roles changed")) {
+    return { ok: false, error: "This account’s roles changed. Reload the account and confirm again." };
+  }
+  if (error) return { ok: false, error: "The role could not be changed." };
+
+  revalidatePath("/admin/users");
+  return { ok: true };
 }

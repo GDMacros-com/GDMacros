@@ -1,5 +1,9 @@
 # Setting up moderators
 
+Apply `0028_trial_mod_roles.sql` before deploying the role manager. Sign in as the reserved **ChesszDC** administrator and open **Account tools**. Look up a username or select someone from **Accounts with staff roles**, choose a role or **Remove staff access**, then confirm with **I’m sure**, the slider, and **Apply role change**. Applying a role replaces the account’s previous staff roles.
+
+Trial Mods can review, edit, accept and reject submissions and run random quality checks on the current catalog. The server uses the existing Supabase secret and the Vercel `TMOD_LOG_WEBHOOK` variable for Discord delivery. Each log pings ChesszDC. Failed deliveries stay queued for maintenance to retry.
+
 The `mod` role adds submission review, support tickets and random quality checks to normal user access. It does not grant admin access.
 
 | Tool | User | Mod | Admin |
@@ -13,7 +17,11 @@ The `mod` role adds submission review, support tickets and random quality checks
 | Random quality checks and their history | No | Yes | Yes |
 | Review activity page | No | No | Yes |
 | Account lookup, statistics and mass email | No | No | Yes |
-| Grant/revoke roles | No | No | Supabase SQL Editor only |
+| Grant/revoke roles | No | No | ChesszDC only |
+
+## Original Mod rollout
+
+The remaining instructions describe the original rollout of the Mod role in migration `0019`. Use Account Tools for day-to-day role changes after installing `0028`.
 
 Rejecting a submission removes its active row and starts the existing upload cleanup. Accepting uses the existing publishing flow, including bulk publishing. It does not grant a separate ability to remove already published catalog entries. Ticket deletion removes the transcript, related notifications and queued email jobs; the button asks for confirmation. Closing or resolving instead retains the existing 30-day deletion period.
 

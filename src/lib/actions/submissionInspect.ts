@@ -1,7 +1,8 @@
 "use server";
 
 import { createHash } from "node:crypto";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { getCurrentStaff } from "@/lib/admin";
+import { logTrialModView, trialModSubmissions } from "@/lib/trialMod";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 import { readGdrMetadata } from "@/lib/gdr";
@@ -100,18 +101,19 @@ async function checkPublishedDuplicate(levelId: string, sha256: string): Promise
 export async function inspectSubmission(id: string): Promise<InspectResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  if (!(await canCurrentUserModerate())) return { ok: false, error: "Not authorised." };
+  const staff = await getCurrentStaff();
+  if (!staff) return { ok: false, error: "Not authorised." };
 
   const supabase = await createClient();
-  if (!supabase) return { ok: false, error: "Database unavailable." };
+  const submissions = staff.role === "trial_mod" ? trialModSubmissions() : supabase?.from("submissions");
+  if (!submissions) return { ok: false, error: "Database unavailable." };
 
   /*
    * The claim comes from the ROW, not from the caller. The browser sends a
    * submission id and nothing else, so a modified request cannot make this
    * compare the file against level details somebody made up.
    */
-  const { data, error } = await supabase
-    .from("submissions")
+  const { data, error } = await submissions
     .select("id,submitted_by,level_id,level_name,recorder,file_size")
     .eq("id", id)
     .maybeSingle();
@@ -120,6 +122,9 @@ export async function inspectSubmission(id: string): Promise<InspectResult> {
 
   const file = await downloadSubmissionObject(data.submitted_by as string, data.id as string);
   if (!file.ok) return { ok: false, error: "The uploaded file could not be opened." };
+  if (staff.role === "trial_mod" && !(await logTrialModView(staff.id, "submission_inspected", data.id, data.level_name))) {
+    return { ok: false, error: "That submission could not be inspected." };
+  }
 
   const recorder = String(data.recorder ?? "");
   const gdrMeta = recorder === "zBot" ? readGdrMetadata(file.bytes) : null;

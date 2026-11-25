@@ -3,11 +3,12 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import BackToAdmin from "@/components/admin/BackToAdmin";
 import QualityCheckCard, { type QualityCandidate } from "@/components/admin/QualityCheckCard";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { getCurrentStaff } from "@/lib/admin";
 import { getAllLevels } from "@/lib/macros";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { ticketDate } from "@/lib/supportTickets";
+import { logTrialModView, trialModStaffClient } from "@/lib/trialMod";
 
 export const metadata: Metadata = { title: "Random quality check", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -27,12 +28,13 @@ export default async function AdminQualityPage() {
   if (!isSupabaseConfigured) redirect("/login");
   const user = await getUser();
   if (!user) redirect("/login?next=/admin/quality");
-  if (!(await canCurrentUserModerate())) notFound();
-  const supabase = await createClient();
-  const historyResult = await supabase!.rpc("list_macro_quality_checks", { p_limit: 30 });
-  const history = (historyResult.data ?? []) as QualityHistoryRow[];
+  const staff = await getCurrentStaff();
+  if (!staff) notFound();
+  const supabase = staff.role === "trial_mod" ? trialModStaffClient(staff.id) : await createClient();
+  const historyResult = await supabase?.rpc("list_macro_quality_checks", { p_limit: 30 });
+  const history = (historyResult?.data ?? []) as QualityHistoryRow[];
   const checkedRecently = new Set(history.map((row) => row.download_url));
-  const all: QualityCandidate[] = getAllLevels().flatMap((level) => level.macros.map((macro) => ({
+  const all: QualityCandidate[] = getAllLevels(false).flatMap((level) => level.macros.map((macro) => ({
     levelName: level.name,
     levelId: String(level.levelId),
     levelSlug: level.slug,
@@ -46,6 +48,13 @@ export default async function AdminQualityPage() {
   const fresh = all.filter((macro) => !checkedRecently.has(macro.downloadUrl));
   const pool = fresh.length > 0 ? fresh : all;
   const candidate = pool.length > 0 ? pool[randomInt(pool.length)] : null;
+  if (staff.role === "trial_mod") {
+    const viewRecorded = candidate
+      ? await logTrialModView(staff.id, "quality_macro_selected", candidate.levelId, candidate.levelName,
+        `${candidate.macroAuthor} · ${candidate.recorder} · ${candidate.fps} FPS`)
+      : !historyResult || Boolean(historyResult.error) || await logTrialModView(staff.id, "quality_history_viewed", null);
+    if (!viewRecorded) throw new Error("The quality check could not be opened.");
+  }
 
   return (
     <div className="mx-auto w-full max-w-[800px] px-4 py-10 sm:px-6 sm:py-14">
@@ -56,8 +65,8 @@ export default async function AdminQualityPage() {
 
       <section className="mt-9">
         <h2 className="text-[16px] font-bold text-text">Recent checks</h2>
-        {historyResult.error ? (
-          <p className="mt-3 text-[12.5px] text-muted">History is unavailable. Migration 0014 may not be applied yet.</p>
+        {!historyResult || historyResult.error ? (
+          <p className="mt-3 text-[12.5px] text-muted">History is unavailable.</p>
         ) : history.length === 0 ? (
           <p className="mt-3 text-[12.5px] text-muted">No quality checks recorded yet.</p>
         ) : (

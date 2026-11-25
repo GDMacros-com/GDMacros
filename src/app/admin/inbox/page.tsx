@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import BackToAdmin from "@/components/admin/BackToAdmin";
 import SupportTicketBans, { type SupportTicketBanRow } from "@/components/admin/SupportTicketBans";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { canCurrentUserManageSupportAndBans } from "@/lib/admin";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
@@ -21,7 +21,7 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: P
   if (!isSupabaseConfigured) redirect("/login");
   const user = await getUser();
   if (!user) redirect("/login?next=/admin/inbox");
-  if (!(await canCurrentUserModerate())) notFound();
+  if (!(await canCurrentUserManageSupportAndBans())) notFound();
 
   const params = await searchParams;
   const filter = params.status && FILTERS.has(params.status) ? params.status : "open";

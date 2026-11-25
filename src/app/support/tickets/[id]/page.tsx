@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import TicketThread from "@/components/support/TicketThread";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { canCurrentUserManageSupportAndBans } from "@/lib/admin";
 import { getUserAndProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -26,7 +26,7 @@ export default async function SupportTicketPage({ params }: { params: Promise<{ 
   const [ticketResult, messageResult, canModerate] = await Promise.all([
     supabase!.from("support_tickets").select(SUPPORT_TICKET_COLUMNS).eq("id", id).maybeSingle(),
     supabase!.from("support_ticket_messages").select(SUPPORT_TICKET_MESSAGE_COLUMNS).eq("ticket_id", id).order("created_at"),
-    canCurrentUserModerate(),
+    canCurrentUserManageSupportAndBans(),
   ]);
   if (ticketResult.error || !ticketResult.data) notFound();
 

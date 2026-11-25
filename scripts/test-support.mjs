@@ -139,7 +139,7 @@ check("the privacy page names private ticket visibility", /Only you, admins and 
 check("the privacy page names the fixed retention", /scheduled for deletion 30 days after closure/i.test(flat(src.privacy)));
 
 console.log("Closing, notifications, email and retention");
-check("staff can close in the action", /closeSupportTicket[\s\S]*canCurrentUserModerate\(\)/.test(src.actions));
+check("support staff can close in the action", /closeSupportTicket[\s\S]*canCurrentUserManageSupportAndBans\(\)/.test(src.actions));
 check("only admins can close in the database", /close_support_ticket[\s\S]*if not private\.is_admin\(\)/.test(mig));
 check("closure supports resolved and other closure", /not in \('resolved', 'closed'\)/.test(mig));
 check("closure sets a 30-day deletion deadline", /now\(\) \+ interval '30 days'/.test(mig));
@@ -178,16 +178,20 @@ check("reply alerts inherit the ticket deletion deadline", /expire_support_ticke
 check("reply alerts render differently from closures", /item\.kind === "support_ticket_reply"/.test(src.supportNotifications) && /Open reply/.test(src.supportNotifications));
 
 console.log("Admin inbox and blocks");
-for (const [name, page] of [["inbox", src.inbox], ["activity", src.activity], ["quality", src.quality]]) {
-  check(`${name} checks the admin role`, (name === "activity" ? /isCurrentUserAdmin\(\)/ : /canCurrentUserModerate\(\)/).test(page));
-  check(`${name} hides from non-admins`, /notFound\(\)/.test(page));
+for (const [name, page, gate] of [
+  ["inbox", src.inbox, /canCurrentUserManageSupportAndBans\(\)/],
+  ["activity", src.activity, /isCurrentUserAdmin\(\)/],
+  ["quality", src.quality, /getCurrentStaff\(\)/],
+]) {
+  check(`${name} checks its required role`, gate.test(page));
+  check(`${name} hides from unauthorized users`, /notFound\(\)/.test(page));
   check(`${name} requires a signed-in user`, /getUser\(\)/.test(page));
 }
 check("the inbox filters open, resolved, closed and all", /\["open", "resolved", "closed", "all"\]/.test(src.inbox));
 check("the inbox never selects account email", !/select\([^)]*email/.test(src.inbox));
 check("blocks prevent new tickets only", /Blocks opening new tickets only|Blocks opening new tickets|Blocks opening/i.test(src.migration) || /Blocks opening new tickets only/i.test(src.bans));
 check("admins cannot block another admin", /cannot ban an administrator/.test(mig));
-check("the block action checks staff in the app and the original migration checks admin", /banSupportTicketUser[\s\S]*canCurrentUserModerate\(\)/.test(src.actions) && /ban_support_ticket_user[\s\S]*private\.is_admin\(\)/.test(mig));
+check("the block action checks support staff in the app and the original migration checks admin", /banSupportTicketUser[\s\S]*canCurrentUserManageSupportAndBans\(\)/.test(src.actions) && /ban_support_ticket_user[\s\S]*private\.is_admin\(\)/.test(mig));
 check("unblocking is available", /unbanSupportTicketUser/.test(src.bans) && /unban_support_ticket_user/.test(mig));
 
 console.log("Bulk publishing");
@@ -196,7 +200,7 @@ check("the queue offers select all and clear", /Select all pending/.test(src.que
 check("bulk publishing asks for confirmation", /Yes, publish all/.test(src.bulk));
 check("bulk publishing claims through the existing transition", /startProcessing\(row\.id\)/.test(src.bulk));
 check("bulk publishing uses the normal publisher", /publishMacroForBatch\(row\.id\)/.test(src.bulk));
-check("the batch action calls the same crash-safe core", /publishMacroForBatch[\s\S]*runPublish\(supabase, id, sendSubmissionResultBestEffort\)/.test(src.publish));
+check("the batch action calls the same crash-safe core", /function publishMacroForBatch[^\n]*\n\s*return publishSubmission\(id\)/.test(src.publish) && /runPublish\(supabase, id, sendSubmissionResultBestEffort\)/.test(src.publish));
 check("items publish sequentially", /for \(const row of rows\)/.test(src.bulk) && !/Promise\.all/.test(src.bulk));
 check("one item failure does not abort the queue", /catch \{[\s\S]*setItem\(row\.id, "failed"/.test(src.bulk));
 check("the running lock always releases", /finally \{[\s\S]*onRunningChange\(false\)/.test(src.bulk));
@@ -209,7 +213,7 @@ check("decisions are captured by trigger", /create trigger capture_submission_ou
 check("publisher checkpoints and errors are captured", /create trigger capture_publish_activity/.test(mig) && /publish_error/.test(mig));
 check("the timeline RPC reveals rows only to admins", /admin_review_activity[\s\S]*where private\.is_admin\(\)/.test(mig));
 check("quality history is private", /create table private\.macro_quality_checks/.test(mig));
-check("the quality action re-derives catalog metadata", /getAllLevels\(\)[\s\S]*macro\.downloadLink === downloadUrl/.test(src.adminActions));
+check("the quality action re-derives metadata from the current catalog", /getAllLevels\(false\)[\s\S]*macro\.downloadLink === downloadUrl/.test(src.adminActions));
 check("the database also checks admin for a quality write", /record_macro_quality_check[\s\S]*if not private\.is_admin\(\)/.test(mig));
 check("issues require a note", /outcome === "issue" && cleanNote\.length < 3/.test(src.adminActions) && /quality_issue_note/.test(mig));
 check("recently checked downloads are avoided", /checkedRecently[\s\S]*fresh = all\.filter/.test(src.quality));

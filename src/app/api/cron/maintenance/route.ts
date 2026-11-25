@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { drainResultEmailQueue } from "@/lib/email/resultQueue";
 import { drainSupportTicketEmailQueue } from "@/lib/email/supportTicketQueue";
 import { purgeExpiredSupportTickets } from "@/lib/supabase/support-ticket-email-admin";
+import { drainTrialModLogs } from "@/lib/trialMod";
 
 /**
  * The nightly maintenance job.
@@ -83,11 +84,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const [emails, supportEmails, purgedTickets, macroAnnouncements] = await Promise.all([
+  const [emails, supportEmails, purgedTickets, macroAnnouncements, trialModLogs] = await Promise.all([
     drainResultEmailQueue(),
     drainSupportTicketEmailQueue(),
     purgeExpiredSupportTickets(),
     drainMacroAnnouncements(),
+    drainTrialModLogs(),
   ]);
 
   // Counts only. No recipient, no notification id, no message.
@@ -108,6 +110,7 @@ export async function GET(request: NextRequest) {
     },
     supportTicketsPurged: purgedTickets,
     macroAnnouncements,
+    trialModLogs,
   };
 
   console.log(`[cron:maintenance] ${JSON.stringify(summary)}`);

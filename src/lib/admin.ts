@@ -22,18 +22,30 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-/** Submission, support and quality-check access. Read fresh roles on each request. */
-export async function canCurrentUserModerate(): Promise<boolean> {
+/** Resolve the effective role from fresh database grants. */
+export async function getCurrentStaff() {
   const supabase = await createClient();
-  if (!supabase) return false;
+  if (!supabase) return null;
   const user = await getUser();
-  if (!user) return false;
+  if (!user) return null;
 
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", user.id)
-    .in("role", ["admin", "mod"])
-    .limit(1);
-  return !error && (data?.length ?? 0) > 0;
+    .in("role", ["admin", "mod", "trial_mod"]);
+  if (error) return null;
+  const role = (["admin", "mod", "trial_mod"] as const).find((role) => data?.some((grant) => grant.role === role));
+  return role ? { id: user.id, role } : null;
+}
+
+/** Submission review and quality-check access. */
+export async function canCurrentUserModerate(): Promise<boolean> {
+  return Boolean(await getCurrentStaff());
+}
+
+/** Staff support inbox and moderation blocks. */
+export async function canCurrentUserManageSupportAndBans(): Promise<boolean> {
+  const staff = await getCurrentStaff();
+  return staff?.role === "admin" || staff?.role === "mod";
 }

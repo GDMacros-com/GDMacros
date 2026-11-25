@@ -8,7 +8,7 @@ import ts from 'typescript';
 import { renderToStaticMarkup } from 'react-dom/server';
 const require = createRequire(import.meta.url);
 const { jsx } = require('react/jsx-runtime');
-let roles = [], signedIn = true, queryError = null, calls = [], id = 'test-user';
+let roles = [], signedIn = true, queryError = null, calls = [], id = 'test-user', owner = false;
 let configured = true;
 const fail = (name) => () => { throw new Error(`Unexpected external call: ${name}`); };
 function query(table) {
@@ -29,10 +29,16 @@ function query(table) {
   };
   return q;
 }
-const client = { from: query, rpc: async (name, args) => { calls.push({ name, args }); return { data: null, error: null }; } };
+const client = {
+  from: query,
+  rpc: async (name, args) => {
+    calls.push({ name, args });
+    return { data: name === 'can_manage_staff_roles' ? owner : null, error: null };
+  },
+};
 const server = { createClient: async () => configured ? client : null, getUser: async () => signedIn ? { id } : null };
 const missing = new Proxy({}, { get: (_, name) => name === '__esModule' ? true : fail(String(name)) });
-function load(file, extra = {}) {
+function load(file, extra = {}, globals = {}) {
   const source = fs.readFileSync(file, 'utf8');
   const code = ts.transpileModule(source, { compilerOptions: {
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS,
@@ -54,7 +60,7 @@ function load(file, extra = {}) {
     if (name.startsWith('@/components/')) return new Proxy({}, { get: () => () => null });
     return missing;
   };
-  vm.runInNewContext(code, { exports, require: localRequire, console, process }, { filename: file });
+  vm.runInNewContext(code, { exports, require: localRequire, console, process, ...globals }, { filename: file });
   return exports;
 }
 const permissions = load('src/lib/admin.ts');
@@ -74,22 +80,29 @@ await check('missing sessions, failed role reads and missing config fail closed'
   queryError = new Error('read failed'); assert.equal(await permissions.canCurrentUserModerate(),false); queryError = null;
   configured = false; assert.equal(await permissions.canCurrentUserModerate(),false); configured = true;
 });
-await check('mods see only their three tools; admins retain all eight', async () => {
+await check('mods see three tools, trial mods see two, and admins retain all nine', async () => {
   const page = loadApp('src/app/admin/page.tsx').default;
   roles = ['mod'];
   const html = renderToStaticMarkup(await page());
   for (const route of ['submissions','inbox','quality']) assert.ok(html.includes(`href="/admin/${route}"`));
-  for (const route of ['users','notices','status','activity','macros']) assert.ok(!html.includes(`href="/admin/${route}"`));
+  for (const route of ['users','notices','status','activity','macros','legacy-releases']) assert.ok(!html.includes(`href="/admin/${route}"`));
+  roles = ['trial_mod'];
+  const trialHtml = renderToStaticMarkup(await page());
+  assert.deepEqual([...trialHtml.matchAll(/href="\/admin\/([^"]+)"/g)].map(match => match[1]), ['submissions', 'quality']);
   roles = ['admin'];
   assert.equal((renderToStaticMarkup(await page()).match(/href="\/admin\//g) ?? []).length,9);
 });
-await check('users cannot open moderation routes; mods cannot open administrative routes', async () => {
-  for (const name of ['submissions','inbox','quality','users','notices','status','activity','macros']) {
+await check('users cannot open staff routes, and trial mods also cannot open support or admin tools', async () => {
+  for (const name of ['submissions','inbox','quality','users','notices','status','activity','macros','legacy-releases']) {
     const page = loadApp(`src/app/admin/${name}/page.tsx`).default;
     roles = [];
     await assert.rejects(page({ searchParams: Promise.resolve({}) }), /NOT_FOUND/);
-    if (['users','notices','status','activity','macros'].includes(name)) {
+    if (['users','notices','status','activity','macros','legacy-releases'].includes(name)) {
       roles = ['mod'];
+      await assert.rejects(page({ searchParams: Promise.resolve({}) }), /NOT_FOUND/);
+    }
+    if (!['submissions', 'quality'].includes(name)) {
+      roles = ['trial_mod'];
       await assert.rejects(page({ searchParams: Promise.resolve({}) }), /NOT_FOUND/);
     }
   }
@@ -134,5 +147,83 @@ await check('a mod can reach review RPCs, and revocation blocks the next action'
   roles = [];
   assert.equal((await actions.startProcessing('test-id')).ok,false);
   assert.equal(calls.length,1);
+});
+await check('only the owner can change roles and both UI confirmations are required by the action', async () => {
+  const { updateStaffRole } = load('src/lib/actions/adminUsers.ts', {
+    '@/lib/staffRoles': load('src/lib/staffRoles.ts'),
+  });
+  calls = [];
+  assert.equal((await updateStaffRole('target', [], 'trial_mod', true, 100)).ok, false);
+  owner = true;
+  assert.equal((await updateStaffRole('target', [], 'trial_mod', false, 100)).ok, false);
+  assert.equal((await updateStaffRole('target', [], 'trial_mod', true, 99)).ok, false);
+  assert.equal((await updateStaffRole('target', [], 'unrecognized', true, 100)).ok, false);
+  assert.equal(calls.filter(call => call.name === 'set_staff_role').length, 0);
+  assert.equal((await updateStaffRole('target', [], 'trial_mod', true, 100)).ok, true);
+  assert.equal(calls.at(-1).args.p_role, 'trial_mod');
+  owner = false;
+});
+await check('quality checks reject legacy catalog URLs and send verified metadata to the trial writer', async () => {
+  const current = 'https://example.test/current';
+  const legacy = 'https://example.test/legacy';
+  const writes = [];
+  const tools = load('src/lib/actions/adminTools.ts', {
+    '@/lib/admin': permissions,
+    '@/lib/macros': { getAllLevels: (archived) => [{
+      name: 'Test', levelId: 123,
+      macros: [{ downloadLink: archived ? legacy : current, recorder: 'Silicate', author: 'Tester' }],
+    }] },
+    '@/lib/trialMod': {
+      recordTrialModQualityCheck: async (actorId, args) => { writes.push({ actorId, args }); return { error: null }; },
+      scheduleTrialModLogDelivery: () => {},
+    },
+  });
+  roles = ['trial_mod'];
+  assert.equal((await tools.recordQualityCheck(legacy, 'good', '')).ok, false);
+  assert.equal(writes.length, 0);
+  assert.equal((await tools.recordQualityCheck(current, 'good', '')).ok, true);
+  assert.equal(writes[0].args.p_download_url, current);
+  assert.equal(writes[0].args.p_level_id, '123');
+});
+await check('each Discord log pings ChesszDC and failed deliveries remain queued', async () => {
+  const messages = [];
+  const deleted = [];
+  let success = false;
+  const job = { id: 'event-id', lease_id: 'lease-id', actor_username: 'test_trial', actor_id: 'trial',
+    created_at: '2026-11-26T14:00:00Z', action: 'rejected', target_id: 'submission-id', level_name: 'Test', detail: 'Reason' };
+  const service = {
+    rpc: async () => ({ data: deleted.length ? [] : [job], error: null }),
+    from: () => ({
+      delete: () => ({
+        eq: (key, value) => ({ eq: (leaseKey, leaseValue) => {
+          deleted.push([key, value, leaseKey, leaseValue]);
+          return { error: null };
+        } }),
+      }),
+    }),
+  };
+  const logs = load('src/lib/trialMod.ts', {
+    'server-only': {},
+    '@supabase/supabase-js': { createClient: () => service },
+    '@/lib/supabase/config': { SUPABASE_URL: 'https://example.test' },
+  }, {
+    process: { env: { SUPABASE_SECRET_KEY: 'mock', TMOD_LOG_WEBHOOK: 'https://discord.com/api/webhooks/123/mock' } },
+    URL, AbortSignal,
+    fetch: async (url, options) => {
+      assert.equal(url.searchParams.get('wait'), 'true');
+      messages.push(JSON.parse(options.body));
+      return { ok: success };
+    },
+  });
+  assert.equal((await logs.drainTrialModLogs()).failed, true);
+  assert.equal(deleted.length, 0);
+  success = true;
+  assert.equal((await logs.drainTrialModLogs()).sent, 1);
+  assert.deepEqual(deleted[0], ['id', 'event-id', 'lease_id', 'lease-id']);
+  for (const message of messages) {
+    assert.equal(message.content, '<@1488686761264549939>');
+    assert.deepEqual(message.allowed_mentions, { parse: [], users: ['1488686761264549939'] });
+    assert.match(message.embeds[0].description, /test_trial.*\n.*Test.*\n.*submission-id.*\nReason/);
+  }
 });
 console.log(`${checks} application permission scenarios passed`);

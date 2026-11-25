@@ -44,7 +44,7 @@ export default function AdminLink({ mobile = false }: { mobile?: boolean }) {
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .in("role", ["admin", "mod"])
+        .in("role", ["admin", "mod", "trial_mod"])
         .limit(1);
       if (active) setCanModerate((roles?.length ?? 0) > 0);
     };

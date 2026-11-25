@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isCurrentUserAdmin, canCurrentUserModerate } from "@/lib/admin";
+import { getCurrentStaff } from "@/lib/admin";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { BellIcon, CheckIcon, ListIcon, MailIcon, GaugeIcon, UserIcon } from "@/components/icons";
@@ -69,14 +69,16 @@ export default async function AdminPage() {
 
   const user = await getUser();
   if (!user) redirect("/login?next=/admin");
-  if (!(await canCurrentUserModerate())) notFound();
-  const admin = await isCurrentUserAdmin();
+  const staff = await getCurrentStaff();
+  if (!staff) notFound();
+  const admin = staff.role === "admin";
+  const canUseInbox = staff.role !== "trial_mod";
 
   // RLS limits these counts to rows the current staff member can read.
   let waiting: number | null = null;
   let inbox: number | null = null;
   const supabase = await createClient();
-  if (supabase) {
+  if (supabase && canUseInbox) {
     const [submissionCount, ticketCount] = await Promise.all([
       supabase.from("submissions").select("id", { count: "exact", head: true }).in("status", ["pending", "processing"]),
       supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -89,12 +91,12 @@ export default async function AdminPage() {
     <div className="mx-auto w-full max-w-[860px] px-4 py-10 sm:px-6 sm:py-14">
       <h1 className="text-[22px] font-extrabold tracking-tight text-text sm:text-[26px]">{admin ? "Admin" : "Moderation"}</h1>
       <p className="mt-1.5 mb-8 text-[13.5px] leading-relaxed text-muted">
-        Review submissions, help with tickets, or check a macro.
+        {canUseInbox ? "Review submissions, help with tickets, or check a macro." : "Review submissions or check a macro."}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {TOOLS.filter((tool) =>
-          admin || tool.href === "/admin/submissions" || tool.href === "/admin/inbox" || tool.href === "/admin/quality"
+          admin || tool.href === "/admin/submissions" || (canUseInbox && tool.href === "/admin/inbox") || tool.href === "/admin/quality"
         ).map(({ href, title, description, Icon }) => (
           <Link
             key={href}

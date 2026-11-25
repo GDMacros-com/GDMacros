@@ -8,7 +8,8 @@ import {
   deleteSubmissionObjectByPath,
   isStorageAdminConfigured,
 } from "@/lib/supabase/storage-admin";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { canCurrentUserManageSupportAndBans, getCurrentStaff } from "@/lib/admin";
+import { logTrialModView, scheduleTrialModLogDelivery, trialModSubmissions } from "@/lib/trialMod";
 import { sendSubmissionResultBestEffort } from "@/lib/actions/submissionResultEmail";
 import { MIN_REJECTION_REASON, LIMITS, submissionErrorMessage } from "@/lib/submissions";
 import { assetFileName } from "@/lib/publish/assetName";
@@ -98,11 +99,13 @@ export async function withdrawSubmission(id: string): Promise<Result> {
 export async function startProcessing(id: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  const staff = await getCurrentStaff();
+  if (!staff)
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("start_processing", { p_id: id });
   if (error) return { ok: false, error: submissionErrorMessage(error) };
+  if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
 
   /*
    * Deliberately NO revalidatePath here.
@@ -120,11 +123,13 @@ export async function startProcessing(id: string): Promise<Result> {
 export async function releaseProcessing(id: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  const staff = await getCurrentStaff();
+  if (!staff)
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("release_processing", { p_id: id });
   if (error) return { ok: false, error: submissionErrorMessage(error) };
+  if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
 
   revalidatePath("/admin");
   return { ok: true };
@@ -142,7 +147,8 @@ export async function releaseProcessing(id: string): Promise<Result> {
 export async function finishProcessing(id: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  const staff = await getCurrentStaff();
+  if (!staff || staff.role === "trial_mod")
     return { ok: false, error: "You do not have permission to do that." };
 
   const { data, error } = await supabase.rpc("finish_processing", { p_id: id });
@@ -176,7 +182,8 @@ export async function finishProcessing(id: string): Promise<Result> {
 export async function rejectSubmission(id: string, reason: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Review is unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  const staff = await getCurrentStaff();
+  if (!staff)
     return { ok: false, error: "You do not have permission to do that." };
 
   const trimmed = reason.trim();
@@ -190,6 +197,7 @@ export async function rejectSubmission(id: string, reason: string): Promise<Resu
     p_reason: trimmed,
   });
   if (error) return { ok: false, error: submissionErrorMessage(error) };
+  if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
 
   const outcome = reviewOutcome(data);
 
@@ -217,8 +225,8 @@ export async function rejectSubmission(id: string, reason: string): Promise<Resu
  * A short-lived signed URL for one submission's file. Admins and mods only.
  *
  * Used from two places: inspecting a submission before deciding on it, and
- * while publishing one by hand. Both are READ ONLY. This changes no status,
- * claims nothing, notifies nobody and writes no database field.
+ * while publishing one by hand. For trial moderators, issuing the link also
+ * queues a Discord audit event.
  *
  * The path is built from the row's own submitted_by, read back from the
  * database, rather than from anything the caller sends, so even a real admin
@@ -230,15 +238,17 @@ export async function getSubmissionDownloadUrl(
 ): Promise<{ url: string } | { error: string }> {
   const supabase = await createClient();
   if (!supabase) return { error: "Downloads are unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  const staff = await getCurrentStaff();
+  if (!staff)
     return { error: "You do not have permission to do that." };
   if (!isStorageAdminConfigured) {
     console.error("[submissions] storage admin is not configured");
     return { error: "Downloads are unavailable right now." };
   }
 
-  const { data, error } = await supabase
-    .from("submissions")
+  const submissions = staff.role === "trial_mod" ? trialModSubmissions() : supabase.from("submissions");
+  if (!submissions) return { error: "Downloads are unavailable right now." };
+  const { data, error } = await submissions
     .select("id,submitted_by,status,level_name,recorder,macro_author")
     .eq("id", id)
     .maybeSingle();
@@ -259,6 +269,9 @@ export async function getSubmissionDownloadUrl(
   const signed = await createSubmissionSignedUrl(data.submitted_by, data.id, downloadName, 120);
   if ("error" in signed) {
     console.error("[submissions] could not sign download", { id });
+    return { error: "That file could not be prepared for download." };
+  }
+  if (staff.role === "trial_mod" && !(await logTrialModView(staff.id, "submission_download_requested", data.id, data.level_name))) {
     return { error: "That file could not be prepared for download." };
   }
   return { url: signed.url };
@@ -328,7 +341,7 @@ export interface BanRow {
 export async function listSubmissionBans(): Promise<{ bans: BanRow[] } | { error: string }> {
   const supabase = await createClient();
   if (!supabase) return { error: "That is unavailable right now." };
-  if (!(await canCurrentUserModerate())) return { error: "You do not have permission to do that." };
+  if (!(await canCurrentUserManageSupportAndBans())) return { error: "You do not have permission to do that." };
 
   const { data, error } = await supabase.rpc("list_submission_bans");
   if (error) return { error: "The ban list could not be loaded." };
@@ -338,7 +351,7 @@ export async function listSubmissionBans(): Promise<{ bans: BanRow[] } | { error
 export async function banSubmissionEmail(email: string, reason: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "That is unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  if (!(await canCurrentUserManageSupportAndBans()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("ban_submission_email", {
@@ -354,7 +367,7 @@ export async function banSubmissionEmail(email: string, reason: string): Promise
 export async function unbanSubmissionEmail(email: string): Promise<Result> {
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "That is unavailable right now." };
-  if (!(await canCurrentUserModerate()))
+  if (!(await canCurrentUserManageSupportAndBans()))
     return { ok: false, error: "You do not have permission to do that." };
 
   const { error } = await supabase.rpc("unban_submission_email", { p_email: email.trim() });

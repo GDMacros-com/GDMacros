@@ -20,6 +20,8 @@ const ids = {
   mod: '00000000-0000-4000-8000-000000000003',
   admin: '00000000-0000-4000-8000-000000000004',
   dual: '00000000-0000-4000-8000-000000000005',
+  owner: '00000000-0000-4000-8000-000000000006',
+  trial: '00000000-0000-4000-8000-000000000007',
 };
 async function as(name) {
   await db.exec('reset role');
@@ -64,10 +66,10 @@ for (const name of fs.readdirSync('supabase/migrations').filter(n => n.endsWith(
 console.log('Applied all migrations');
 for (const [name, id] of Object.entries(ids)) {
   await db.query('insert into auth.users(id,email,email_confirmed_at) values ($1,$2,now())', [id, `${name}@example.test`]);
-  await db.query('insert into public.profiles(id,username) values ($1,$2)', [id, `test_${name}`]);
+  await db.query('insert into public.profiles(id,username) values ($1,$2)', [id, name === 'owner' ? 'ChesszDC' : `test_${name}`]);
 }
 await db.exec(`insert into public.user_roles(user_id,role) values
-  ('${ids.mod}','mod'), ('${ids.admin}','admin'), ('${ids.dual}','admin'), ('${ids.dual}','mod');`);
+  ('${ids.mod}','mod'), ('${ids.admin}','admin'), ('${ids.dual}','admin'), ('${ids.dual}','mod'), ('${ids.owner}','admin');`);
 await as('user');
 const ticket = (await rows("select * from public.create_support_ticket('suggestion','Test ticket','Please help with this test')"))[0].ticket_id;
 await as('other');
@@ -278,6 +280,104 @@ await check('declared FPS survives submission, staff editing and the publish sna
   await denied('select public.admin_update_submission(p_id => $1, p_fps => $2)',[id,240],/can no longer be edited|publishing has already started/);
   await db.exec('reset role');
   await denied('update public.submissions set fps=240 where id=$1',[id],/immutable/);
+});
+
+await check('ChesszDC alone can see and change staff roles, with stale changes and self-revocation blocked', async () => {
+  const setRole = 'select public.set_staff_role($1,$2,$3)';
+  await as('admin');
+  assert.deepEqual((await rows('select public.list_staff_roles() as staff'))[0].staff, []);
+  await denied(setRole, [ids.trial, [], 'trial_mod']);
+
+  await as('owner');
+  assert.equal((await rows('select public.can_manage_staff_roles() as allowed'))[0].allowed, true);
+  await denied(setRole, [ids.owner, ['admin'], null], /owner role is protected/);
+  await rows(setRole, [ids.trial, [], 'trial_mod']);
+  await denied(setRole, [ids.trial, [], 'admin'], /roles changed/);
+  const { staff } = (await rows('select public.list_staff_roles() as staff'))[0];
+  assert.deepEqual(staff.find(account => account.user_id === ids.trial).roles, ['trial_mod']);
+  await rows(setRole, [ids.dual, ['admin', 'mod'], 'mod']);
+  assert.deepEqual((await rows('select public.list_staff_roles() as staff'))[0].staff
+    .find(account => account.user_id === ids.dual).roles, ['mod']);
+});
+
+await check('trial mods can review and reject but cannot manage support, blocks, roles or publish checkpoints directly', async () => {
+  await db.exec('reset role');
+  const submitted = await rows(`insert into public.submissions(submitted_by,level_name,level_id,recorder,macro_author,file_size,fps,game_version)
+    values ($1,'Trial rejection','125','Silicate','Tester',100,240,'2.2091'),
+           ($1,'Trial publish','126','Silicate','Tester',100,240,'2.2091') returning id`, [ids.user]);
+  const [{id: rejectId}, {id: publishId}] = submitted;
+
+  await as('trial');
+  assert.equal((await rows('select id from public.submissions where id=$1', [rejectId])).length, 0);
+  assert.equal((await rows('select * from public.support_tickets')).length, 0);
+  assert.equal((await rows('select * from public.support_ticket_messages')).length, 0);
+  assert.equal((await rows('select * from public.admin_review_activity()')).length, 0);
+  await denied('select public.add_support_ticket_message($1,$2)', [otherTicket, 'private'], /ticket unavailable/);
+  await denied('select public.close_support_ticket($1,$2,$3)', [otherTicket, 'resolved', 'done']);
+  await denied('select public.delete_support_ticket($1)', [otherTicket]);
+  await denied('select public.ban_submission_email($1,$2)', ['other@example.test', 'test ban']);
+  await denied('select * from public.list_submission_bans()');
+  await denied('select public.set_staff_role($1,$2,$3)', [ids.trial, ['trial_mod'], 'admin']);
+  await denied('select public.begin_publish($1)', [publishId]);
+  await denied('select public.finish_processing($1)', [publishId]);
+  await denied('select public.record_publish_live($1)', [publishId]);
+  await denied('select public.get_publish_state($1)', [publishId]);
+  await denied('select public.trial_mod_staff_rpc($1,$2,$3)', [ids.trial,'begin_publish',{p_id:publishId}]);
+  await denied('select * from public.trial_mod_log_jobs');
+  await denied('select * from public.claim_trial_mod_log(null)');
+  await rows('select public.admin_update_submission(p_id => $1, p_fps => 360)', [rejectId]);
+  await rows('select public.start_processing($1)', [rejectId]);
+  await rows('select public.release_processing($1)', [rejectId]);
+  await rows('select public.reject_submission($1,$2)', [rejectId, 'Invalid recording']);
+
+  await rows('select public.start_processing($1)', [publishId]);
+  await db.exec("reset role; select set_config('request.jwt.claim.sub', '', false); set role service_role");
+  assert.equal((await rows('select id from public.submissions where id=$1', [publishId])).length, 1);
+  const publish = async (operation, args = {}) => (await rows('select public.trial_mod_staff_rpc($1,$2,$3) as result',
+    [ids.trial, operation, {p_id: publishId, ...args}]))[0].result;
+  assert.equal((await publish('begin_publish'))[0].level_id, '126');
+  const asset = { p_release_id: 1, p_release_tag: 'level-2.2091-126', p_asset_name: 'trial.slc', p_asset_sha256: 'a'.repeat(64) };
+  await publish('record_publish_intent', asset);
+  await publish('record_publish_asset', {...asset, p_asset_id: 2, p_asset_url: 'https://example.test/trial.slc'});
+  assert.equal((await publish('get_publish_state'))[0].state, 'asset_uploaded');
+  await publish('record_publish_commit', {p_commit_sha: 'b'.repeat(40)});
+  await publish('record_publish_live');
+  await publish('finish_processing');
+  const events = await rows('select action, actor_username, detail from public.trial_mod_log_jobs');
+  for (const action of ['details_edited', 'review_started', 'review_released', 'rejected', 'publish_asset_uploaded', 'publish_catalog_committed', 'publish_live_verified', 'accepted']) {
+    assert.ok(events.some(event => event.action === action && event.actor_username === 'test_trial'), action);
+  }
+  assert.equal(events.find(event => event.action === 'rejected').detail, 'Invalid recording');
+  await as('trial');
+  assert.equal((await rows('select id from public.submissions where id=$1', [publishId])).length, 0);
+});
+
+await check('trial quality results and staff views queue logs; only the service can claim them', async () => {
+  const quality = ['https://example.test/current.slc', 'Current level', '126', 'Tester', 'Silicate', 'issue', 'Recording issue'];
+  await as('trial');
+  await denied('select public.record_macro_quality_check($1,$2,$3,$4,$5,$6,$7)', quality);
+  await denied('select public.record_trial_mod_quality_check($1,$2,$3,$4,$5,$6,$7,$8)', [ids.trial, ...quality]);
+  await denied('select public.log_trial_mod_view($1,$2,$3,$4)', [ids.trial,'review_queue_viewed',null,null]);
+  await db.exec('reset role; set role service_role');
+  await rows('select public.record_trial_mod_quality_check($1,$2,$3,$4,$5,$6,$7,$8)', [ids.trial, ...quality]);
+  await rows('select public.log_trial_mod_view($1,$2,$3,$4)', [ids.trial,'quality_macro_selected','126','Current level']);
+  const events = await rows('select action, detail from public.trial_mod_log_jobs where target_id=$1', ['126']);
+  assert.ok(events.some(event => event.action === 'quality_check_issue' && event.detail.includes('Recording issue')));
+  assert.ok(events.some(event => event.action === 'quality_macro_selected'));
+  const [claimed] = await rows('select * from public.claim_trial_mod_log($1)', [ids.trial]);
+  const [next] = await rows('select * from public.claim_trial_mod_log($1)', [ids.trial]);
+  assert.ok(claimed.lease_id);
+  assert.notEqual(claimed.id, next.id);
+  const [history] = await rows('select public.trial_mod_staff_rpc($1,$2,$3) as result',
+    [ids.trial, 'list_macro_quality_checks', {p_limit:30}]);
+  assert.ok(history.result.some(row => row.level_id === '126'));
+  await as('trial');
+  assert.equal((await rows('select * from public.list_macro_quality_checks()')).length, 0);
+  await as('owner');
+  await rows('select public.set_staff_role($1,$2,$3)', [ids.trial, ['trial_mod'], null]);
+  await as('trial');
+  assert.equal((await rows('select * from public.list_macro_quality_checks()')).length, 0);
+  await denied('select public.start_processing($1)', ['ffffffff-ffff-4fff-8fff-ffffffffffff']);
 });
 
 await db.close();

@@ -132,12 +132,9 @@ const MAX_CATALOG_ATTEMPTS = 4;
  * there; a query error returns `false`, because "I could not tell" must never
  * be reported as "it is finished".
  *
- * This reads through the ADMIN'S OWN session, so the select policy on
- * `submissions` is what permits it: that policy returns other people's rows
- * only when `private.is_admin()` is true. No privileged key is involved and no
- * authorisation is bypassed.
+ * Use the same authorized client as the publisher.
  */
-async function submissionIsGone(supabase: SupabaseClient, id: string): Promise<boolean> {
+async function submissionIsGone(supabase: Pick<SupabaseClient, "from">, id: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("submissions")
     .select("id")
@@ -149,7 +146,7 @@ async function submissionIsGone(supabase: SupabaseClient, id: string): Promise<b
 }
 
 async function noteError(
-  supabase: SupabaseClient,
+  supabase: Pick<SupabaseClient, "rpc">,
   id: string,
   stage: string,
   error: string,
@@ -188,7 +185,7 @@ export async function productionIsServing(commitSha: string): Promise<boolean> {
  * an error, and a second admin resuming the job all call exactly this.
  */
 export async function runPublish(
-  supabase: SupabaseClient,
+  supabase: Pick<SupabaseClient, "rpc" | "from">,
   submissionId: string,
   onResultNotification?: (notificationId: string) => Promise<void>,
 ): Promise<PublishProgress> {

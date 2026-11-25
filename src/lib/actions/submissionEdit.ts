@@ -3,7 +3,8 @@
 import { parseFps } from "@/lib/fps";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { getCurrentStaff } from "@/lib/admin";
+import { scheduleTrialModLogDelivery, trialModSubmissions } from "@/lib/trialMod";
 import { canonicalUrl, verifyVideo, videoIdFromUrl } from "@/lib/youtube";
 import { lookupLevel } from "@/lib/gdbrowser";
 import { SUBMISSION_RECORDERS } from "@/lib/types";
@@ -51,7 +52,8 @@ export type EditResult =
 export async function updateSubmission(id: string, fields: EditFields): Promise<EditResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "Not signed in." };
-  if (!(await canCurrentUserModerate())) return { ok: false, error: "Not authorised." };
+  const staff = await getCurrentStaff();
+  if (!staff) return { ok: false, error: "Not authorised." };
 
   const supabase = await createClient();
   if (!supabase) return { ok: false, error: "Database unavailable." };
@@ -137,8 +139,9 @@ export async function updateSubmission(id: string, fields: EditFields): Promise<
     }
 
     // A recorder edit can change the file format. Check the stored bytes.
-    const { data: stored } = await supabase
-      .from("submissions")
+    const submissions = staff.role === "trial_mod" ? trialModSubmissions() : supabase.from("submissions");
+    if (!submissions) return { ok: false, error: "Database unavailable." };
+    const { data: stored } = await submissions
       .select("id,submitted_by")
       .eq("id", id)
       .maybeSingle();
@@ -195,6 +198,7 @@ export async function updateSubmission(id: string, fields: EditFields): Promise<
   const row = (data as Record<string, string | null>[])?.[0];
   if (!row) return { ok: false, error: "The submission could not be updated." };
 
+  if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
   revalidatePath("/admin/submissions");
   return { ok: true, fields: row, note: notes.join(". ") || undefined };
 }

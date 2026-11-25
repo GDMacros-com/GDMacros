@@ -3,10 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import ReviewQueue, { type AdminRow } from "@/components/admin/ReviewQueue";
 import SubmissionBans from "@/components/admin/SubmissionBans";
 import BackToAdmin from "@/components/admin/BackToAdmin";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { getCurrentStaff } from "@/lib/admin";
 import { listSubmissionBans } from "@/lib/actions/submissions";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { logTrialModView, trialModSubmissions } from "@/lib/trialMod";
 
 export const metadata: Metadata = {
   title: "Review queue",
@@ -24,19 +25,13 @@ const STATUSES = new Set(["pending", "processing", "all"]);
  *
  *   1. the proxy redirects an anonymous visitor to /login;
  *   2. this page checks the role server side, from the database;
- *   3. the row level security policy on `submissions` only returns other
- *      people's rows when private.can_moderate() is true.
+ *   3. the query uses the reviewer's session for admins and mods. Trial mods
+ *      read the queue through this server route, which records the view.
  *
- * The third is the one that matters. Even if the first two were removed, a
- * normal user reaching this page would render an empty queue, because the
- * database would hand them nothing. And every review RPC checks
- * private.can_moderate() for itself, so seeing a button is not the same as being
- * able to use it. Editing a submission's details is no different: the
- * `admin_update_submission` RPC does its own check and refuses once publishing
- * has started.
+ * Every review RPC checks its own permissions. The
+ * `admin_update_submission` RPC refuses once publishing has started.
  *
- * A non-admin gets a 404 rather than a "forbidden" page: there is no reason to
- * confirm that this route exists.
+ * Staff access is required to open this route.
  *
  * Only ACTIVE submissions exist now. An accepted or rejected one is deleted and
  * replaced by a small notification to its submitter, so there is no history to
@@ -51,29 +46,32 @@ export default async function AdminSubmissionsPage({
 
   const user = await getUser();
   if (!user) redirect("/login?next=/admin/submissions");
-  if (!(await canCurrentUserModerate())) notFound();
+  const staff = await getCurrentStaff();
+  if (!staff) notFound();
 
   const params = await searchParams;
   const filter = params.status && STATUSES.has(params.status) ? params.status : "pending";
 
   const supabase = await createClient();
 
-  let query = supabase!
-    .from("submissions")
-    .select(
+  const submissions = staff.role === "trial_mod" ? trialModSubmissions() : supabase?.from("submissions");
+  let query = submissions
+    ?.select(
       "id,submitted_by,level_name,level_id,level_creator,video_url,recorder,fps,macro_author,notes,status,created_at,file_size,processing_by,processing_started_at",
     )
     .order("created_at", { ascending: false });
 
-  if (filter !== "all") query = query.eq("status", filter);
+  if (filter !== "all") query = query?.eq("status", filter);
 
-  const [{ data, error }, bans] = await Promise.all([query, listSubmissionBans()]);
+  const [review, bans] = await Promise.all([query, staff.role === "trial_mod" ? null : listSubmissionBans()]);
+  const viewRecorded = staff.role !== "trial_mod"
+    || (review && !review.error && await logTrialModView(staff.id, "review_queue_viewed", filter));
 
   type Raw = Omit<AdminRow, "submitter" | "processor" | "mine"> & {
     submitted_by: string;
     processing_by: string | null;
   };
-  const raw = (data ?? []) as unknown as Raw[];
+  const raw = (viewRecorded ? review?.data ?? [] : []) as unknown as Raw[];
 
   /*
    * Usernames are resolved in a SECOND query rather than a PostgREST embed.
@@ -126,7 +124,7 @@ export default async function AdminSubmissionsPage({
         announced to the submitter until it has been confirmed live.
       </p>
 
-      {error ? (
+      {!review || review.error || !viewRecorded ? (
         <div className="card px-6 py-10 text-center text-[13px] text-muted">
           The queue could not be loaded. Reload the page.
         </div>
@@ -134,7 +132,7 @@ export default async function AdminSubmissionsPage({
         <ReviewQueue rows={rows} filter={filter} />
       )}
 
-      <SubmissionBans initial={"bans" in bans ? bans.bans : []} />
+      {bans && <SubmissionBans initial={"bans" in bans ? bans.bans : []} />}
     </div>
   );
 }

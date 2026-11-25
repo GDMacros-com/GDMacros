@@ -2,18 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { canCurrentUserModerate } from "@/lib/admin";
+import { getCurrentStaff } from "@/lib/admin";
 import { sendSubmissionResultBestEffort } from "@/lib/actions/submissionResultEmail";
 import { runPublish, type PublishProgress } from "@/lib/publish/publisher";
+import { logTrialModView, scheduleTrialModLogDelivery, trialModStaffClient } from "@/lib/trialMod";
 
 /**
  * The two entry points for automated publishing.
  *
  * A server action is a POST endpoint that anyone on the internet can call, so
- * neither of these is the security boundary. Every RPC the publisher uses calls
- * `private.can_moderate()` for itself, exactly as the 2D review functions do. The
- * check here exists to fail fast with a sensible message and to avoid doing
- * expensive work for someone who will be refused anyway.
+ * the database checks each RPC's permissions. Trial moderators use a
+ * server-only client for publishing checkpoints.
  *
  * THE BROWSER SENDS ONE THING: a submission id. Repository, release, tag, asset
  * name, download URL, level metadata, recorder, macro author and the catalog
@@ -28,18 +27,9 @@ import { runPublish, type PublishProgress } from "@/lib/publish/publisher";
  * admin picking the job up all call exactly this, and it does only the work
  * that has not already been done.
  */
-export async function publishMacro(id: string): Promise<PublishProgress> {
-  const supabase = await createClient();
-  if (!supabase) {
-    return {
-      ok: false,
-      state: "not_started",
-      stage: "validating",
-      error: "Publishing is unavailable right now.",
-    };
-  }
-
-  if (!(await canCurrentUserModerate())) {
+async function publishSubmission(id: string): Promise<PublishProgress> {
+  const staff = await getCurrentStaff();
+  if (!staff) {
     return {
       ok: false,
       state: "not_started",
@@ -48,7 +38,20 @@ export async function publishMacro(id: string): Promise<PublishProgress> {
     };
   }
 
-  const result = await runPublish(supabase, id, sendSubmissionResultBestEffort);
+  const supabase = staff.role === "trial_mod" ? trialModStaffClient(staff.id) : await createClient();
+  if (!supabase) {
+    return { ok: false, state: "not_started", stage: "validating", error: "Publishing is unavailable right now." };
+  }
+
+  try {
+    return await runPublish(supabase, id, sendSubmissionResultBestEffort);
+  } finally {
+    if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
+  }
+}
+
+export async function publishMacro(id: string): Promise<PublishProgress> {
+  const result = await publishSubmission(id);
 
   // Only once the submission is actually gone does the queue need refreshing.
   // Revalidating mid-publish would unmount the modal that is driving it, which
@@ -69,10 +72,7 @@ export async function publishMacro(id: string): Promise<PublishProgress> {
  * queue. The bulk UI refreshes once after the complete selection finishes.
  */
 export async function publishMacroForBatch(id: string): Promise<PublishProgress> {
-  const supabase = await createClient();
-  if (!supabase) return { ok: false, state: "not_started", stage: "validating", error: "Publishing is unavailable right now." };
-  if (!(await canCurrentUserModerate())) return { ok: false, state: "not_started", stage: "validating", error: "You do not have permission to do that." };
-  return runPublish(supabase, id, sendSubmissionResultBestEffort);
+  return publishSubmission(id);
 }
 
 export interface PublishStateView {
@@ -95,12 +95,16 @@ export interface PublishStateView {
 export async function getPublishState(
   id: string,
 ): Promise<PublishStateView | { error: string }> {
-  const supabase = await createClient();
+  const staff = await getCurrentStaff();
+  if (!staff) return { error: "You do not have permission to do that." };
+  const supabase = staff.role === "trial_mod" ? trialModStaffClient(staff.id) : await createClient();
   if (!supabase) return { error: "Publishing is unavailable right now." };
-  if (!(await canCurrentUserModerate())) return { error: "You do not have permission to do that." };
 
   const { data, error } = await supabase.rpc("get_publish_state", { p_id: id });
   if (error) return { error: "The publishing status could not be read." };
+  if (staff.role === "trial_mod" && !(await logTrialModView(staff.id, "publish_status_viewed", id))) {
+    return { error: "The publishing status could not be read." };
+  }
 
   const row = (Array.isArray(data) ? data[0] : data) as
     | {

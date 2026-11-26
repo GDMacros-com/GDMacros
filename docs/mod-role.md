@@ -2,7 +2,7 @@
 
 Apply `0028_trial_mod_roles.sql` before deploying the role manager. Sign in as the reserved **ChesszDC** administrator and open **Account tools**. Look up a username or select someone from **Accounts with staff roles**, choose a role or **Remove staff access**, then confirm with **I’m sure**, the slider, and **Apply role change**. Applying a role replaces the account’s previous staff roles.
 
-Trial Mods can review, edit, accept and reject submissions and run random quality checks on the current catalog. The server uses the existing Supabase secret and the Vercel `TMOD_LOG_WEBHOOK` variable for Discord delivery. Each log pings ChesszDC. Failed deliveries stay queued for maintenance to retry.
+Trial Mods can review, edit, accept and reject submissions and run random quality checks on the current catalog. Discord alerts cover submission decisions, detail edits, the start and completion of publishing, and recorded quality-check results. Each alert uses `TMOD_LOG_WEBHOOK` and pings ChesszDC. Failed deliveries stay queued for maintenance to retry. Migration `0029_trial_mod_notification_scope.sql` limits which events the database queues and removes older queued events outside this scope.
 
 The `mod` role adds submission review, support tickets and random quality checks to normal user access. It does not grant admin access.
 

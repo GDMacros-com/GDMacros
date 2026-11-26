@@ -8,7 +8,7 @@ import { getAllLevels } from "@/lib/macros";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { ticketDate } from "@/lib/supportTickets";
-import { logTrialModView, trialModStaffClient } from "@/lib/trialMod";
+import { trialModStaffClient } from "@/lib/trialMod";
 
 export const metadata: Metadata = { title: "Random quality check", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -48,13 +48,6 @@ export default async function AdminQualityPage() {
   const fresh = all.filter((macro) => !checkedRecently.has(macro.downloadUrl));
   const pool = fresh.length > 0 ? fresh : all;
   const candidate = pool.length > 0 ? pool[randomInt(pool.length)] : null;
-  if (staff.role === "trial_mod") {
-    const viewRecorded = candidate
-      ? await logTrialModView(staff.id, "quality_macro_selected", candidate.levelId, candidate.levelName,
-        `${candidate.macroAuthor} · ${candidate.recorder} · ${candidate.fps} FPS`)
-      : !historyResult || Boolean(historyResult.error) || await logTrialModView(staff.id, "quality_history_viewed", null);
-    if (!viewRecorded) throw new Error("The quality check could not be opened.");
-  }
 
   return (
     <div className="mx-auto w-full max-w-[800px] px-4 py-10 sm:px-6 sm:py-14">

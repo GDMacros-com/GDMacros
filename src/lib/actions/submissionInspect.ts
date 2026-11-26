@@ -2,7 +2,7 @@
 
 import { createHash } from "node:crypto";
 import { getCurrentStaff } from "@/lib/admin";
-import { logTrialModView, trialModSubmissions } from "@/lib/trialMod";
+import { trialModSubmissions } from "@/lib/trialMod";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { downloadSubmissionObject } from "@/lib/supabase/storage-admin";
 import { readGdrMetadata } from "@/lib/gdr";
@@ -122,9 +122,6 @@ export async function inspectSubmission(id: string): Promise<InspectResult> {
 
   const file = await downloadSubmissionObject(data.submitted_by as string, data.id as string);
   if (!file.ok) return { ok: false, error: "The uploaded file could not be opened." };
-  if (staff.role === "trial_mod" && !(await logTrialModView(staff.id, "submission_inspected", data.id, data.level_name))) {
-    return { ok: false, error: "That submission could not be inspected." };
-  }
 
   const recorder = String(data.recorder ?? "");
   const gdrMeta = recorder === "zBot" ? readGdrMetadata(file.bytes) : null;

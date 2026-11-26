@@ -344,15 +344,15 @@ await check('trial mods can review and reject but cannot manage support, blocks,
   await publish('record_publish_live');
   await publish('finish_processing');
   const events = await rows('select action, actor_username, detail from public.trial_mod_log_jobs');
-  for (const action of ['details_edited', 'review_started', 'review_released', 'rejected', 'publish_asset_uploaded', 'publish_catalog_committed', 'publish_live_verified', 'accepted']) {
-    assert.ok(events.some(event => event.action === action && event.actor_username === 'test_trial'), action);
-  }
+  assert.deepEqual(events.map(event => event.action).sort(),
+    ['accepted', 'details_edited', 'publish_live_verified', 'publish_not_started', 'rejected']);
+  assert.ok(events.every(event => event.actor_username === 'test_trial'));
   assert.equal(events.find(event => event.action === 'rejected').detail, 'Invalid recording');
   await as('trial');
   assert.equal((await rows('select id from public.submissions where id=$1', [publishId])).length, 0);
 });
 
-await check('trial quality results and staff views queue logs; only the service can claim them', async () => {
+await check('trial quality results queue logs and older staff views are ignored', async () => {
   const quality = ['https://example.test/current.slc', 'Current level', '126', 'Tester', 'Silicate', 'issue', 'Recording issue'];
   await as('trial');
   await denied('select public.record_macro_quality_check($1,$2,$3,$4,$5,$6,$7)', quality);
@@ -363,7 +363,7 @@ await check('trial quality results and staff views queue logs; only the service 
   await rows('select public.log_trial_mod_view($1,$2,$3,$4)', [ids.trial,'quality_macro_selected','126','Current level']);
   const events = await rows('select action, detail from public.trial_mod_log_jobs where target_id=$1', ['126']);
   assert.ok(events.some(event => event.action === 'quality_check_issue' && event.detail.includes('Recording issue')));
-  assert.ok(events.some(event => event.action === 'quality_macro_selected'));
+  assert.equal(events.length, 1);
   const [claimed] = await rows('select * from public.claim_trial_mod_log($1)', [ids.trial]);
   const [next] = await rows('select * from public.claim_trial_mod_log($1)', [ids.trial]);
   assert.ok(claimed.lease_id);

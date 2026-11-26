@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentStaff } from "@/lib/admin";
 import { sendSubmissionResultBestEffort } from "@/lib/actions/submissionResultEmail";
 import { runPublish, type PublishProgress } from "@/lib/publish/publisher";
-import { logTrialModView, scheduleTrialModLogDelivery, trialModStaffClient } from "@/lib/trialMod";
+import { scheduleTrialModLogDelivery, trialModStaffClient } from "@/lib/trialMod";
 
 /**
  * The two entry points for automated publishing.
@@ -102,9 +102,6 @@ export async function getPublishState(
 
   const { data, error } = await supabase.rpc("get_publish_state", { p_id: id });
   if (error) return { error: "The publishing status could not be read." };
-  if (staff.role === "trial_mod" && !(await logTrialModView(staff.id, "publish_status_viewed", id))) {
-    return { error: "The publishing status could not be read." };
-  }
 
   const row = (Array.isArray(data) ? data[0] : data) as
     | {

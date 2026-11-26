@@ -185,14 +185,15 @@ await check('quality checks reject legacy catalog URLs and send verified metadat
   assert.equal(writes[0].args.p_download_url, current);
   assert.equal(writes[0].args.p_level_id, '123');
 });
-await check('each Discord log pings ChesszDC and failed deliveries remain queued', async () => {
+await check('Discord drops old view events, pings ChesszDC for moderation results and retries failures', async () => {
   const messages = [];
   const deleted = [];
   let success = false;
   const job = { id: 'event-id', lease_id: 'lease-id', actor_username: 'test_trial', actor_id: 'trial',
     created_at: '2026-11-26T14:00:00Z', action: 'rejected', target_id: 'submission-id', level_name: 'Test', detail: 'Reason' };
+  const viewJob = { ...job, id: 'view-id', action: 'review_queue_viewed' };
   const service = {
-    rpc: async () => ({ data: deleted.length ? [] : [job], error: null }),
+    rpc: async () => ({ data: deleted.length === 0 ? [viewJob] : deleted.length === 1 ? [job] : [], error: null }),
     from: () => ({
       delete: () => ({
         eq: (key, value) => ({ eq: (leaseKey, leaseValue) => {
@@ -216,12 +217,14 @@ await check('each Discord log pings ChesszDC and failed deliveries remain queued
     },
   });
   assert.equal((await logs.drainTrialModLogs()).failed, true);
-  assert.equal(deleted.length, 0);
+  assert.deepEqual(deleted, [['id', 'view-id', 'lease_id', 'lease-id']]);
+  assert.equal(messages.length, 1);
   success = true;
   assert.equal((await logs.drainTrialModLogs()).sent, 1);
-  assert.deepEqual(deleted[0], ['id', 'event-id', 'lease_id', 'lease-id']);
+  assert.deepEqual(deleted[1], ['id', 'event-id', 'lease_id', 'lease-id']);
   for (const message of messages) {
     assert.equal(message.content, '<@1488686761264549939>');
+    assert.equal(message.embeds[0].title, 'Trial Mod · Submission denied');
     assert.deepEqual(message.allowed_mentions, { parse: [], users: ['1488686761264549939'] });
     assert.match(message.embeds[0].description, /test_trial.*\n.*Test.*\n.*submission-id.*\nReason/);
   }

@@ -9,7 +9,7 @@ import {
   isStorageAdminConfigured,
 } from "@/lib/supabase/storage-admin";
 import { canCurrentUserManageSupportAndBans, getCurrentStaff } from "@/lib/admin";
-import { logTrialModView, scheduleTrialModLogDelivery, trialModSubmissions } from "@/lib/trialMod";
+import { scheduleTrialModLogDelivery, trialModSubmissions } from "@/lib/trialMod";
 import { sendSubmissionResultBestEffort } from "@/lib/actions/submissionResultEmail";
 import { MIN_REJECTION_REASON, LIMITS, submissionErrorMessage } from "@/lib/submissions";
 import { assetFileName } from "@/lib/publish/assetName";
@@ -105,8 +105,6 @@ export async function startProcessing(id: string): Promise<Result> {
 
   const { error } = await supabase.rpc("start_processing", { p_id: id });
   if (error) return { ok: false, error: submissionErrorMessage(error) };
-  if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
-
   /*
    * Deliberately NO revalidatePath here.
    *
@@ -129,8 +127,6 @@ export async function releaseProcessing(id: string): Promise<Result> {
 
   const { error } = await supabase.rpc("release_processing", { p_id: id });
   if (error) return { ok: false, error: submissionErrorMessage(error) };
-  if (staff.role === "trial_mod") scheduleTrialModLogDelivery(staff.id);
-
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -225,8 +221,7 @@ export async function rejectSubmission(id: string, reason: string): Promise<Resu
  * A short-lived signed URL for one submission's file. Admins and mods only.
  *
  * Used from two places: inspecting a submission before deciding on it, and
- * while publishing one by hand. For trial moderators, issuing the link also
- * queues a Discord audit event.
+ * while publishing one by hand.
  *
  * The path is built from the row's own submitted_by, read back from the
  * database, rather than from anything the caller sends, so even a real admin
@@ -269,9 +264,6 @@ export async function getSubmissionDownloadUrl(
   const signed = await createSubmissionSignedUrl(data.submitted_by, data.id, downloadName, 120);
   if ("error" in signed) {
     console.error("[submissions] could not sign download", { id });
-    return { error: "That file could not be prepared for download." };
-  }
-  if (staff.role === "trial_mod" && !(await logTrialModView(staff.id, "submission_download_requested", data.id, data.level_name))) {
     return { error: "That file could not be prepared for download." };
   }
   return { url: signed.url };

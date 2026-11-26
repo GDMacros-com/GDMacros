@@ -7,7 +7,7 @@ import { getCurrentStaff } from "@/lib/admin";
 import { listSubmissionBans } from "@/lib/actions/submissions";
 import { getUser, createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { logTrialModView, trialModSubmissions } from "@/lib/trialMod";
+import { trialModSubmissions } from "@/lib/trialMod";
 
 export const metadata: Metadata = {
   title: "Review queue",
@@ -26,7 +26,7 @@ const STATUSES = new Set(["pending", "processing", "all"]);
  *   1. the proxy redirects an anonymous visitor to /login;
  *   2. this page checks the role server side, from the database;
  *   3. the query uses the reviewer's session for admins and mods. Trial mods
- *      read the queue through this server route, which records the view.
+ *      read the queue through this server route.
  *
  * Every review RPC checks its own permissions. The
  * `admin_update_submission` RPC refuses once publishing has started.
@@ -64,14 +64,12 @@ export default async function AdminSubmissionsPage({
   if (filter !== "all") query = query?.eq("status", filter);
 
   const [review, bans] = await Promise.all([query, staff.role === "trial_mod" ? null : listSubmissionBans()]);
-  const viewRecorded = staff.role !== "trial_mod"
-    || (review && !review.error && await logTrialModView(staff.id, "review_queue_viewed", filter));
 
   type Raw = Omit<AdminRow, "submitter" | "processor" | "mine"> & {
     submitted_by: string;
     processing_by: string | null;
   };
-  const raw = (viewRecorded ? review?.data ?? [] : []) as unknown as Raw[];
+  const raw = (review?.data ?? []) as unknown as Raw[];
 
   /*
    * Usernames are resolved in a SECOND query rather than a PostgREST embed.
@@ -124,7 +122,7 @@ export default async function AdminSubmissionsPage({
         announced to the submitter until it has been confirmed live.
       </p>
 
-      {!review || review.error || !viewRecorded ? (
+      {!review || review.error ? (
         <div className="card px-6 py-10 text-center text-[13px] text-muted">
           The queue could not be loaded. Reload the page.
         </div>

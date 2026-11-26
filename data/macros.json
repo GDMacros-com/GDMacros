@@ -66,5 +66,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-152139257/Itsagelaaaaa-Robmoc-Eclipse.gdr2"
       }
     ]
+  },
+  {
+    "name": "Megalovania",
+    "creator": "EternaswipVMAX",
+    "levelId": "15427055",
+    "video": "https://www.youtube.com/watch?v=BQwJK8Yw7CI",
+    "addedAt": "2026-11-26",
+    "macros": [
+      {
+        "author": "hcoot71cool",
+        "recorder": "Mega Hack",
+        "fps": 240,
+        "testedAt": "2026-11-26",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-15427055/hcoot71cool-Megalovania-Mega-Hack.gdr2"
+      }
+    ]
   }
 ]

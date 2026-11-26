@@ -100,5 +100,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-146399247/SomebodyoneGD-rauchkammer-Mega-Hack.gdr2"
       }
     ]
+  },
+  {
+    "name": "Friday Vortex",
+    "creator": "Cersia",
+    "levelId": "69871779",
+    "video": "https://www.youtube.com/watch?v=p8EOoYJQH9o",
+    "addedAt": "2026-11-26",
+    "macros": [
+      {
+        "author": "ChesszDC",
+        "recorder": "Mega Hack",
+        "fps": 240,
+        "testedAt": "2026-11-26",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-69871779/ChesszDC-Friday-Vortex-Mega-Hack.gdr2"
+      }
+    ]
   }
 ]

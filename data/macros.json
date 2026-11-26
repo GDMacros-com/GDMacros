@@ -66,5 +66,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-152139257/Itsagelaaaaa-Robmoc-Eclipse.gdr2"
       }
     ]
+  },
+  {
+    "name": "test",
+    "creator": "Skitten",
+    "levelId": "19910130",
+    "video": "https://www.youtube.com/watch?v=2PpcHyyjgVg",
+    "addedAt": "2026-11-26",
+    "macros": [
+      {
+        "author": "TEST",
+        "recorder": "Mega Hack",
+        "fps": 240,
+        "testedAt": "2026-11-26",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-19910130/TEST-test-Mega-Hack.gdr2"
+      }
+    ]
   }
 ]

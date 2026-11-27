@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AdvertisingConsentPopup } from "@/components/AdvertisingPreferences";
 import Background from "@/components/Background";
 import DiscordAnnouncement from "@/components/DiscordAnnouncement";
 import Footer from "@/components/Footer";
@@ -103,7 +104,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PageTransition>{children}</PageTransition>
         </main>
         <Footer />
-        <DiscordAnnouncement />
+        <AdvertisingConsentPopup>
+          <DiscordAnnouncement />
+        </AdvertisingConsentPopup>
         <Analytics />
         <SpeedInsights />
       </body>

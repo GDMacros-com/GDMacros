@@ -1,4 +1,5 @@
 import FpsBadge from "@/components/FpsBadge";
+import BannerAd from "@/components/BannerAd";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -350,8 +351,7 @@ export default function MacroDetailPage({ slug, legacy = false }: { slug: string
         </nav>
       )}
 
-      {/* Kept after the complete macro experience so it cannot be mistaken for
-          a download, video control, report action or previous/next link. */}
+      <BannerAd />
     </div>
   );
 }

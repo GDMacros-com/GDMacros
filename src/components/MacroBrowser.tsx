@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { migrateStoredFavorites } from "@/lib/favorites";
 import { LEGACY_RECORDERS, SUBMISSION_RECORDERS, macroPath, type Level, type Recorder } from "@/lib/types";
+import BannerAd from "./BannerAd";
 import MacroCard from "./MacroCard";
 import RecentlyViewed from "./RecentlyViewed";
 import MacroRow from "./MacroRow";
@@ -58,6 +59,19 @@ type RecorderFilter = Recorder | "all";
  * rather than as staggered.
  */
 const STAGGER_CAP = 12;
+const RESULTS_PER_BANNER = 8;
+
+function subscribeToWidth(update: () => void) {
+  window.addEventListener("resize", update);
+  return () => window.removeEventListener("resize", update);
+}
+
+function catalogViewport() {
+  const width = window.innerWidth;
+  if (width >= 1360) return "wide";
+  if (width >= 768) return "desktop";
+  return width >= 320 ? "mobile" : null;
+}
 
 export default function MacroBrowser({ levels, legacy = false }: { levels: Level[]; legacy?: boolean }) {
   const recorders: readonly Recorder[] = legacy ? LEGACY_RECORDERS : SUBMISSION_RECORDERS;
@@ -68,6 +82,7 @@ export default function MacroBrowser({ levels, legacy = false }: { levels: Level
   const inputRef = useRef<HTMLInputElement>(null);
   const hydrated = useRef(false);
   const router = useRouter();
+  const viewport = useSyncExternalStore(subscribeToWidth, catalogViewport, () => null);
 
   // Favorites were keyed by slug before Phase 2B. This page has the whole
   // catalog, so it is the natural place to finish that migration: almost every
@@ -171,7 +186,8 @@ export default function MacroBrowser({ levels, legacy = false }: { levels: Level
   }
 
   return (
-    <div>
+    <div className="relative">
+      {viewport === "wide" && <BannerAd size="160x600" className="absolute top-0 left-full ml-4" />}
       <div className="mb-4 flex items-center gap-2.5">
         <div className="group relative min-w-0 flex-1">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 h-[19px] w-[19px] -translate-y-1/2 text-muted transition-colors group-focus-within:text-accent" />
@@ -325,16 +341,19 @@ export default function MacroBrowser({ levels, legacy = false }: { levels: Level
             </div>
           )}
         </div>
-      ) : view === "grid" ? (
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((m, i) => (
-            <MacroCard key={m.slug} level={m} index={Math.min(i, STAGGER_CAP)} />
-          ))}
-        </div>
       ) : (
-        <div className="flex flex-col gap-3.5">
-          {results.map((m, i) => (
-            <MacroRow key={m.slug} level={m} index={Math.min(i, STAGGER_CAP)} />
+        <div className={view === "grid" ? "grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-3.5"}>
+          {results.map((level, index) => (
+            <Fragment key={level.slug}>
+              {view === "grid" ? (
+                <MacroCard level={level} index={Math.min(index, STAGGER_CAP)} />
+              ) : (
+                <MacroRow level={level} index={Math.min(index, STAGGER_CAP)} />
+              )}
+              {viewport && index + 1 === RESULTS_PER_BANNER && index + 1 < results.length && (
+                <BannerAd size={viewport === "mobile" ? "320x50" : "300x250"} />
+              )}
+            </Fragment>
           ))}
         </div>
       )}

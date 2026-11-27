@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AdvertisingPreferences from "@/components/AdvertisingPreferences";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import { site } from "@/lib/site";
 import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "@/lib/support";
@@ -125,6 +126,23 @@ export default function PrivacyPage() {
           ]}
         />
       </Section>
+
+      <div id="advertising" className="scroll-mt-24">
+        <Section title="Advertising and privacy">
+          <p>
+            If you allow ads, your browser connects to Adsterra and its advertising partners. They
+            receive information such as your IP address, browser details and ad interactions. They may
+            use advertising cookies or similar technologies to deliver and measure ads. See the{" "}
+            <a className="text-accent-soft underline" href="https://adsterra.com/cookies/">Adsterra cookies policy</a>.
+          </p>
+          <p>
+            Your choice is saved in this browser (<Key>gdmacros:advertising</Key>) without an automatic
+            expiration. You can change it here at any time and use the catalog either way. Clearing
+            your site data removes this preference.
+          </p>
+          <AdvertisingPreferences />
+        </Section>
+      </div>
 
       <Section title="Public macro announcements">
         <p>

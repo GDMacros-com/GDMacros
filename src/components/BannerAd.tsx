@@ -15,8 +15,8 @@ function bannerDocument(size: BannerSize) {
   const { key, height, width } = bannerUnits[size];
   return `<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>Advertisement</title></head>
-<body style="margin:0">
+<head><meta charset="utf-8"><meta name="color-scheme" content="light"><title>Advertisement</title></head>
+<body style="margin:0;background:transparent">
 <script>
   atOptions = {
     key: '${key}',
@@ -47,7 +47,7 @@ export default function BannerAd({ size = "300x250", className = "col-span-full 
           loading="lazy"
           sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
           srcDoc={bannerDocument(size)}
-          className="block rounded-lg border-0 bg-surface"
+          className="block rounded-lg border-0 bg-transparent [color-scheme:light]"
         />
       </div>
     </aside>

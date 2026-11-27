@@ -48,9 +48,6 @@ export default function Footer() {
             <Link href="/privacy" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Privacy
             </Link>
-            <Link href="/privacy#advertising" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
-              Ad preferences
-            </Link>
             <Link href="/terms" className="rounded-lg px-2.5 py-2 text-text-dim transition-colors hover:bg-surface-2 hover:text-text focus-visible:bg-surface-2">
               Terms
             </Link>

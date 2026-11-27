@@ -33,7 +33,6 @@ export const STORE_KEYS = {
   sort: "gdmacros:sort",
   /** List or grid. */
   view: "gdmacros:view",
-  advertising: "gdmacros:advertising",
 } as const;
 
 /** How many recently viewed entries to keep. Two rows' worth on desktop. */

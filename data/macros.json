@@ -117,5 +117,22 @@
         "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-69871779/ChesszDC-Friday-Vortex-Mega-Hack.gdr2"
       }
     ]
+  },
+  {
+    "name": "Forsaken Neon",
+    "creator": "Zobros",
+    "levelId": "6300721",
+    "video": "https://www.youtube.com/watch?v=ARjiOD0udsY",
+    "addedAt": "2026-11-27",
+    "macros": [
+      {
+        "author": "SomebodyoneGD",
+        "recorder": "Mega Hack",
+        "fps": 240,
+        "testedAt": "2026-11-27",
+        "downloadType": "GitHub",
+        "downloadLink": "https://github.com/GDMacros-com/GDMacros-downloads/releases/download/level-2.2091-6300721/SomebodyoneGD-Forsaken-Neon-Mega-Hack.gdr2"
+      }
+    ]
   }
 ]

@@ -12,8 +12,9 @@ let temporaryChoice: Choice | null = null;
 
 function getChoice() {
   const { hostname } = window.location;
-  const isLive = hostname === "www.gdmacros.com" || hostname === "gdmacros.com";
-  if (!isLive && process.env.NEXT_PUBLIC_BANNER_AD_PREVIEW !== "1") return "unavailable";
+  const vercelEnvironment = process.env.NEXT_PUBLIC_VERCEL_ENV;
+  const isVercelPreview = vercelEnvironment === "preview" || (!vercelEnvironment && hostname.endsWith(".vercel.app"));
+  if (!isVercelPreview && process.env.NEXT_PUBLIC_BANNER_AD_PREVIEW !== "1") return "unavailable";
 
   if (temporaryChoice) return temporaryChoice;
   try {

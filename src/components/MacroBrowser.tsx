@@ -187,7 +187,12 @@ export default function MacroBrowser({ levels, legacy = false }: { levels: Level
 
   return (
     <div className="relative">
-      {viewport === "wide" && <BannerAd size="160x600" className="absolute top-0 left-full ml-4" />}
+      {viewport === "wide" && (
+        <>
+          <BannerAd size="160x600" className="absolute top-0 right-full mr-4" />
+          <BannerAd size="160x600" className="absolute top-0 left-full ml-4" />
+        </>
+      )}
       <div className="mb-4 flex items-center gap-2.5">
         <div className="group relative min-w-0 flex-1">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 h-[19px] w-[19px] -translate-y-1/2 text-muted transition-colors group-focus-within:text-accent" />
@@ -350,7 +355,7 @@ export default function MacroBrowser({ levels, legacy = false }: { levels: Level
               ) : (
                 <MacroRow level={level} index={Math.min(index, STAGGER_CAP)} />
               )}
-              {viewport && index + 1 === RESULTS_PER_BANNER && index + 1 < results.length && (
+              {viewport && (index + 1) % RESULTS_PER_BANNER === 0 && index + 1 < results.length && (
                 <BannerAd size={viewport === "mobile" ? "320x50" : "300x250"} />
               )}
             </Fragment>
